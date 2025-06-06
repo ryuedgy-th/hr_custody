@@ -150,6 +150,8 @@
         </field>
     </record>
 
+    <!-- ACTIONS - Define all actions before menus -->
+
     <!-- Hr Custody action -->
     <record id="hr_custody_action" model="ir.actions.act_window">
         <field name="name">Custody</field>
@@ -163,7 +165,28 @@
         </field>
     </record>
 
-    <!-- ALL MENUS IN ONE FILE -->
+    <!-- Custody Property action (moved from custody_property_views.xml) -->
+    <record id="custody_property_action" model="ir.actions.act_window">
+        <field name="name">Property</field>
+        <field name="res_model">custody.property</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Click to Create a New Record.
+            </p>
+        </field>
+    </record>
+
+    <!-- Report Custody action (moved from report_custody_views.xml) -->
+    <record id="report_custody_action" model="ir.actions.act_window">
+        <field name="name">Custody Analysis</field>
+        <field name="res_model">report.custody</field>
+        <field name="view_mode">pivot</field>
+        <field name="context">{'group_by_no_leaf':1,'group_by':[]}</field>
+        <field name="help">This report allows you to analyse all Custody Requests.</field>
+    </record>
+
+    <!-- MENUS - All menus in one place -->
 
     <!-- Main menu -->
     <menuitem id="hr_custody_main_menu"
