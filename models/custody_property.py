@@ -50,7 +50,7 @@ class CustodyProperty(models.Model):
     company_id = fields.Many2one('res.company', 'Company',
                                  help='The company associated with '
                                       'this record.',
-                                 default=lambda self: self.env.user.company_id)
+                                 default=lambda self: self.env.company)  # Updated for Odoo 18
     property_selection = fields.Selection([('empty', 'No Connection'),
                                            ('product', 'Products')],
                                           default='empty',

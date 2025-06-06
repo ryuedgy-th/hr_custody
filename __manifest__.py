@@ -1,6 +1,6 @@
 {
     'name': 'Open HRMS Custody',
-    'version': '18.0.1.0.0',  # Changed from 17.0.1.0.0
+    'version': '18.0.1.0.0',
     'category': 'Human Resources',
     'summary': """Manage the company properties""",
     'description': 'Manage the company properties when it is in '
@@ -9,7 +9,7 @@
     'company': 'Cybrosys Techno Solutions',
     'maintainer': 'Cybrosys Techno Solutions',
     'website': "https://www.cybrosys.com",
-    'depends': ['hr', 'mail', 'hr_employee_updation', 'base'],  # Verify hr_employee_updation compatibility
+    'depends': ['hr', 'mail', 'base'],  # Removed hr_employee_updation for now
     'data': [
         'security/custody_security.xml',
         'security/ir.model.access.csv',
