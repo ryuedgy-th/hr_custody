@@ -26,79 +26,62 @@ from odoo.exceptions import UserError, ValidationError
 
 
 class HrCustody(models.Model):
-    """
-        Hr custody contract creation model.
-    """
     _name = 'hr.custody'
     _description = 'Hr Custody Management'
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
-    is_read_only = fields.Boolean(string="Check Field")
+    # Updated field definitions
+    date_request = fields.Date(
+        string='Requested Date',
+        required=True,
+        tracking=True,  # Changed from track_visibility='always'
+        help='The date when the request was made',
+        default=lambda self: fields.Date.today()  # More explicit default
+    )
 
-    @api.onchange('employee_id')
-    def _onchange_employee_id(self):
-        """ Use this function to check weather
-        the user has the permission
-        to change the employee"""
-        res_user = self.env['res.users'].browse(self._uid)
-        if res_user.has_group('hr.group_hr_user'):
-            self.is_read_only = True
-        else:
-            self.is_read_only = False
+    purpose = fields.Char(
+        string='Reason',
+        tracking=True,  # Changed from track_visibility='always'
+        required=True,
+        help='The reason or purpose of the custody'
+    )
 
-    def mail_reminder(self):
-        """ Use this function to product return reminder mail"""
-        now = datetime.now() + timedelta(days=1)
-        date_now = now.date()
-        match = self.search([('state', '=', 'approved')])
-        for i in match:
-            if i.return_date:
-                exp_date = fields.Date.from_string(i.return_date)
-                if exp_date <= date_now:
-                    base_url = self.env['ir.config_parameter'].get_param(
-                        'web.base.url')
-                    url = base_url + _(
-                        '/web#id=%s&view_type=form&model=hr.custody&menu_id=') % i.id
-                    mail_content = _(
-                        'Hi %s,<br>As per the %s you took %s on %s for the reason of %s. S0 here we '
-                        'remind you that you have to return that on or before %s. Otherwise, you can '
-                        'renew the reference number(%s) by extending the return date through following '
-                        'link.<br> <div style = "text-align: center; margin-top: 16px;"><a href = "%s"'
-                        'style = "padding: 5px 10px; font-size: 12px; line-height: 18px; color: #FFFFFF; '
-                        'border-color:#875A7B;text-decoration: none; display: inline-block; '
-                        'margin-bottom: 0px; font-weight: 400;text-align: center; vertical-align: middle; '
-                        'cursor: pointer; white-space: nowrap; background-image: none; '
-                        'background-color: #875A7B; border: 1px solid #875A7B; border-radius:3px;">'
-                        'Renew %s</a></div>') % \
-                                   (i.employee_id.name, i.name,
-                                    i.custody_property_id.name,
-                                    i.date_request, i.purpose,
-                                    date_now, i.name, url, i.name)
-                    main_content = {
-                        'subject': _('REMINDER On %s') % i.name,
-                        'author_id': self.env.user.partner_id.id,
-                        'body_html': mail_content,
-                        'email_to': i.employee_id.work_email,
-                    }
-                    mail_id = self.env['mail.mail'].create(main_content)
-                    mail_id.mail_message_id.body = mail_content
-                    mail_id.send()
-                    if i.employee_id.user_id:
-                        mail_id.mail_message_id.write({
-                            'partner_ids': [
-                                (4, i.employee_id.user_id.partner_id.id)]})
+    return_date = fields.Date(
+        string='Return Date',
+        required=True,
+        tracking=True,  # Changed from track_visibility='always'
+        help='The date when the custody is expected to be returned.'
+    )
 
+    renew_date = fields.Date(
+        string='Renewal Return Date',
+        tracking=True,  # Changed from track_visibility='always'
+        help="Return date for the renewal",
+        readonly=True,
+        copy=False
+    )
+
+    state = fields.Selection([
+        ('draft', 'Draft'),
+        ('to_approve', 'Waiting For Approval'),
+        ('approved', 'Approved'),
+        ('returned', 'Returned'),
+        ('rejected', 'Refused')
+    ],
+    string='Status',
+    default='draft',
+    tracking=True,  # Changed from track_visibility='always'
+    help='Custody states visible in statusbar'
+    )
+
+    # Update create method for sequence generation
     @api.model_create_multi
-    def create(self, vals):
-        """Create a new record for the HrCustody model.
-            This method is responsible for creating a new
-            record for the HrCustody model with the provided values.
-            It automatically generates a unique name for
-            the record using the 'ir.sequence'
-            and assigns it to the 'name' field."""
-        for val in vals:
-            val['name'] = self.env['ir.sequence'].next_by_code('hr.custody')
-        return super(HrCustody, self).create(vals)
+    def create(self, vals_list):
+        """Create method updated for Odoo 18 multi-record creation."""
+        for vals in vals_list:
+            if not vals.get('name'):
+                vals['name'] = self.env['ir.sequence'].next_by_code('hr.custody')
+        return super(HrCustody, self).create(vals_list)
 
     def sent(self):
         """Move the current record to the 'to_approve' state."""
