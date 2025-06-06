@@ -1,4 +1,6 @@
-<!-- Hr Custody form view - FIXED -->
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Hr Custody form view -->
     <record id="hr_custody_view_form" model="ir.ui.view">
         <field name="name">hr.custody.form</field>
         <field name="model">hr.custody</field>
@@ -76,7 +78,6 @@
                         </group>
                     </group>
 
-                    <!-- Show rejected reasons when applicable -->
                     <group invisible="state != 'rejected' and not is_renew_reject">
                         <field name="rejected_reason"
                                invisible="state != 'rejected'"/>
@@ -103,3 +104,122 @@
             </form>
         </field>
     </record>
+
+    <!-- Hr Custody list view -->
+    <record id="hr_custody_view_tree" model="ir.ui.view">
+        <field name="name">hr.custody.list</field>
+        <field name="model">hr.custody</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="custody_property_id"/>
+                <field name="purpose"/>
+                <field name="date_request"/>
+                <field name="return_date"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Hr Custody search view -->
+    <record id="hr_custody_view_search" model="ir.ui.view">
+        <field name="name">hr.custody.search</field>
+        <field name="model">hr.custody</field>
+        <field name="arch" type="xml">
+            <search string="Custody">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="custody_property_id"/>
+                <field name="purpose"/>
+                <field name="date_request"/>
+                <field name="return_date"/>
+                <field name="state"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter string="Status" name="status" domain="[]"
+                            context="{'group_by':'state'}"/>
+                    <filter string="Employee" name="employee" domain="[]"
+                            context="{'group_by':'employee_id'}"/>
+                    <filter string="Custody Name" name="custody"
+                            domain="[]"
+                            context="{'group_by':'custody_property_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ACTIONS -->
+
+    <!-- Hr Custody action -->
+    <record id="hr_custody_action" model="ir.actions.act_window">
+        <field name="name">Custody</field>
+        <field name="res_model">hr.custody</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="hr_custody_view_search"/>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Click to Create a New Record.
+            </p>
+        </field>
+    </record>
+
+    <!-- Custody Property action -->
+    <record id="custody_property_action" model="ir.actions.act_window">
+        <field name="name">Property</field>
+        <field name="res_model">custody.property</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Click to Create a New Record.
+            </p>
+        </field>
+    </record>
+
+    <!-- Report Custody action -->
+    <record id="report_custody_action" model="ir.actions.act_window">
+        <field name="name">Custody Analysis</field>
+        <field name="res_model">report.custody</field>
+        <field name="view_mode">pivot</field>
+        <field name="context">{'group_by_no_leaf':1,'group_by':[]}</field>
+        <field name="help">This report allows you to analyse all Custody Requests.</field>
+    </record>
+
+    <!-- MENUS -->
+
+    <!-- Main menu -->
+    <menuitem id="hr_custody_main_menu"
+              name="Custody"
+              sequence="20"
+              web_icon="hr_custody,static/description/icon.png"/>
+
+    <!-- Custody Request menu -->
+    <menuitem id="hr_custody_menu_request"
+              action="hr_custody_action"
+              parent="hr_custody_main_menu"
+              name="Custody Request"
+              sequence="1"/>
+
+    <!-- Property menu -->
+    <menuitem id="hr_property_menu"
+              action="custody_property_action"
+              parent="hr_custody_main_menu"
+              name="Property"
+              sequence="5"
+              groups="hr.group_hr_manager"/>
+
+    <!-- Report menu group -->
+    <menuitem id="custody_report_menu"
+              name="Report"
+              parent="hr_custody_main_menu"
+              groups="hr.group_hr_manager"
+              sequence="100"/>
+
+    <!-- Custody Analysis menu -->
+    <menuitem id="custody_report_menu_custody_analysis"
+              name="Custody Analysis"
+              action="report_custody_action"
+              parent="custody_report_menu"
+              groups="hr.group_hr_manager"
+              sequence="1"/>
+</odoo>
