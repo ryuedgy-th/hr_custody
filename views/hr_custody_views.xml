@@ -7,7 +7,6 @@
         <field name="arch" type="xml">
             <form string="Custody">
                 <header>
-                    <!-- Updated button visibility conditions -->
                     <button string="Send For Approval" type="object"
                             name="sent"
                             class="oe_highlight"
@@ -164,20 +163,41 @@
         </field>
     </record>
 
-    <!-- MENUS: Main menu first, then sub-menus -->
+    <!-- ALL MENUS IN ONE FILE -->
+
+    <!-- Main menu -->
     <menuitem id="hr_custody_main_menu"
               name="Custody"
               sequence="20"
               web_icon="hr_custody,static/description/icon.png"/>
 
-    <menuitem id="hr_custody_menu_management"
-              parent="hr_custody_main_menu"
-              name="Custody Management"
-              sequence="10"/>
-
+    <!-- Custody Request menu -->
     <menuitem id="hr_custody_menu_request"
               action="hr_custody_action"
               parent="hr_custody_main_menu"
               name="Custody Request"
+              sequence="1"/>
+
+    <!-- Property menu -->
+    <menuitem id="hr_property_menu"
+              action="custody_property_action"
+              parent="hr_custody_main_menu"
+              name="Property"
+              sequence="5"
+              groups="hr.group_hr_manager"/>
+
+    <!-- Report menu group -->
+    <menuitem id="custody_report_menu"
+              name="Report"
+              parent="hr_custody_main_menu"
+              groups="hr.group_hr_manager"
+              sequence="100"/>
+
+    <!-- Custody Analysis menu -->
+    <menuitem id="custody_report_menu_custody_analysis"
+              name="Custody Analysis"
+              action="report_custody_action"
+              parent="custody_report_menu"
+              groups="hr.group_hr_manager"
               sequence="1"/>
 </odoo>

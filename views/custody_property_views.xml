@@ -54,12 +54,4 @@
             </p>
         </field>
     </record>
-
-    <!-- Property menu - references the main menu from hr_custody_views.xml -->
-    <menuitem id="hr_property_menu"
-              action="custody_property_action"
-              parent="hr_custody_main_menu"
-              name="Property"
-              sequence="5"
-              groups="hr.group_hr_manager"/>
 </odoo>

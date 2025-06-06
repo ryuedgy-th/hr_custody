@@ -19,18 +19,4 @@
         <field name="context">{'group_by_no_leaf':1,'group_by':[]}</field>
         <field name="help">This report allows you to analyse all Custody Requests.</field>
     </record>
-
-    <!-- Report Custody menus -->
-    <menuitem id="custody_report_menu"
-              name="Report"
-              parent="hr_custody_main_menu"
-              groups="hr.group_hr_manager"
-              sequence="100"/>
-
-    <menuitem id="custody_report_menu_custody_analysis"
-              name="Custody Analysis"
-              action="report_custody_action"
-              parent="custody_report_menu"
-              groups="hr.group_hr_manager"
-              sequence="1"/>
 </odoo>
