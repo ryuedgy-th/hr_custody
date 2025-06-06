@@ -33,8 +33,7 @@ class HrEmployee(models.Model):
     equipment_count = fields.Integer(compute='_compute_equipment_count',
                                      string='# Equipments',
                                      help='This field represents '
-                                          'the count of equipments.',
-                                     )
+                                          'the count of equipments.')
 
     @api.depends('custody_count')
     def _compute_custody_count(self):
@@ -71,7 +70,7 @@ class HrEmployee(models.Model):
             custody_ids = []
             for each in custody_obj:
                 custody_ids.append(each.id)
-            view_id = self.env.ref('hr_custody.hr_custody_form_view').id
+            view_id = self.env.ref('hr_custody.hr_custody_view_form').id
             if custody_ids:
                 if len(custody_ids) <= 1:
                     value = {
@@ -85,7 +84,7 @@ class HrEmployee(models.Model):
                 else:
                     value = {
                         'domain': str([('id', 'in', custody_ids)]),
-                        'view_mode': 'tree,form',
+                        'view_mode': 'list,form',  # Changed from tree,form to list,form
                         'res_model': 'hr.custody',
                         'view_id': False,
                         'type': 'ir.actions.act_window',
@@ -106,7 +105,7 @@ class HrEmployee(models.Model):
             for each in equipment_obj:
                 if each.custody_property_id.id not in equipment_ids:
                     equipment_ids.append(each.custody_property_id.id)
-            view_id = self.env.ref('hr_custody.custody_custody_form_view').id
+            view_id = self.env.ref('hr_custody.custody_property_view_form').id
             if equipment_ids:
                 if len(equipment_ids) <= 1:
                     value = {
@@ -120,7 +119,7 @@ class HrEmployee(models.Model):
                 else:
                     value = {
                         'domain': str([('id', 'in', equipment_ids)]),
-                        'view_mode': 'tree,form',
+                        'view_mode': 'list,form',  # Changed from tree,form to list,form
                         'res_model': 'custody.property',
                         'view_id': False,
                         'type': 'ir.actions.act_window',
