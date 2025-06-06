@@ -84,7 +84,7 @@ class HrEmployee(models.Model):
                 else:
                     value = {
                         'domain': str([('id', 'in', custody_ids)]),
-                        'view_mode': 'list,form',  # Changed from tree,form to list,form
+                        'view_mode': 'list,form',
                         'res_model': 'hr.custody',
                         'view_id': False,
                         'type': 'ir.actions.act_window',
@@ -119,7 +119,7 @@ class HrEmployee(models.Model):
                 else:
                     value = {
                         'domain': str([('id', 'in', equipment_ids)]),
-                        'view_mode': 'list,form',  # Changed from tree,form to list,form
+                        'view_mode': 'list,form',
                         'res_model': 'custody.property',
                         'view_id': False,
                         'type': 'ir.actions.act_window',

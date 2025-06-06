@@ -10,4 +10,48 @@
             </pivot>
         </field>
     </record>
+
+    <!-- Report Custody List view -->
+    <record id="report_custody_view_tree" model="ir.ui.view">
+        <field name="name">report.custody.view.list</field>
+        <field name="model">report.custody</field>
+        <field name="arch" type="xml">
+            <list string="Custody Analysis">
+                <field name="name"/>
+                <field name="date_request"/>
+                <field name="employee_id"/>
+                <field name="purpose"/>
+                <field name="custody_property_id"/>
+                <field name="return_date"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Report Custody Search view -->
+    <record id="report_custody_view_search" model="ir.ui.view">
+        <field name="name">report.custody.view.search</field>
+        <field name="model">report.custody</field>
+        <field name="arch" type="xml">
+            <search string="Custody Analysis">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="custody_property_id"/>
+                <field name="state"/>
+                <field name="date_request"/>
+                <field name="return_date"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter string="Status" name="status" domain="[]"
+                            context="{'group_by':'state'}"/>
+                    <filter string="Employee" name="employee" domain="[]"
+                            context="{'group_by':'employee_id'}"/>
+                    <filter string="Property" name="property" domain="[]"
+                            context="{'group_by':'custody_property_id'}"/>
+                    <filter string="Request Date" name="request_date" domain="[]"
+                            context="{'group_by':'date_request'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
 </odoo>

@@ -65,7 +65,7 @@ class HrCustody(models.Model):
     date_request = fields.Date(
         string='Requested Date',
         required=True,
-        tracking=True,  # Changed from track_visibility='always'
+        tracking=True,
         help='The date when the request was made',
         default=fields.Date.today
     )
@@ -80,7 +80,7 @@ class HrCustody(models.Model):
 
     purpose = fields.Char(
         string='Reason',
-        tracking=True,  # Changed from track_visibility='always'
+        tracking=True,
         required=True,
         help='The reason or purpose of the custody'
     )
@@ -95,13 +95,13 @@ class HrCustody(models.Model):
     return_date = fields.Date(
         string='Return Date',
         required=True,
-        tracking=True,  # Changed from track_visibility='always'
+        tracking=True,
         help='The date when the custody is expected to be returned.'
     )
 
     renew_date = fields.Date(
         string='Renewal Return Date',
-        tracking=True,  # Changed from track_visibility='always'
+        tracking=True,
         help="Return date for the renewal",
         readonly=True,
         copy=False
@@ -133,7 +133,7 @@ class HrCustody(models.Model):
     ],
     string='Status',
     default='draft',
-    tracking=True,  # Changed from track_visibility='always'
+    tracking=True,
     help='Custody states visible in statusbar'
     )
 
