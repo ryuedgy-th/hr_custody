@@ -17,7 +17,7 @@
                         <group>
                             <field name="property_selection" widget="radio"/>
                             <field name="product_id"
-                                   invisible=" property_selection != 'product'"/>
+                                   invisible="property_selection != 'product'"/>
                             <field name="company_id"
                                    options="{'no_create': True}"/>
                         </group>
@@ -31,29 +31,35 @@
             </form>
         </field>
     </record>
-    <!-- Custody Property tree view -->
+
+    <!-- Custody Property list view -->
     <record id="custody_property_view_tree" model="ir.ui.view">
-        <field name="name">custody.property.view.tree</field>
+        <field name="name">custody.property.view.list</field>
         <field name="model">custody.property</field>
         <field name="arch" type="xml">
-            <tree>
+            <list>
                 <field name="name"/>
-            </tree>
+            </list>
         </field>
     </record>
+
     <!-- Custody Property action -->
     <record id="custody_property_action" model="ir.actions.act_window">
         <field name="name">Property</field>
         <field name="res_model">custody.property</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
         <field name="help" type="html">
             <p class="oe_view_nocontent_create">
                 Click to Create a New Record.
             </p>
         </field>
     </record>
-    <!-- Custody Property menu -->
-    <menuitem action="custody_property_action" id="hr_property_menu"
-              parent="hr_custody.hr_custody_main_menu"
-              name="Property" sequence="5" groups="hr.group_hr_manager"/>
+
+    <!-- Property menu - references the main menu from hr_custody_views.xml -->
+    <menuitem id="hr_property_menu"
+              action="custody_property_action"
+              parent="hr_custody_main_menu"
+              name="Property"
+              sequence="5"
+              groups="hr.group_hr_manager"/>
 </odoo>

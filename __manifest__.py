@@ -9,18 +9,27 @@
     'company': 'Cybrosys Techno Solutions',
     'maintainer': 'Cybrosys Techno Solutions',
     'website': "https://www.cybrosys.com",
-    'depends': ['hr', 'mail', 'base'],  # Removed hr_employee_updation for now
+    'depends': ['hr', 'mail', 'base'],
     'data': [
+        # Security files first
         'security/custody_security.xml',
         'security/ir.model.access.csv',
+
+        # Data files
         'data/custody_sequence_data.xml',
         'data/ir_cron_data.xml',
         'data/mail_custody_notification_data.xml',
+
+        # Wizard views
         'wizard/property_return_reason_views.xml',
         'wizard/property_return_date_views.xml',
+
+        # Main views with menus (hr_custody_views.xml must come first to define main menu)
         'views/hr_custody_views.xml',
         'views/custody_property_views.xml',
         'views/hr_employee_views.xml',
+
+        # Reports last
         'reports/report_custody_views.xml',
     ],
     'demo': ['data/demo_data.xml'],
