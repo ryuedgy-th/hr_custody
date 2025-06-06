@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <!-- Force delete any existing conflicting views -->
-        <delete model="ir.ui.view" search="[('model', '=', 'hr.custody')]"/>
-
-        <!-- Hr Custody form view with HIGH PRIORITY -->
+        <!-- Hr Custody form view -->
         <record id="hr_custody_form_view_custom" model="ir.ui.view">
             <field name="name">hr.custody.form.custom</field>
             <field name="model">hr.custody</field>
@@ -110,13 +107,13 @@
             </field>
         </record>
 
-        <!-- Hr Custody tree view -->
-        <record id="hr_custody_tree_view_custom" model="ir.ui.view">
-            <field name="name">hr.custody.tree.custom</field>
+        <!-- Hr Custody list view - แก้เป็น list แทน tree -->
+        <record id="hr_custody_list_view_custom" model="ir.ui.view">
+            <field name="name">hr.custody.list.custom</field>
             <field name="model">hr.custody</field>
             <field name="priority" eval="1"/>
             <field name="arch" type="xml">
-                <tree>
+                <list>
                     <field name="name"/>
                     <field name="employee_id"/>
                     <field name="custody_property_id"/>
@@ -124,7 +121,7 @@
                     <field name="date_request"/>
                     <field name="return_date"/>
                     <field name="state"/>
-                </tree>
+                </list>
             </field>
         </record>
 
@@ -156,34 +153,18 @@
             </field>
         </record>
 
-        <!-- FORCE ACTION -->
-        <record id="action_hr_custody_force" model="ir.actions.act_window">
+        <!-- ACTIONS with corrected view_mode -->
+        <record id="action_hr_custody_custom" model="ir.actions.act_window">
             <field name="name">Custody</field>
             <field name="res_model">hr.custody</field>
-            <field name="view_mode">tree,form</field>
-            <field name="view_id" ref="hr_custody_tree_view_custom"/>
+            <field name="view_mode">list,form</field>
+            <field name="view_id" ref="hr_custody_list_view_custom"/>
             <field name="search_view_id" ref="hr_custody_search_view_custom"/>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">
                     Click to Create a New Record.
                 </p>
             </field>
-        </record>
-
-        <!-- Force override default form view -->
-        <record id="action_hr_custody_force_form" model="ir.actions.act_window.view">
-            <field name="sequence" eval="2"/>
-            <field name="view_mode">form</field>
-            <field name="view_id" ref="hr_custody_form_view_custom"/>
-            <field name="act_window_id" ref="action_hr_custody_force"/>
-        </record>
-
-        <!-- Force override default tree view -->
-        <record id="action_hr_custody_force_tree" model="ir.actions.act_window.view">
-            <field name="sequence" eval="1"/>
-            <field name="view_mode">tree</field>
-            <field name="view_id" ref="hr_custody_tree_view_custom"/>
-            <field name="act_window_id" ref="action_hr_custody_force"/>
         </record>
 
         <!-- Custody Property Views -->
@@ -218,22 +199,22 @@
             </field>
         </record>
 
-        <record id="custody_property_tree_view_custom" model="ir.ui.view">
-            <field name="name">custody.property.tree.custom</field>
+        <record id="custody_property_list_view_custom" model="ir.ui.view">
+            <field name="name">custody.property.list.custom</field>
             <field name="model">custody.property</field>
             <field name="arch" type="xml">
-                <tree>
+                <list>
                     <field name="name"/>
-                </tree>
+                </list>
             </field>
         </record>
 
         <!-- Property Action -->
-        <record id="action_hr_property_force" model="ir.actions.act_window">
+        <record id="action_hr_property_custom" model="ir.actions.act_window">
             <field name="name">Property</field>
             <field name="res_model">custody.property</field>
-            <field name="view_mode">tree,form</field>
-            <field name="view_id" ref="custody_property_tree_view_custom"/>
+            <field name="view_mode">list,form</field>
+            <field name="view_id" ref="custody_property_list_view_custom"/>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">
                     Click to Create a New Record.
@@ -242,7 +223,7 @@
         </record>
 
         <!-- Report Actions -->
-        <record id="action_report_custody_force" model="ir.actions.act_window">
+        <record id="action_report_custody_custom" model="ir.actions.act_window">
             <field name="name">Custody Analysis</field>
             <field name="res_model">report.custody</field>
             <field name="view_mode">pivot</field>
@@ -250,35 +231,35 @@
             <field name="help">This report allows you to analyse all Custody Requests.</field>
         </record>
 
-        <!-- MENUS - Force override -->
-        <menuitem id="hr_custody_main_menu_force"
+        <!-- MENUS -->
+        <menuitem id="hr_custody_main_menu_custom"
                   name="Custody"
                   sequence="20"
                   web_icon="hr_custody,static/description/icon.png"/>
 
-        <menuitem id="hr_custody_menu_force"
-                  action="action_hr_custody_force"
-                  parent="hr_custody_main_menu_force"
+        <menuitem id="hr_custody_menu_custom"
+                  action="action_hr_custody_custom"
+                  parent="hr_custody_main_menu_custom"
                   name="Custody Request"
                   sequence="1"/>
 
-        <menuitem id="hr_property_menu_force"
-                  action="action_hr_property_force"
-                  parent="hr_custody_main_menu_force"
+        <menuitem id="hr_property_menu_custom"
+                  action="action_hr_property_custom"
+                  parent="hr_custody_main_menu_custom"
                   name="Property"
                   sequence="5"
                   groups="hr.group_hr_manager"/>
 
-        <menuitem id="custody_report_menu_force"
+        <menuitem id="custody_report_menu_custom"
                   name="Report"
-                  parent="hr_custody_main_menu_force"
+                  parent="hr_custody_main_menu_custom"
                   groups="hr.group_hr_manager"
                   sequence="100"/>
 
-        <menuitem id="custody_report_menu_custody_analysis_force"
+        <menuitem id="custody_report_menu_custody_analysis_custom"
                   name="Custody Analysis"
-                  action="action_report_custody_force"
-                  parent="custody_report_menu_force"
+                  action="action_report_custody_custom"
+                  parent="custody_report_menu_custom"
                   groups="hr.group_hr_manager"
                   sequence="1"/>
     </data>
