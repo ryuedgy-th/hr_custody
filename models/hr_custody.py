@@ -33,6 +33,115 @@ class HrCustody(models.Model):
     _description = 'Hr Custody Management'
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
+    # Field definitions - Updated for Odoo 18
+    name = fields.Char(
+        string='Code',
+        copy=False,
+        help='A unique code assigned to this record.'
+    )
+
+    company_id = fields.Many2one(
+        'res.company',
+        string='Company',
+        readonly=True,
+        help='The company associated with this record.',
+        default=lambda self: self.env.company
+    )
+
+    rejected_reason = fields.Text(
+        string='Rejected Reason',
+        copy=False,
+        readonly=True,
+        help="Reason for the rejection"
+    )
+
+    renew_rejected_reason = fields.Text(
+        string='Renew Rejected Reason',
+        copy=False,
+        readonly=True,
+        help="Renew rejected reason"
+    )
+
+    date_request = fields.Date(
+        string='Requested Date',
+        required=True,
+        tracking=True,  # Changed from track_visibility='always'
+        help='The date when the request was made',
+        default=fields.Date.today
+    )
+
+    employee_id = fields.Many2one(
+        'hr.employee',
+        string='Employee',
+        required=True,
+        help='The employee associated with this record.',
+        default=lambda self: self.env.user.employee_id
+    )
+
+    purpose = fields.Char(
+        string='Reason',
+        tracking=True,  # Changed from track_visibility='always'
+        required=True,
+        help='The reason or purpose of the custody'
+    )
+
+    custody_property_id = fields.Many2one(
+        'custody.property',
+        string='Property',
+        required=True,
+        help='The property associated with this custody record'
+    )
+
+    return_date = fields.Date(
+        string='Return Date',
+        required=True,
+        tracking=True,  # Changed from track_visibility='always'
+        help='The date when the custody is expected to be returned.'
+    )
+
+    renew_date = fields.Date(
+        string='Renewal Return Date',
+        tracking=True,  # Changed from track_visibility='always'
+        help="Return date for the renewal",
+        readonly=True,
+        copy=False
+    )
+
+    notes = fields.Html(
+        string='Notes',
+        help='Note for Custody'
+    )
+
+    is_renew_return_date = fields.Boolean(
+        default=False,
+        copy=False,
+        help='Rejected Renew Date'
+    )
+
+    is_renew_reject = fields.Boolean(
+        default=False,
+        copy=False,
+        help='Indicates whether the renewal is rejected or not.'
+    )
+
+    state = fields.Selection([
+        ('draft', 'Draft'),
+        ('to_approve', 'Waiting For Approval'),
+        ('approved', 'Approved'),
+        ('returned', 'Returned'),
+        ('rejected', 'Refused')
+    ],
+    string='Status',
+    default='draft',
+    tracking=True,  # Changed from track_visibility='always'
+    help='Custody states visible in statusbar'
+    )
+
+    is_mail_send = fields.Boolean(
+        string="Mail Send",
+        help='Indicates whether an email has been sent or not.'
+    )
+
     is_read_only = fields.Boolean(string="Check Field")
 
     @api.onchange('employee_id')
@@ -160,112 +269,3 @@ class HrCustody(models.Model):
         for record in self:
             if record.return_date < record.date_request:
                 raise ValidationError(_('Please Give Valid Return Date'))
-
-    # Field definitions - Updated for Odoo 18
-    name = fields.Char(
-        string='Code',
-        copy=False,
-        help='A unique code assigned to this record.'
-    )
-
-    company_id = fields.Many2one(
-        'res.company',
-        string='Company',
-        readonly=True,
-        help='The company associated with this record.',
-        default=lambda self: self.env.company
-    )
-
-    rejected_reason = fields.Text(
-        string='Rejected Reason',
-        copy=False,
-        readonly=True,
-        help="Reason for the rejection"
-    )
-
-    renew_rejected_reason = fields.Text(
-        string='Renew Rejected Reason',
-        copy=False,
-        readonly=True,
-        help="Renew rejected reason"
-    )
-
-    date_request = fields.Date(
-        string='Requested Date',
-        required=True,
-        tracking=True,  # Changed from track_visibility='always'
-        help='The date when the request was made',
-        default=fields.Date.today
-    )
-
-    employee_id = fields.Many2one(
-        'hr.employee',
-        string='Employee',
-        required=True,
-        help='The employee associated with this record.',
-        default=lambda self: self.env.user.employee_id
-    )
-
-    purpose = fields.Char(
-        string='Reason',
-        tracking=True,  # Changed from track_visibility='always'
-        required=True,
-        help='The reason or purpose of the custody'
-    )
-
-    custody_property_id = fields.Many2one(
-        'custody.property',
-        string='Property',
-        required=True,
-        help='The property associated with this custody record'
-    )
-
-    return_date = fields.Date(
-        string='Return Date',
-        required=True,
-        tracking=True,  # Changed from track_visibility='always'
-        help='The date when the custody is expected to be returned.'
-    )
-
-    renew_date = fields.Date(
-        string='Renewal Return Date',
-        tracking=True,  # Changed from track_visibility='always'
-        help="Return date for the renewal",
-        readonly=True,
-        copy=False
-    )
-
-    notes = fields.Html(
-        string='Notes',
-        help='Note for Custody'
-    )
-
-    is_renew_return_date = fields.Boolean(
-        default=False,
-        copy=False,
-        help='Rejected Renew Date'
-    )
-
-    is_renew_reject = fields.Boolean(
-        default=False,
-        copy=False,
-        help='Indicates whether the renewal is rejected or not.'
-    )
-
-    state = fields.Selection([
-        ('draft', 'Draft'),
-        ('to_approve', 'Waiting For Approval'),
-        ('approved', 'Approved'),
-        ('returned', 'Returned'),
-        ('rejected', 'Refused')
-    ],
-    string='Status',
-    default='draft',
-    tracking=True,  # Changed from track_visibility='always'
-    help='Custody states visible in statusbar'
-    )
-
-    is_mail_send = fields.Boolean(
-        string="Mail Send",
-        help='Indicates whether an email has been sent or not.'
-    )
