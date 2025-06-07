@@ -127,8 +127,8 @@
     <!-- Main menu -->
     <menuitem id="hr_custody_main_menu"
               name="Custody"
-              sequence="20"/>
-
+              sequence="20"
+              web_icon="hr_custody,static/description/icon.png"/>
     <!-- Management submenu -->
     <menuitem id="hr_custody_menu_management"
               parent="hr_custody_main_menu"
