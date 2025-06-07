@@ -1,129 +1,110 @@
 # -*- coding: utf-8 -*-
-#############################################################################
-#    A part of Open HRMS Project <https://www.openhrms.com>
-#
-#    Cybrosys Technologies Pvt. Ltd.
-#
-#    Copyright (C) 2023-TODAY Cybrosys Technologies(<https://www.cybrosys.com>)
-#    Author: Cybrosys Techno Solutions(<https://www.cybrosys.com>)
-#
-#    You can modify it under the terms of the GNU LESSER
-#    GENERAL PUBLIC LICENSE (LGPL v3), Version 3.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU LESSER GENERAL PUBLIC LICENSE (LGPL v3) for more details.
-#
-#    You should have received a copy of the GNU LESSER GENERAL PUBLIC LICENSE
-#    (LGPL v3) along with this program.
-#    If not, see <http://www.gnu.org/licenses/>.
-#
-#############################################################################
 from odoo import api, fields, models, _
 
 
 class HrEmployee(models.Model):
     _inherit = 'hr.employee'
 
-    custody_count = fields.Integer(compute='_compute_custody_count',
-                                   string='# Custody',
-                                   help='This field represents '
-                                        'the count of custodies.')
-    equipment_count = fields.Integer(compute='_compute_equipment_count',
-                                     string='# Equipments',
-                                     help='This field represents '
-                                          'the count of equipments.')
+    # Option A: แสดงเฉพาะ Active Custody
+    custody_count = fields.Integer(
+        compute='_compute_custody_count',
+        string='# Active Custody',
+        help='Number of active custody requests'
+    )
+
+    # เพิ่มฟิลด์ใหม่สำหรับประวัติทั้งหมด
+    total_custody_count = fields.Integer(
+        compute='_compute_total_custody_count',
+        string='# Total Custody',
+        help='Total number of custody requests (all states)'
+    )
+
+    equipment_count = fields.Integer(
+        compute='_compute_equipment_count',
+        string='# Equipment',
+        help='Number of equipment currently in possession'
+    )
 
     @api.depends('custody_count')
     def _compute_custody_count(self):
-        """The compute function
-        the count of custody
-        associated with each employee."""
-        for each in self:
-            custody_ids = self.env['hr.custody'].search(
-                [('employee_id', '=', each.id)])
-            each.custody_count = len(custody_ids)
+        """Count only ACTIVE custody (approved state)"""
+        for employee in self:
+            active_custody = self.env['hr.custody'].search_count([
+                ('employee_id', '=', employee.id),
+                ('state', '=', 'approved')  # เฉพาะที่ approved
+            ])
+            employee.custody_count = active_custody
+
+    @api.depends('total_custody_count')
+    def _compute_total_custody_count(self):
+        """Count ALL custody requests (all states)"""
+        for employee in self:
+            total_custody = self.env['hr.custody'].search_count([
+                ('employee_id', '=', employee.id)
+                # ไม่กรอง state = ทุกสถานะ
+            ])
+            employee.total_custody_count = total_custody
 
     @api.depends('equipment_count')
     def _compute_equipment_count(self):
-        """The Compute function the count
-        of distinct equipment
-        properties associated
-        with each employee. """
-        for each in self:
-            equipment_obj = self.env['hr.custody'].search(
-                [('employee_id', '=', each.id), ('state', '=', 'approved')])
-            equipment_ids = []
-            for each1 in equipment_obj:
-                if each1.custody_property_id.id not in equipment_ids:
-                    equipment_ids.append(each1.custody_property_id.id)
-            each.equipment_count = len(equipment_ids)
+        """Count unique equipment currently in possession (approved state only)"""
+        for employee in self:
+            equipment_records = self.env['hr.custody'].search([
+                ('employee_id', '=', employee.id),
+                ('state', '=', 'approved')  # เฉพาะที่ approved
+            ])
+
+            # นับ property ที่ unique (ไม่ซ้ำ)
+            unique_properties = set()
+            for custody in equipment_records:
+                unique_properties.add(custody.custody_property_id.id)
+
+            employee.equipment_count = len(unique_properties)
 
     def custody_view(self):
-        """ The function Used to returning the
-        view of all custody contracts
-        related to the current employee"""
-        for each1 in self:
-            custody_obj = self.env['hr.custody'].search(
-                [('employee_id', '=', each1.id)])
-            custody_ids = []
-            for each in custody_obj:
-                custody_ids.append(each.id)
-            view_id = self.env.ref('hr_custody.hr_custody_view_form').id
-            if custody_ids:
-                if len(custody_ids) <= 1:
-                    value = {
-                        'view_mode': 'form',
-                        'res_model': 'hr.custody',
-                        'view_id': view_id,
-                        'type': 'ir.actions.act_window',
-                        'name': _('Custody'),
-                        'res_id': custody_ids and custody_ids[0]
-                    }
-                else:
-                    value = {
-                        'domain': str([('id', 'in', custody_ids)]),
-                        'view_mode': 'list,form',
-                        'res_model': 'hr.custody',
-                        'view_id': False,
-                        'type': 'ir.actions.act_window',
-                        'name': _('Custody'),
-                        'res_id': custody_ids
-                    }
+        """View all custody records for this employee"""
+        self.ensure_one()
+        custody_records = self.env['hr.custody'].search([
+            ('employee_id', '=', self.id)
+        ])
 
-                return value
+        if not custody_records:
+            return {
+                'type': 'ir.actions.act_window_close',
+            }
+
+        return {
+            'name': _('Custody History - %s') % self.name,
+            'type': 'ir.actions.act_window',
+            'res_model': 'hr.custody',
+            'view_mode': 'list,form',
+            'domain': [('employee_id', '=', self.id)],
+            'context': {
+                'default_employee_id': self.id,
+                'search_default_group_status': 1  # Group by status
+            }
+        }
 
     def equipment_view(self):
-        """The function used to returning the
-         view of all custody contracts
-         that are in approved state,"""
-        for each1 in self:
-            equipment_obj = self.env['hr.custody'].search(
-                [('employee_id', '=', each1.id), ('state', '=', 'approved')])
-            equipment_ids = []
-            for each in equipment_obj:
-                if each.custody_property_id.id not in equipment_ids:
-                    equipment_ids.append(each.custody_property_id.id)
-            view_id = self.env.ref('hr_custody.custody_property_view_form').id
-            if equipment_ids:
-                if len(equipment_ids) <= 1:
-                    value = {
-                        'view_mode': 'form',
-                        'res_model': 'custody.property',
-                        'view_id': view_id,
-                        'type': 'ir.actions.act_window',
-                        'name': _('Equipments'),
-                        'res_id': equipment_ids and equipment_ids[0]
-                    }
-                else:
-                    value = {
-                        'domain': str([('id', 'in', equipment_ids)]),
-                        'view_mode': 'list,form',
-                        'res_model': 'custody.property',
-                        'view_id': False,
-                        'type': 'ir.actions.act_window',
-                        'name': _('Equipments'),
-                        'res_id': equipment_ids
-                    }
-                return value
+        """View equipment currently in possession (approved custody only)"""
+        self.ensure_one()
+        approved_custody = self.env['hr.custody'].search([
+            ('employee_id', '=', self.id),
+            ('state', '=', 'approved')
+        ])
+
+        if not approved_custody:
+            return {
+                'type': 'ir.actions.act_window_close',
+            }
+
+        property_ids = approved_custody.mapped('custody_property_id').ids
+
+        return {
+            'name': _('Equipment in Possession - %s') % self.name,
+            'type': 'ir.actions.act_window',
+            'res_model': 'custody.property',
+            'view_mode': 'list,form',
+            'domain': [('id', 'in', property_ids)],
+            'context': {'create': False, 'edit': False}  # Read-only
+        }
