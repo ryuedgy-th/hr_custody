@@ -10,7 +10,6 @@
     'maintainer': 'Cybrosys Techno Solutions',
     'website': "https://www.cybrosys.com",
     'depends': ['hr', 'mail', 'base'],
-    'web_icon': 'static/description/icon.png',
     'data': [
         # Security files first
         'security/custody_security.xml',
@@ -37,7 +36,8 @@
     'demo': ['data/demo_data.xml'],
     'images': ['static/description/banner.jpg'],
     'license': 'LGPL-3',
+    'web_icon': 'hr_custody,static/description/icon.png',
     'installable': True,
     'auto_install': False,
-    'application': False,
+    'application': True,
 }

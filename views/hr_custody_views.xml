@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Hr Custody form view with flexible return date -->
+    <!-- Hr Custody form view -->
     <record id="hr_custody_view_form" model="ir.ui.view">
         <field name="name">hr.custody.form</field>
         <field name="model">hr.custody</field>
@@ -26,21 +26,9 @@
                            statusbar_visible="draft,to_approve,approved,returned"/>
                 </header>
                 <sheet>
-                    <div class="oe_title">
-                        <h1>
-                            <field name="name" readonly="1" nolabel="1"/>
-                        </h1>
-                        <!-- แสดง badge ประเภทการยืม -->
-                        <div class="o_row" invisible="state == 'draft'">
-                            <span class="badge badge-info"
-                                  invisible="custody_type != 'permanent'">Permanent Custody</span>
-                            <span class="badge badge-warning"
-                                  invisible="custody_type != 'until_notice'">Until Notice</span>
-                            <span class="badge badge-secondary"
-                                  invisible="custody_type != 'temporary'">Temporary</span>
-                        </div>
-                    </div>
-
+                    <h1>
+                        <field name="name" readonly="1" nolabel="1"/>
+                    </h1>
                     <group>
                         <group>
                             <field name="employee_id"/>
@@ -49,28 +37,14 @@
                             <field name="purpose" readonly="state != 'draft'"/>
                         </group>
                         <group>
-                            <field name="custody_type" readonly="state != 'draft'"
-                                   widget="radio"/>
                             <field name="date_request" readonly="state != 'draft'"/>
-                            <field name="return_date"
-                                   readonly="state != 'draft'"
-                                   invisible="custody_type in ['permanent', 'until_notice']"
-                                   required="custody_type == 'temporary'"/>
+                            <field name="return_date" readonly="state != 'draft'"/>
                             <field name="rejected_reason"
                                    invisible="state != 'rejected'"/>
                             <field name="company_id"
                                    options="{'no_create': True}"/>
                         </group>
                     </group>
-
-                    <!-- แสดงเหตุผลสำหรับการยืมถาวร -->
-                    <group string="Permanent Custody Details"
-                           invisible="custody_type == 'temporary'">
-                        <field name="permanent_reason"
-                               readonly="state != 'draft'"
-                               placeholder="Explain why this is a permanent custody..."/>
-                    </group>
-
                     <notebook>
                         <page string="Notes">
                             <field name="notes"/>
@@ -81,7 +55,7 @@
         </field>
     </record>
 
-    <!-- Updated list view -->
+    <!-- Hr Custody list view -->
     <record id="hr_custody_view_tree" model="ir.ui.view">
         <field name="name">hr.custody.list</field>
         <field name="model">hr.custody</field>
@@ -90,7 +64,6 @@
                 <field name="name"/>
                 <field name="employee_id"/>
                 <field name="custody_property_id"/>
-                <field name="custody_type"/>
                 <field name="purpose"/>
                 <field name="date_request"/>
                 <field name="return_date"/>
@@ -103,7 +76,7 @@
         </field>
     </record>
 
-    <!-- Updated search view -->
+    <!-- Hr Custody search view -->
     <record id="hr_custody_view_search" model="ir.ui.view">
         <field name="name">hr.custody.search</field>
         <field name="model">hr.custody</field>
@@ -113,19 +86,9 @@
                 <field name="employee_id"/>
                 <field name="custody_property_id"/>
                 <field name="purpose"/>
-                <field name="custody_type"/>
                 <field name="state"/>
 
                 <!-- Filters -->
-                <filter string="Temporary" name="temporary"
-                        domain="[('custody_type', '=', 'temporary')]"/>
-                <filter string="Permanent" name="permanent"
-                        domain="[('custody_type', '=', 'permanent')]"/>
-                <filter string="Until Notice" name="until_notice"
-                        domain="[('custody_type', '=', 'until_notice')]"/>
-
-                <separator/>
-
                 <filter string="Draft" name="draft"
                         domain="[('state', '=', 'draft')]"/>
                 <filter string="Waiting Approval" name="to_approve"
@@ -137,8 +100,6 @@
 
                 <!-- Group By -->
                 <group expand="0" string="Group By">
-                    <filter string="Custody Type" name="group_type"
-                            context="{'group_by':'custody_type'}"/>
                     <filter string="Status" name="group_status"
                             context="{'group_by':'state'}"/>
                     <filter string="Employee" name="group_employee"
@@ -147,4 +108,45 @@
             </search>
         </field>
     </record>
+
+    <!-- Hr Custody action -->
+    <record id="hr_custody_action" model="ir.actions.act_window">
+        <field name="name">Custody</field>
+        <field name="res_model">hr.custody</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="hr_custody_view_search"/>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Click to Create a New Custody Request.
+            </p>
+        </field>
+    </record>
+
+    <!-- ===== MENU STRUCTURE ===== -->
+
+    <!-- Main menu -->
+    <menuitem id="hr_custody_main_menu"
+              name="Custody"
+              sequence="20"/>
+
+    <!-- Management submenu -->
+    <menuitem id="hr_custody_menu_management"
+              parent="hr_custody_main_menu"
+              name="Custody Management"
+              sequence="10"/>
+
+    <!-- Custody Request menu -->
+    <menuitem action="hr_custody_action"
+              id="hr_custody_menu_request"
+              parent="hr_custody_menu_management"
+              name="Custody Request"
+              sequence="1"/>
+
+    <!-- Properties menu - ใช้ action จาก custody_property_views.xml -->
+    <menuitem action="custody_property_action"
+              id="hr_property_menu"
+              parent="hr_custody_menu_management"
+              name="Properties"
+              sequence="5"
+              groups="hr.group_hr_manager"/>
 </odoo>
