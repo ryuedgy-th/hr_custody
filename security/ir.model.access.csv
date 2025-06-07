@@ -11,3 +11,4 @@ access_property_return_date_employee,property.return.date.employee,model_propert
 access_report_custody_manager,report.custody.manager,model_report_custody,hr.group_hr_manager,1,1,1,1
 access_report_custody_user,report.custody.user,model_report_custody,hr.group_hr_user,1,1,1,1
 access_property_return_reason_manager,property.return.reason.manager,model_property_return_reason,hr.group_hr_manager,1,1,1,1
+access_property_return_reason_user,property.return.reason.user,model_property_return_reason,hr.group_hr_user,1,1,1,1

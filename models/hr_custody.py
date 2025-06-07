@@ -32,12 +32,15 @@ class HrCustody(models.Model):
     _name = 'hr.custody'
     _description = 'Hr Custody Management'
     _inherit = ['mail.thread', 'mail.activity.mixin']
+    _order = 'date_request desc'
+    _rec_name = 'name'
 
     # Field definitions - Updated for Odoo 18
     name = fields.Char(
         string='Code',
         copy=False,
-        help='A unique code assigned to this record.'
+        help='A unique code assigned to this record.',
+        readonly=True
     )
 
     company_id = fields.Many2one(
@@ -142,31 +145,36 @@ class HrCustody(models.Model):
         help='Indicates whether an email has been sent or not.'
     )
 
-    is_read_only = fields.Boolean(string="Check Field")
+    is_read_only = fields.Boolean(
+        string="Check Field",
+        compute='_compute_is_read_only'
+    )
 
-    @api.onchange('employee_id')
-    def _onchange_employee_id(self):
-        """ Use this function to check weather
+    @api.depends('employee_id')
+    def _compute_is_read_only(self):
+        """ Use this function to check whether
         the user has the permission
         to change the employee"""
-        res_user = self.env['res.users'].browse(self._uid)
-        if res_user.has_group('hr.group_hr_user'):
-            self.is_read_only = True
-        else:
-            self.is_read_only = False
+        for record in self:
+            res_user = self.env.user
+            if res_user.has_group('hr.group_hr_user'):
+                record.is_read_only = True
+            else:
+                record.is_read_only = False
 
     def mail_reminder(self):
         """ Use this function to product return reminder mail"""
         now = datetime.now() + timedelta(days=1)
         date_now = now.date()
         match = self.search([('state', '=', 'approved')])
-        for i in match:
-            if i.return_date:
-                exp_date = fields.Date.from_string(i.return_date)
+
+        for custody_record in match:
+            if custody_record.return_date:
+                exp_date = custody_record.return_date
                 if exp_date <= date_now:
                     base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
-                    url = base_url + _(
-                        '/web#id=%s&view_type=form&model=hr.custody&menu_id=') % i.id
+                    url = f"{base_url}/web#id={custody_record.id}&view_type=form&model=hr.custody"
+
                     mail_content = _(
                         'Hi %s,<br>As per the %s you took %s on %s for the reason of %s. So here we '
                         'remind you that you have to return that on or before %s. Otherwise, you can '
@@ -177,24 +185,33 @@ class HrCustody(models.Model):
                         'margin-bottom: 0px; font-weight: 400;text-align: center; vertical-align: middle; '
                         'cursor: pointer; white-space: nowrap; background-image: none; '
                         'background-color: #875A7B; border: 1px solid #875A7B; border-radius:3px;">'
-                        'Renew %s</a></div>') % \
-                                   (i.employee_id.name, i.name,
-                                    i.custody_property_id.name,
-                                    i.date_request, i.purpose,
-                                    date_now, i.name, url, i.name)
+                        'Renew %s</a></div>'
+                    ) % (
+                        custody_record.employee_id.name,
+                        custody_record.name,
+                        custody_record.custody_property_id.name,
+                        custody_record.date_request,
+                        custody_record.purpose,
+                        date_now,
+                        custody_record.name,
+                        url,
+                        custody_record.name
+                    )
+
                     main_content = {
-                        'subject': _('REMINDER On %s') % i.name,
+                        'subject': _('REMINDER On %s') % custody_record.name,
                         'author_id': self.env.user.partner_id.id,
                         'body_html': mail_content,
-                        'email_to': i.employee_id.work_email,
+                        'email_to': custody_record.employee_id.work_email,
                     }
+
                     mail_id = self.env['mail.mail'].create(main_content)
-                    mail_id.mail_message_id.body = mail_content
                     mail_id.send()
-                    if i.employee_id.user_id:
+
+                    if custody_record.employee_id.user_id:
                         mail_id.mail_message_id.write({
-                            'partner_ids': [
-                                (4, i.employee_id.user_id.partner_id.id)]})
+                            'partner_ids': [(4, custody_record.employee_id.user_id.partner_id.id)]
+                        })
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -206,7 +223,7 @@ class HrCustody(models.Model):
             and assigns it to the 'name' field."""
         for vals in vals_list:
             if not vals.get('name'):
-                vals['name'] = self.env['ir.sequence'].next_by_code('hr.custody')
+                vals['name'] = self.env['ir.sequence'].next_by_code('hr.custody') or 'New'
         return super(HrCustody, self).create(vals_list)
 
     def sent(self):
@@ -215,9 +232,8 @@ class HrCustody(models.Model):
 
     def send_mail(self):
         """Send email notification using a predefined template."""
-        template = self.env.ref(
-            'hr_custody.custody_email_notification_template')
-        self.env['mail.template'].browse(template.id).send_mail(self.id)
+        template = self.env.ref('hr_custody.custody_email_notification_template')
+        template.send_mail(self.id)
         self.is_mail_send = True
 
     def set_to_draft(self):
@@ -227,33 +243,33 @@ class HrCustody(models.Model):
     def renew_approve(self):
         """The function Used to renew and approve
         the current custody record."""
-        for custody in self.env['hr.custody']. \
-                search([('custody_property_id', '=',
-                         self.custody_property_id.id)]):
+        for custody in self.env['hr.custody'].search([
+            ('custody_property_id', '=', self.custody_property_id.id),
+            ('id', '!=', self.id)
+        ]):
             if custody.state == "approved":
                 raise UserError(_("Custody is not available now"))
+
         self.return_date = self.renew_date
-        self.renew_date = ''
+        self.renew_date = False
         self.state = 'approved'
 
     def renew_refuse(self):
         """the function used to refuse
         the renewal of the current custody record"""
-        for custody in self.env['hr.custody']. \
-                search([('custody_property_id', '=',
-                         self.custody_property_id.id)]):
-            if custody.state == "approved":
-                raise UserError(_("Custody is not available now"))
-        self.renew_date = ''
+        self.renew_date = False
         self.state = 'approved'
 
     def approve(self):
         """The function used to approve
         the current custody record."""
-        for custody in self.env['hr.custody'].search(
-                [('custody_property_id', '=', self.custody_property_id.id)]):
+        for custody in self.env['hr.custody'].search([
+            ('custody_property_id', '=', self.custody_property_id.id),
+            ('id', '!=', self.id)
+        ]):
             if custody.state == "approved":
                 raise UserError(_("Custody is not available now"))
+
         self.state = 'approved'
 
     def set_to_return(self):
@@ -262,10 +278,28 @@ class HrCustody(models.Model):
         self.state = 'returned'
         self.return_date = fields.Date.today()
 
-    @api.constrains('return_date')
+    @api.constrains('return_date', 'date_request')
     def validate_return_date(self):
         """The function validate the return
         date to ensure it is after the request date"""
         for record in self:
-            if record.return_date < record.date_request:
-                raise ValidationError(_('Please Give Valid Return Date'))
+            if record.return_date and record.date_request:
+                if record.return_date < record.date_request:
+                    raise ValidationError(_('Return date must be after request date'))
+
+    def unlink(self):
+        """Override unlink to prevent deletion of approved records"""
+        for record in self:
+            if record.state == 'approved':
+                raise UserError(_('You cannot delete approved custody records'))
+        return super(HrCustody, self).unlink()
+
+    def write(self, vals):
+        """Override write method to handle state changes"""
+        result = super(HrCustody, self).write(vals)
+        if 'state' in vals:
+            for record in self:
+                record.message_post(
+                    body=_('Custody state changed to %s') % dict(record._fields['state'].selection)[record.state]
+                )
+        return result

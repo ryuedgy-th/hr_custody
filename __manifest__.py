@@ -1,3 +1,25 @@
+# -*- coding: utf-8 -*-
+#############################################################################
+#    A part of Open HRMS Project <https://www.openhrms.com>
+#
+#    Cybrosys Technologies Pvt. Ltd.
+#
+#    Copyright (C) 2023-TODAY Cybrosys Technologies(<https://www.cybrosys.com>)
+#    Author: Cybrosys Techno Solutions(<https://www.cybrosys.com>)
+#
+#    You can modify it under the terms of the GNU LESSER
+#    GENERAL PUBLIC LICENSE (LGPL v3), Version 3.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU LESSER GENERAL PUBLIC LICENSE (LGPL v3) for more details.
+#
+#    You should have received a copy of the GNU LESSER GENERAL PUBLIC LICENSE
+#    (LGPL v3) along with this program.
+#    If not, see <http://www.gnu.org/licenses/>.
+#
+#############################################################################
 {
     'name': 'Open HRMS Custody',
     'version': '18.0.1.0.0',
@@ -9,7 +31,8 @@
     'company': 'Cybrosys Techno Solutions',
     'maintainer': 'Cybrosys Techno Solutions',
     'website': "https://www.cybrosys.com",
-    'depends': ['hr', 'mail', 'base'],
+    'live_test_url': 'https://youtu.be/rd62HYzZxFI',
+    'depends': ['hr', 'mail', 'hr_employee_updation', 'base'],
     'data': [
         # Security files first
         'security/custody_security.xml',
@@ -24,7 +47,7 @@
         'wizard/property_return_reason_views.xml',
         'wizard/property_return_date_views.xml',
 
-        # Main views with menus (hr_custody_views.xml must come first to define main menu)
+        # Main views (order is important for menu dependencies)
         'views/hr_custody_views.xml',
         'views/custody_property_views.xml',
         'views/hr_employee_views.xml',

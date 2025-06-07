@@ -20,7 +20,8 @@
 #    If not, see <http://www.gnu.org/licenses/>.
 #
 #############################################################################
-from odoo import models, fields
+from odoo import models, fields, api, _
+from odoo.exceptions import UserError
 
 
 class PropertyReturnReason(models.TransientModel):
@@ -28,22 +29,69 @@ class PropertyReturnReason(models.TransientModel):
         Hr custody contract refuse wizard.
     """
     _name = 'property.return.reason'
+    _description = 'Property Return Reason'
+
+    reason = fields.Text(
+        string="Reason",
+        required=True,
+        help="Add the reason for rejection"
+    )
 
     def send_reason(self):
         """The function used to send
         rejection reason for the associated record."""
-        reject_obj = self.env[self._context.get('model_id')].search(
-            [('id', '=', self._context.get('reject_id'))])
-        if 'renew' in self._context.keys():
-            reject_obj.write({'state': 'approved',
-                              'is_renew_reject': True,
-                              'renew_rejected_reason': self.reason})
+        context = self.env.context
+        model_id = context.get('model_id')
+        reject_id = context.get('reject_id')
+
+        if not model_id or not reject_id:
+            raise UserError(_('Missing required context parameters'))
+
+        # Get the record to be rejected
+        reject_obj = self.env[model_id].browse(reject_id)
+
+        if not reject_obj.exists():
+            raise UserError(_('Record not found'))
+
+        # Handle renewal rejection
+        if 'renew' in context:
+            reject_obj.write({
+                'state': 'approved',
+                'is_renew_reject': True,
+                'renew_rejected_reason': self.reason
+            })
+            # Post message for tracking
+            reject_obj.message_post(
+                body=_('Renewal request rejected: %s') % self.reason,
+                message_type='notification'
+            )
         else:
-            if self._context.get('model_id') == 'hr.holidays':
+            # Handle regular rejection
+            if model_id == 'hr.holidays':
+                # Special handling for hr.holidays if needed
                 reject_obj.write({'rejected_reason': self.reason})
                 reject_obj.action_refuse()
             else:
-                reject_obj.write({'state': 'rejected',
-                                  'rejected_reason': self.reason})
+                # Standard custody rejection
+                reject_obj.write({
+                    'state': 'rejected',
+                    'rejected_reason': self.reason
+                })
+                # Post message for tracking
+                reject_obj.message_post(
+                    body=_('Request rejected: %s') % self.reason,
+                    message_type='notification'
+                )
 
-    reason = fields.Text(string="Reason", help="Add the reason")
+        return {'type': 'ir.actions.act_window_close'}
+
+    @api.model
+    def default_get(self, fields_list):
+        """Override default_get to set default values based on context"""
+        result = super(PropertyReturnReason, self).default_get(fields_list)
+
+        context = self.env.context
+        if 'renew' in context:
+            result['reason'] = _('Renewal request rejected')
+
+        return result
