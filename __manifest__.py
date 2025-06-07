@@ -10,6 +10,7 @@
     'maintainer': 'Cybrosys Techno Solutions',
     'website': "https://www.cybrosys.com",
     'depends': ['hr', 'mail', 'base'],
+    'web_icon': 'hr_custody,static/description/icon.png'
     'data': [
         # Security files first
         'security/custody_security.xml',
