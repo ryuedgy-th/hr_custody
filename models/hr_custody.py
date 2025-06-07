@@ -95,11 +95,25 @@ class HrCustody(models.Model):
         help='The property associated with this custody record'
     )
 
+    # เพิ่ม Custody Type
+    custody_type = fields.Selection([
+        ('temporary', 'Temporary (มีกำหนดคืน)'),
+        ('permanent', 'Permanent (ไม่มีกำหนดคืน)'),
+        ('until_notice', 'Until Notice (คืนเมื่อได้รับแจ้ง)')
+    ], string='Custody Type', default='temporary', required=True,
+       tracking=True, help='Type of custody - temporary has return date, permanent does not')
+
     return_date = fields.Date(
         string='Return Date',
-        required=True,
+        required=False,  # เปลี่ยนเป็น False เพื่อรองรับ permanent
         tracking=True,
-        help='The date when the custody is expected to be returned.'
+        help='The date when the custody is expected to be returned. Leave empty for permanent custody.'
+    )
+
+    # เพิ่มฟิลด์สำหรับ permanent custody
+    permanent_reason = fields.Text(
+        string='Permanent Custody Reason',
+        help='Reason for permanent custody (no return date)'
     )
 
     renew_date = fields.Date(
@@ -162,11 +176,35 @@ class HrCustody(models.Model):
             else:
                 record.is_read_only = False
 
+    @api.onchange('custody_type')
+    def _onchange_custody_type(self):
+        """เมื่อเปลี่ยนประเภทการยืม"""
+        if self.custody_type == 'permanent':
+            self.return_date = False
+            self.permanent_reason = 'Permanent assignment - no return date required'
+        elif self.custody_type == 'until_notice':
+            self.return_date = False
+            self.permanent_reason = 'Return when notified by management'
+        else:  # temporary
+            if not self.return_date:
+                # ตั้งค่าเริ่มต้น 30 วันจากวันที่ขอ
+                if self.date_request:
+                    self.return_date = self.date_request + timedelta(days=30)
+                else:
+                    self.return_date = fields.Date.today() + timedelta(days=30)
+            self.permanent_reason = False
+
     def mail_reminder(self):
         """ Use this function to product return reminder mail"""
         now = datetime.now() + timedelta(days=1)
         date_now = now.date()
-        match = self.search([('state', '=', 'approved')])
+
+        # เฉพาะ custody ที่มี return_date เท่านั้น (temporary)
+        match = self.search([
+            ('state', '=', 'approved'),
+            ('custody_type', '=', 'temporary'),  # เฉพาะแบบชั่วคราว
+            ('return_date', '!=', False)  # มี return_date
+        ])
 
         for custody_record in match:
             if custody_record.return_date:
@@ -176,30 +214,20 @@ class HrCustody(models.Model):
                     url = f"{base_url}/web#id={custody_record.id}&view_type=form&model=hr.custody"
 
                     mail_content = _(
-                        'Hi %s,<br>As per the %s you took %s on %s for the reason of %s. So here we '
-                        'remind you that you have to return that on or before %s. Otherwise, you can '
-                        'renew the reference number(%s) by extending the return date through following '
-                        'link.<br> <div style = "text-align: center; margin-top: 16px;"><a href = "%s"'
-                        'style = "padding: 5px 10px; font-size: 12px; line-height: 18px; color: #FFFFFF; '
-                        'border-color:#875A7B;text-decoration: none; display: inline-block; '
-                        'margin-bottom: 0px; font-weight: 400;text-align: center; vertical-align: middle; '
-                        'cursor: pointer; white-space: nowrap; background-image: none; '
-                        'background-color: #875A7B; border: 1px solid #875A7B; border-radius:3px;">'
-                        'Renew %s</a></div>'
+                        'Hi %s,<br>Your temporary custody of %s (Ref: %s) is due for return on %s. '
+                        'Please return the item or request for renewal through the following link: '
+                        '<br><br><a href="%s" style="background-color: #875A7B; color: white; '
+                        'padding: 10px 15px; text-decoration: none; border-radius: 3px;">View Custody</a>'
                     ) % (
                         custody_record.employee_id.name,
-                        custody_record.name,
                         custody_record.custody_property_id.name,
-                        custody_record.date_request,
-                        custody_record.purpose,
-                        date_now,
                         custody_record.name,
-                        url,
-                        custody_record.name
+                        custody_record.return_date,
+                        url
                     )
 
                     main_content = {
-                        'subject': _('REMINDER On %s') % custody_record.name,
+                        'subject': _('Custody Return Reminder - %s') % custody_record.name,
                         'author_id': self.env.user.partner_id.id,
                         'body_html': mail_content,
                         'email_to': custody_record.employee_id.work_email,
@@ -276,16 +304,22 @@ class HrCustody(models.Model):
         """The function used to set the current
         custody record to the 'returned' state"""
         self.state = 'returned'
-        self.return_date = fields.Date.today()
+        # อัปเดต return_date เป็นวันที่จริงที่คืน
+        if not self.return_date or self.custody_type != 'temporary':
+            self.return_date = fields.Date.today()
 
-    @api.constrains('return_date', 'date_request')
+    @api.constrains('return_date', 'custody_type', 'date_request')
     def validate_return_date(self):
-        """The function validate the return
-        date to ensure it is after the request date"""
+        """ตรวจสอบ return_date ตาม custody_type"""
         for record in self:
-            if record.return_date and record.date_request:
+            if record.custody_type == 'temporary':
+                # ถ้าเป็นแบบชั่วคราว ต้องมี return_date
+                if not record.return_date:
+                    raise ValidationError(_('Return date is required for temporary custody'))
                 if record.return_date < record.date_request:
                     raise ValidationError(_('Return date must be after request date'))
+
+            # ถ้าเป็น permanent หรือ until_notice ไม่ต้องมี return_date
 
     def unlink(self):
         """Override unlink to prevent deletion of approved records"""
@@ -302,4 +336,16 @@ class HrCustody(models.Model):
                 record.message_post(
                     body=_('Custody state changed to %s') % dict(record._fields['state'].selection)[record.state]
                 )
+        return result
+
+    def name_get(self):
+        """แสดงชื่อพร้อมประเภทการยืม"""
+        result = []
+        for record in self:
+            name = record.name or 'New'
+            if record.custody_type == 'permanent':
+                name += ' (Permanent)'
+            elif record.custody_type == 'until_notice':
+                name += ' (Until Notice)'
+            result.append((record.id, name))
         return result
