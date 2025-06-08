@@ -21,6 +21,7 @@
 #
 #############################################################################
 from odoo import api, fields, models, _
+from odoo.exceptions import UserError
 
 
 class CustodyProperty(models.Model):
@@ -182,7 +183,7 @@ class CustodyProperty(models.Model):
 
     @api.depends('active_custody_count')
     def _compute_current_borrower(self):
-        """Compute current borrower information"""
+        """Compute current borrower information and auto-update status"""
         for record in self:
             current_custody = self.env['hr.custody'].search([
                 ('custody_property_id', '=', record.id),
@@ -192,9 +193,15 @@ class CustodyProperty(models.Model):
             if current_custody:
                 record.current_borrower_id = current_custody.employee_id
                 record.current_custody_id = current_custody
+                # Auto update status to 'in_use' when someone borrows
+                if record.property_status == 'available':
+                    record.property_status = 'in_use'
             else:
                 record.current_borrower_id = False
                 record.current_custody_id = False
+                # Auto update status to 'available' when returned (only if it was in_use)
+                if record.property_status == 'in_use':
+                    record.property_status = 'available'
 
     @api.depends('property_status', 'active_custody_count')
     def _compute_is_available(self):

@@ -399,8 +399,7 @@ class HrCustody(models.Model):
         self.state = 'approved'
 
     def approve(self):
-        """The function used to approve
-        the current custody record."""
+        """The function used to approve the current custody record."""
         for custody in self.env['hr.custody'].search([
             ('custody_property_id', '=', self.custody_property_id.id),
             ('id', '!=', self.id)
@@ -408,11 +407,18 @@ class HrCustody(models.Model):
             if custody.state == "approved":
                 raise UserError(_("Custody is not available now"))
 
+        # Update property status to 'in_use' when approved
+        if self.custody_property_id.property_status == 'available':
+            self.custody_property_id.property_status = 'in_use'
+
         self.state = 'approved'
 
     def set_to_return(self):
-        """The function used to set the current
-        custody record to the 'returned' state"""
+        """The function used to set the current custody record to the 'returned' state"""
+        # Update property status to 'available' when returned
+        if self.custody_property_id.property_status == 'in_use':
+            self.custody_property_id.property_status = 'available'
+
         self.state = 'returned'
         # Don't automatically set return_date for flexible returns
         if self.return_type == 'date':
@@ -434,6 +440,7 @@ class HrCustody(models.Model):
                     body=_('Custody state changed to %s') % dict(record._fields['state'].selection)[record.state]
                 )
         return result
+
     @api.model
     def name_search(self, name='', args=None, operator='ilike', limit=100):
         """Override name_search to search in multiple fields"""
