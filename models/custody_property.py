@@ -207,17 +207,19 @@ class CustodyProperty(models.Model):
 
     @api.model
     def name_search(self, name='', args=None, operator='ilike', limit=100):
-        """Override name_search to search in description and property code as well"""
+        """Override name_search to search in multiple fields"""
         if args is None:
             args = []
 
         if name:
             domain = [
-                '|', '|', '|',
-                ('name', operator, name),
-                ('desc', operator, name),
-                ('property_code', operator, name),
-                ('storage_location', operator, name)
+                '|', '|', '|', '|', '|',
+                ('name', operator, name),  # Property name
+                ('property_code', operator, name),  # Property code
+                ('desc', operator, name),  # Description
+                ('storage_location', operator, name),  # Storage location
+                ('current_borrower_id.name', operator, name),  # Current borrower name
+                ('department_id.name', operator, name)  # Department name
             ]
             records = self.search(domain + args, limit=limit)
             return records.name_get()

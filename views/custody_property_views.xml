@@ -159,8 +159,8 @@
         <field name="model">custody.property</field>
         <field name="arch" type="xml">
             <search>
-                <field name="name"/>
-                <field name="property_code"/>
+                <field name="name" string="Property Name"/>
+                <field name="property_code" string="Property Code"/>
                 <field name="storage_location"/>
                 <field name="current_borrower_id"/>
                 <field name="department_id"/>
