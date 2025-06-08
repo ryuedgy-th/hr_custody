@@ -88,7 +88,7 @@
         <field name="model">hr.custody</field>
         <field name="arch" type="xml">
             <search string="Custody">
-                <field name="name"/>
+                <field name="name" string="Code"/>
                 <field name="employee_id"/>
                 <field name="custody_property_id"/>
                 <field name="purpose"/>

@@ -434,3 +434,22 @@ class HrCustody(models.Model):
                     body=_('Custody state changed to %s') % dict(record._fields['state'].selection)[record.state]
                 )
         return result
+    @api.model
+    def name_search(self, name='', args=None, operator='ilike', limit=100):
+        """Override name_search to search in multiple fields"""
+        if args is None:
+            args = []
+
+        if name:
+            domain = [
+                '|', '|', '|', '|',
+                ('name', operator, name),  # Code
+                ('employee_id.name', operator, name),  # Employee name
+                ('custody_property_id.name', operator, name),  # Property name
+                ('purpose', operator, name),  # Reason
+                ('custody_property_id.property_code', operator, name)  # Property code
+            ]
+            records = self.search(domain + args, limit=limit)
+            return records.name_get()
+
+        return super(HrCustody, self).name_search(name, args, operator, limit)
