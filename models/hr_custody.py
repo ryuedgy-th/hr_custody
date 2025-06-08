@@ -235,6 +235,34 @@ class HrCustody(models.Model):
                 if record.return_date < record.date_request:
                     raise ValidationError(_('Return date must be after request date'))
 
+    @api.constrains('custody_property_id')
+    def _check_property_availability(self):
+        """Check if property is available for custody"""
+        for record in self:
+            if record.custody_property_id:
+                property_obj = record.custody_property_id
+
+                # Check if property is under maintenance
+                if property_obj.property_status in ['maintenance', 'damaged', 'retired']:
+                    status_name = dict(property_obj._fields['property_status'].selection)[property_obj.property_status]
+                    raise ValidationError(
+                        _('Cannot request custody for %s. Property is currently: %s')
+                        % (property_obj.name, status_name)
+                    )
+
+                # Check if property is already in use by someone else
+                existing_custody = self.env['hr.custody'].search([
+                    ('custody_property_id', '=', property_obj.id),
+                    ('state', '=', 'approved'),
+                    ('id', '!=', record.id)
+                ])
+
+                if existing_custody:
+                    raise ValidationError(
+                        _('Cannot request custody for %s. It is currently being used by %s (Request: %s)')
+                        % (property_obj.name, existing_custody.employee_id.name, existing_custody.name)
+                    )
+
     # Email and Reminder Methods
     def mail_reminder(self):
         """ Use this function to send return reminder mail"""
