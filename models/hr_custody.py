@@ -242,25 +242,12 @@ class HrCustody(models.Model):
             if record.custody_property_id:
                 property_obj = record.custody_property_id
 
-                # Check if property is under maintenance
-                if property_obj.property_status in ['maintenance', 'damaged', 'retired']:
+                # Only allow Available properties
+                if property_obj.property_status != 'available':
                     status_name = dict(property_obj._fields['property_status'].selection)[property_obj.property_status]
                     raise ValidationError(
-                        _('Cannot request custody for %s. Property is currently: %s')
+                        _('Cannot request custody for %s. Property status is: %s. Only Available properties can be requested.')
                         % (property_obj.name, status_name)
-                    )
-
-                # Check if property is already in use by someone else
-                existing_custody = self.env['hr.custody'].search([
-                    ('custody_property_id', '=', property_obj.id),
-                    ('state', '=', 'approved'),
-                    ('id', '!=', record.id)
-                ])
-
-                if existing_custody:
-                    raise ValidationError(
-                        _('Cannot request custody for %s. It is currently being used by %s (Request: %s)')
-                        % (property_obj.name, existing_custody.employee_id.name, existing_custody.name)
                     )
 
     # Email and Reminder Methods

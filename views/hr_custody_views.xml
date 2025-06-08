@@ -34,7 +34,7 @@
                             <field name="employee_id"/>
                             <field name="custody_property_id"
                                    readonly="state != 'draft'"
-                                   domain="[('property_status', 'not in', ['maintenance', 'damaged', 'retired'])]"/>
+                                   domain="[('property_status', '=', 'available')]"/>
                             <field name="purpose" readonly="state != 'draft'"/>
                         </group>
                         <group>
