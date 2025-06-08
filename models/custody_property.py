@@ -44,9 +44,6 @@ class CustodyProperty(models.Model):
              "this provider, limited to 1024x1024px"
     )
 
-    # Remove image_medium and image_small as they are deprecated in Odoo 18
-    # Odoo 18 handles image resizing automatically with the Image field
-
     desc = fields.Html(
         string='Description',
         help='A detailed description of the item.'
@@ -74,17 +71,90 @@ class CustodyProperty(models.Model):
         help="Select the Product"
     )
 
+    # Storage and Location Information
+    storage_location = fields.Char(
+        string='Storage Location',
+        help='Where this property is normally stored (e.g., "IT Room Cabinet A1", "Storage Room Shelf 5")'
+    )
+
+    department_id = fields.Many2one(
+        'hr.department',
+        string='Responsible Department',
+        help='Department responsible for this property'
+    )
+
+    responsible_person = fields.Many2one(
+        'hr.employee',
+        string='Responsible Person',
+        help='Person responsible for maintaining this property'
+    )
+
+    property_code = fields.Char(
+        string='Property Code',
+        help='Internal code or asset tag for this property'
+    )
+
+    # Property Status and Availability
+    property_status = fields.Selection([
+        ('available', 'Available'),
+        ('in_use', 'In Use'),
+        ('maintenance', 'Under Maintenance'),
+        ('damaged', 'Damaged'),
+        ('retired', 'Retired')
+    ], string='Property Status', default='available', help='Current status of the property')
+
     # Computed fields for better tracking
     custody_count = fields.Integer(
+        string='Total Custodies',
+        compute='_compute_custody_counts',
+        help='Total number of custody records for this property'
+    )
+
+    active_custody_count = fields.Integer(
         string='Active Custodies',
-        compute='_compute_custody_count',
+        compute='_compute_custody_counts',
         help='Number of active custodies for this property'
+    )
+
+    current_borrower_id = fields.Many2one(
+        'hr.employee',
+        string='Current Borrower',
+        compute='_compute_current_borrower',
+        help='Employee currently borrowing this property'
+    )
+
+    current_custody_id = fields.Many2one(
+        'hr.custody',
+        string='Current Custody',
+        compute='_compute_current_borrower',
+        help='Current active custody record'
     )
 
     is_available = fields.Boolean(
         string='Available',
         compute='_compute_is_available',
         help='Whether this property is available for custody'
+    )
+
+    # History fields
+    last_maintenance_date = fields.Date(
+        string='Last Maintenance Date',
+        help='Date of last maintenance or inspection'
+    )
+
+    next_maintenance_date = fields.Date(
+        string='Next Maintenance Date',
+        help='Scheduled date for next maintenance'
+    )
+
+    purchase_date = fields.Date(
+        string='Purchase Date',
+        help='Date when this property was purchased'
+    )
+
+    purchase_value = fields.Float(
+        string='Purchase Value',
+        help='Original purchase value of this property'
     )
 
     @api.depends('product_id')
@@ -97,41 +167,76 @@ class CustodyProperty(models.Model):
                 record.name = record.product_id.name
 
     @api.depends('name')
-    def _compute_custody_count(self):
-        """Compute the number of active custodies for this property"""
+    def _compute_custody_counts(self):
+        """Compute the number of custodies for this property"""
         for record in self:
-            custody_count = self.env['hr.custody'].search_count([
+            custody_records = self.env['hr.custody'].search([
+                ('custody_property_id', '=', record.id)
+            ])
+            record.custody_count = len(custody_records)
+
+            active_custody = custody_records.filtered(
+                lambda r: r.state == 'approved'
+            )
+            record.active_custody_count = len(active_custody)
+
+    @api.depends('active_custody_count')
+    def _compute_current_borrower(self):
+        """Compute current borrower information"""
+        for record in self:
+            current_custody = self.env['hr.custody'].search([
                 ('custody_property_id', '=', record.id),
                 ('state', '=', 'approved')
-            ])
-            record.custody_count = custody_count
+            ], limit=1)
 
-    @api.depends('custody_count')
+            if current_custody:
+                record.current_borrower_id = current_custody.employee_id
+                record.current_custody_id = current_custody
+            else:
+                record.current_borrower_id = False
+                record.current_custody_id = False
+
+    @api.depends('property_status', 'active_custody_count')
     def _compute_is_available(self):
         """Compute if the property is available for custody"""
         for record in self:
-            record.is_available = record.custody_count == 0
+            record.is_available = (
+                record.property_status == 'available' and
+                record.active_custody_count == 0
+            )
 
     @api.model
     def name_search(self, name='', args=None, operator='ilike', limit=100):
-        """Override name_search to search in description as well"""
+        """Override name_search to search in description and property code as well"""
         if args is None:
             args = []
 
         if name:
-            domain = ['|', ('name', operator, name), ('desc', operator, name)]
+            domain = [
+                '|', '|', '|',
+                ('name', operator, name),
+                ('desc', operator, name),
+                ('property_code', operator, name),
+                ('storage_location', operator, name)
+            ]
             records = self.search(domain + args, limit=limit)
             return records.name_get()
 
         return super(CustodyProperty, self).name_search(name, args, operator, limit)
 
     def name_get(self):
-        """Override name_get to show availability status"""
+        """Override name_get to show availability status and current borrower"""
         result = []
         for record in self:
             name = record.name
-            if not record.is_available:
-                name += _(' (In Use)')
+            if record.property_code:
+                name = f"[{record.property_code}] {name}"
+
+            if record.current_borrower_id:
+                name += _(f' (Used by {record.current_borrower_id.name})')
+            elif not record.is_available:
+                name += _(f' ({dict(record._fields["property_status"].selection)[record.property_status]})')
+
             result.append((record.id, name))
         return result
 
@@ -146,3 +251,37 @@ class CustodyProperty(models.Model):
             'domain': [('custody_property_id', '=', self.id)],
             'context': {'default_custody_property_id': self.id}
         }
+
+    def action_view_current_custody(self):
+        """Action to view current active custody"""
+        self.ensure_one()
+        if self.current_custody_id:
+            return {
+                'name': _('Current Custody'),
+                'type': 'ir.actions.act_window',
+                'res_model': 'hr.custody',
+                'view_mode': 'form',
+                'res_id': self.current_custody_id.id,
+            }
+        else:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Information'),
+                    'message': _('This property is not currently in use.'),
+                    'type': 'info'
+                }
+            }
+
+    def action_set_maintenance(self):
+        """Set property status to under maintenance"""
+        for record in self:
+            if record.active_custody_count > 0:
+                raise UserError(_('Cannot set to maintenance while property is in use'))
+            record.property_status = 'maintenance'
+
+    def action_set_available(self):
+        """Set property status to available"""
+        for record in self:
+            record.property_status = 'available'

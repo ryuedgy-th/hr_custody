@@ -6,25 +6,125 @@
         <field name="model">custody.property</field>
         <field name="arch" type="xml">
             <form string="Properties">
+                <header>
+                    <button string="Set to Maintenance" type="object"
+                            name="action_set_maintenance"
+                            invisible="property_status == 'maintenance' or active_custody_count > 0"
+                            groups="hr.group_hr_user"/>
+                    <button string="Set to Available" type="object"
+                            name="action_set_available"
+                            invisible="property_status == 'available'"
+                            groups="hr.group_hr_user"/>
+                    <field name="property_status" widget="statusbar"
+                           statusbar_visible="available,in_use,maintenance"/>
+                </header>
                 <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="object"
+                                name="action_view_custodies" icon="fa-list">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="custody_count"/>
+                                </span>
+                                <span class="o_stat_text">Total Custodies</span>
+                            </div>
+                        </button>
+                        <button class="oe_stat_button" type="object"
+                                name="action_view_current_custody" icon="fa-user"
+                                invisible="active_custody_count == 0">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="active_custody_count"/>
+                                </span>
+                                <span class="o_stat_text">In Use</span>
+                            </div>
+                        </button>
+                    </div>
+
                     <field name="image" widget='image' class="oe_avatar"/>
                     <div class="oe_title">
                         <h1>
                             <field name="name" placeholder="Property Name"/>
                         </h1>
+                        <h3>
+                            <field name="property_code" placeholder="Property Code (Optional)"/>
+                        </h3>
                     </div>
+
+                    <!-- Current Status Information -->
+                    <div class="alert alert-info" invisible="active_custody_count == 0">
+                        <strong>Currently in use by:</strong>
+                        <field name="current_borrower_id" readonly="1"/>
+                    </div>
+
                     <group>
-                        <group>
+                        <group string="Basic Information">
                             <field name="property_selection" widget="radio"/>
                             <field name="product_id"
                                    invisible="property_selection != 'product'"/>
                             <field name="company_id"
                                    options="{'no_create': True}"/>
+                            <field name="is_available" readonly="1"/>
+                        </group>
+                        <group string="Location &amp; Responsibility">
+                            <field name="storage_location" placeholder="e.g., IT Room Cabinet A1"/>
+                            <field name="department_id"/>
+                            <field name="responsible_person"/>
                         </group>
                     </group>
+
                     <notebook>
                         <page name="desc" string="Description">
                             <field name="desc"/>
+                        </page>
+
+                        <page name="current_usage" string="Current Usage"
+                              invisible="active_custody_count == 0">
+                            <group>
+                                <group string="Current Borrower">
+                                    <field name="current_borrower_id" readonly="1"/>
+                                    <field name="current_custody_id" readonly="1"/>
+                                </group>
+                                <group string="Actions">
+                                    <button string="View Current Custody" type="object"
+                                            name="action_view_current_custody"
+                                            class="btn-primary"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page name="storage_info" string="Storage &amp; Maintenance">
+                            <group>
+                                <group string="Storage Information">
+                                    <field name="storage_location"/>
+                                    <field name="department_id"/>
+                                    <field name="responsible_person"/>
+                                </group>
+                                <group string="Maintenance">
+                                    <field name="last_maintenance_date"/>
+                                    <field name="next_maintenance_date"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page name="purchase_info" string="Purchase Information">
+                            <group>
+                                <group string="Purchase Details">
+                                    <field name="purchase_date"/>
+                                    <field name="purchase_value"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page name="custody_history" string="Custody History">
+                            <field name="custody_count" invisible="1"/>
+                            <button string="View All Custodies" type="object"
+                                    name="action_view_custodies"
+                                    class="btn-primary mb-3"
+                                    invisible="custody_count == 0"/>
+                            <p invisible="custody_count > 0">
+                                No custody records found for this property.
+                            </p>
                         </page>
                     </notebook>
                 </sheet>
@@ -38,14 +138,57 @@
         <field name="model">custody.property</field>
         <field name="arch" type="xml">
             <list>
+                <field name="property_code"/>
                 <field name="name"/>
                 <field name="property_selection"/>
+                <field name="storage_location"/>
+                <field name="current_borrower_id"/>
+                <field name="property_status" widget="badge"
+                       decoration-success="property_status == 'available'"
+                       decoration-info="property_status == 'in_use'"
+                       decoration-warning="property_status == 'maintenance'"
+                       decoration-danger="property_status == 'damaged'"/>
                 <field name="company_id"/>
             </list>
         </field>
     </record>
 
-    <!-- Custody Property action - ตัวที่หายไป! -->
+    <!-- Custody Property search view -->
+    <record id="custody_property_view_search" model="ir.ui.view">
+        <field name="name">custody.property.view.search</field>
+        <field name="model">custody.property</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="property_code"/>
+                <field name="storage_location"/>
+                <field name="current_borrower_id"/>
+                <field name="department_id"/>
+
+                <!-- Filters -->
+                <filter string="Available" name="available"
+                        domain="[('property_status', '=', 'available')]"/>
+                <filter string="In Use" name="in_use"
+                        domain="[('property_status', '=', 'in_use')]"/>
+                <filter string="Under Maintenance" name="maintenance"
+                        domain="[('property_status', '=', 'maintenance')]"/>
+
+                <separator/>
+
+                <!-- Group By -->
+                <group expand="0" string="Group By">
+                    <filter string="Status" name="group_status"
+                            context="{'group_by':'property_status'}"/>
+                    <filter string="Department" name="group_department"
+                            context="{'group_by':'department_id'}"/>
+                    <filter string="Storage Location" name="group_storage"
+                            context="{'group_by':'storage_location'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Custody Property action -->
     <record id="custody_property_action" model="ir.actions.act_window">
         <field name="name">Properties</field>
         <field name="res_model">custody.property</field>
