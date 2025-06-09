@@ -290,7 +290,7 @@ class HrCustody(models.Model):
         for record in self:
             # Before photos: can take when to_approve, approved, or returned (for documentation)
             record.can_take_before_photos = (
-                record.state in ['to_approve', 'approved', 'returned'] and
+                record.state in ['to_approve', 'approved'] and
                 (self.env.user.has_group('hr.group_hr_user') or
                  self.env.user in record.custody_property_id.approver_ids)
             )
