@@ -284,31 +284,33 @@ class HrCustody(models.Model):
             record.has_before_images = bool(record.before_image_ids)
             record.has_after_images = bool(record.after_image_ids)
 
-    @api.depends('state', 'has_before_images', 'has_after_images')
+    @api.depends('state')
     def _compute_image_permissions(self):
-        """Compute whether images can be taken in current state"""
+        """Compute whether images can be taken in current state - FIXED"""
         for record in self:
-            # Before photos: can take when to_approve or approved (for re-documentation)
+            # Before photos: can take when to_approve, approved, or returned (for documentation)
             record.can_take_before_photos = (
-                record.state in ['to_approve', 'approved'] and
-                self.env.user.has_group('hr.group_hr_user')
+                record.state in ['to_approve', 'approved', 'returned'] and
+                (self.env.user.has_group('hr.group_hr_user') or
+                 self.env.user in record.custody_property_id.approver_ids)
             )
 
             # After photos: can take when approved (ready to return)
             record.can_take_after_photos = (
                 record.state == 'approved' and
-                self.env.user.has_group('hr.group_hr_user')
+                (self.env.user.has_group('hr.group_hr_user') or
+                 self.env.user in record.custody_property_id.approver_ids)
             )
 
     @api.depends('state')
     def _compute_image_requirements(self):
-        """Compute whether images are required"""
+        """Compute whether images are required - FIXED"""
         for record in self:
-            # Before images are required for approval workflow
-            record.requires_before_images = record.state in ['to_approve', 'approved', 'returned']
+            # Before images are NOT required for approval anymore
+            record.requires_before_images = False
 
-            # After images are required for return workflow
-            record.requires_after_images = record.state in ['returned']
+            # After images are required for return workflow only
+            record.requires_after_images = record.state == 'returned'
 
     # Onchange Methods
     @api.onchange('return_type')
@@ -585,16 +587,11 @@ class HrCustody(models.Model):
             'context': {'default_custody_id': self.id}
         }
 
-    # Updated approve method with image validation
+    # Updated approve method - FIXED: Before photos are optional
     def approve(self):
-        """Updated approve method with before photos validation"""
-        # ⭐ NEW: Check if before photos are required but missing
-        if self.requires_before_images and not self.has_before_images:
-            raise UserError(
-                _('Before photos are required before approval. Please take before photos first.')
-            )
+        """Updated approve method - Before photos are optional"""
 
-        # ⭐ NEW: Check approval permissions
+        # ✅ ตรวจสอบ approval permissions เท่านั้น
         if (self.env.user not in self.custody_property_id.approver_ids and
             not self.env.user.has_group('hr.group_hr_manager')):
             allowed_names = ', '.join(self.custody_property_id.approver_ids.mapped('name'))
@@ -620,10 +617,12 @@ class HrCustody(models.Model):
 
         self.state = 'approved'
 
-        # Post message with image info
+        # Post message with optional image info
         message_body = _('✅ Request approved by %s') % self.env.user.name
         if self.has_before_images:
             message_body += _(' with %d before photos documented.') % self.before_image_count
+        else:
+            message_body += _(' (Before photos can be taken later)')
 
         self.message_post(
             body=message_body,
