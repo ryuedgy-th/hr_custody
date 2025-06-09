@@ -216,33 +216,35 @@
         <field name="model">hr.custody</field>
         <field name="inherit_id" ref="hr_custody_view_form"/>
         <field name="arch" type="xml">
-            <!-- Add Image buttons to button box -->
-            <xpath expr="//div[@class='oe_button_box']" position="inside">
-                <!-- Before Images Button -->
-                <button class="oe_stat_button"
-                        type="object"
-                        name="action_view_all_images"
-                        icon="fa-camera"
-                        invisible="before_image_count == 0 and after_image_count == 0">
-                    <div class="o_field_widget o_stat_info">
-                        <span class="o_stat_value">
-                            <field name="before_image_count"/> / <field name="after_image_count"/>
-                        </span>
-                        <span class="o_stat_text">Before / After</span>
-                    </div>
-                </button>
+            <!-- Add button_box if not exists, then add Image buttons -->
+            <xpath expr="//sheet" position="inside">
+                <div class="oe_button_box" name="button_box">
+                    <!-- Before Images Button -->
+                    <button class="oe_stat_button"
+                            type="object"
+                            name="action_view_all_images"
+                            icon="fa-camera"
+                            invisible="before_image_count == 0 and after_image_count == 0">
+                        <div class="o_field_widget o_stat_info">
+                            <span class="o_stat_value">
+                                <field name="before_image_count"/> / <field name="after_image_count"/>
+                            </span>
+                            <span class="o_stat_text">Before / After</span>
+                        </div>
+                    </button>
 
-                <!-- Image Comparison Button -->
-                <button class="oe_stat_button"
-                        type="object"
-                        name="action_view_image_comparison"
-                        icon="fa-files-o"
-                        invisible="before_image_count == 0 and after_image_count == 0">
-                    <div class="o_field_widget o_stat_info">
-                        <span class="o_stat_value">📸</span>
-                        <span class="o_stat_text">Compare Images</span>
-                    </div>
-                </button>
+                    <!-- Image Comparison Button -->
+                    <button class="oe_stat_button"
+                            type="object"
+                            name="action_view_image_comparison"
+                            icon="fa-files-o"
+                            invisible="before_image_count == 0 and after_image_count == 0">
+                        <div class="o_field_widget o_stat_info">
+                            <span class="o_stat_value">📸</span>
+                            <span class="o_stat_text">Compare Images</span>
+                        </div>
+                    </button>
+                </div>
             </xpath>
 
             <!-- Add Image Action Buttons to Header -->
