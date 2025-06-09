@@ -65,7 +65,7 @@
         <field name="name">custody.image.tree</field>
         <field name="model">custody.image</field>
         <field name="arch" type="xml">
-            <tree string="Custody Images">
+            <list string="Custody Images">
                 <field name="custody_id"/>
                 <field name="image_type" widget="badge"
                        decoration-info="image_type == 'before'"
@@ -78,7 +78,7 @@
                 <field name="taken_date"/>
                 <field name="taken_by_id"/>
                 <field name="file_size_kb" string="Size (KB)"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -196,7 +196,7 @@
     <record id="custody_image_action" model="ir.actions.act_window">
         <field name="name">📸 Custody Images</field>
         <field name="res_model">custody.image</field>
-        <field name="view_mode">kanban,tree,form</field>
+        <field name="view_mode">kanban,list,form</field>
         <field name="search_view_id" ref="custody_image_view_search"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_create">
