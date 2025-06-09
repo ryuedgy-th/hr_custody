@@ -250,13 +250,13 @@ class HrCustody(models.Model):
                         % (property_obj.name, status_name)
                     )
 
-    # Email and Reminder Methods
+    # Email and Reminder Methods - UPDATED: Only for Fixed Return Date
     def mail_reminder(self):
-        """ Use this function to send return reminder mail"""
+        """ Send return reminder mail for FIXED DATE returns only"""
         now = datetime.now() + timedelta(days=1)
         date_now = now.date()
 
-        # Send reminders for fixed date returns
+        # ✅ Send reminders ONLY for fixed date returns that are overdue
         fixed_date_records = self.search([
             ('state', '=', 'approved'),
             ('return_type', '=', 'date'),
@@ -267,18 +267,10 @@ class HrCustody(models.Model):
             if custody_record.return_date <= date_now:
                 self._send_fixed_date_reminder(custody_record)
 
-        # Send reminders for flexible returns (every 30 days)
-        flexible_records = self.search([
-            ('state', '=', 'approved'),
-            ('return_type', 'in', ['flexible', 'term_end'])
-        ])
-
-        for record in flexible_records:
-            if self._should_send_flexible_reminder(record):
-                self._send_flexible_reminder(record)
+        # ❌ REMOVED: No more reminders for flexible and term_end returns
 
     def _send_fixed_date_reminder(self, custody_record):
-        """Send reminder for fixed date returns"""
+        """Send reminder for fixed date returns only"""
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
         url = f"{base_url}/web#id={custody_record.id}&view_type=form&model=hr.custody"
 
@@ -316,55 +308,6 @@ class HrCustody(models.Model):
 
         mail_id = self.env['mail.mail'].create(main_content)
         mail_id.send()
-
-    def _should_send_flexible_reminder(self, record):
-        """Check if should send flexible reminder (every 30 days)"""
-        last_message = self.env['mail.message'].search([
-            ('model', '=', 'hr.custody'),
-            ('res_id', '=', record.id),
-            ('subject', 'ilike', 'reminder'),
-        ], order='date desc', limit=1)
-
-        if not last_message:
-            return True
-
-        days_since_last = (fields.Date.today() - last_message.date.date()).days
-        return days_since_last >= 30
-
-    def _send_flexible_reminder(self, record):
-        """Send reminder for flexible return date items"""
-        mail_content = _(
-            'Hi %s,<br/>'
-            'This is a reminder about the %s you borrowed on %s.<br/>'
-            'Return Type: %s<br/>'
-            'Expected Return Period: %s<br/><br/>'
-            'If you can return it now, please contact HR department.<br/>'
-            'If you still need to use it, please inform us.<br/><br/>'
-            'Best regards,<br/>%s'
-        ) % (
-            record.employee_id.name,
-            record.custody_property_id.name,
-            record.date_request,
-            dict(record._fields['return_type'].selection)[record.return_type],
-            record.expected_return_period or 'Not specified',
-            record.company_id.name or 'HR Department'
-        )
-
-        main_content = {
-            'subject': _('Custody Reminder: %s') % record.custody_property_id.name,
-            'author_id': self.env.user.partner_id.id,
-            'body_html': mail_content,
-            'email_to': record.employee_id.work_email,
-        }
-
-        mail_id = self.env['mail.mail'].create(main_content)
-        mail_id.send()
-
-        # Post message for tracking
-        record.message_post(
-            body=_('Flexible return reminder sent to %s') % record.employee_id.name,
-            message_type='notification'
-        )
 
     @api.model_create_multi
     def create(self, vals_list):
