@@ -170,16 +170,16 @@ class CustodyImage(models.Model):
             if record.custody_id:
                 custody_state = record.custody_id.state
 
-                # Before images: only when custody is approved or later
+                # ✅ FIXED: Before images can be added when custody is to_approve, approved or returned
                 if record.image_type == 'before' and custody_state not in ['to_approve', 'approved', 'returned']:
                     raise ValidationError(
-                        _('Before images can only be added when custody is approved or later.')
+                        _('Before images can only be added when custody is waiting for approval or later.')
                     )
 
-                # After images: only when custody is being returned
+                # After images: only when custody is approved or returned
                 if record.image_type == 'after' and custody_state not in ['approved', 'returned']:
                     raise ValidationError(
-                        _('After images can only be added when returning the custody.')
+                        _('After images can only be added when custody is approved or being returned.')
                     )
 
     def name_get(self):
