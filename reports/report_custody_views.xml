@@ -7,6 +7,8 @@
         <field name="arch" type="xml">
             <pivot string="Custody Analysis" display_quantity="true" disable_linking="True">
                 <field name="name" type="row"/>
+                <!-- ⭐ เพิ่ม Approver ใน Pivot -->
+                <field name="approver_id" type="col"/>
             </pivot>
         </field>
     </record>
@@ -22,6 +24,8 @@
                 <field name="employee_id"/>
                 <field name="purpose"/>
                 <field name="custody_property_id"/>
+                <!-- ⭐ เพิ่ม Approver column -->
+                <field name="approver_id"/>
                 <field name="return_date"/>
                 <field name="state"/>
             </list>
@@ -37,6 +41,8 @@
                 <field name="name"/>
                 <field name="employee_id"/>
                 <field name="custody_property_id"/>
+                <!-- ⭐ เพิ่ม search by approver -->
+                <field name="approver_id"/>
                 <field name="state"/>
                 <field name="date_request"/>
                 <field name="return_date"/>
@@ -48,10 +54,26 @@
                             context="{'group_by':'employee_id'}"/>
                     <filter string="Property" name="property" domain="[]"
                             context="{'group_by':'custody_property_id'}"/>
+                    <!-- ⭐ เพิ่ม Group by Approver -->
+                    <filter string="Approver" name="approver" domain="[]"
+                            context="{'group_by':'approver_id'}"/>
                     <filter string="Request Date" name="request_date" domain="[]"
                             context="{'group_by':'date_request'}"/>
                 </group>
             </search>
+        </field>
+    </record>
+
+    <!-- ⭐ NEW: Action สำหรับ Report ของ Approver -->
+    <record id="action_report_custody_by_approver" model="ir.actions.act_window">
+        <field name="name">Custody Analysis by Approver</field>
+        <field name="res_model">report.custody</field>
+        <field name="view_mode">pivot,list</field>
+        <field name="context">{'search_default_approver': 1}</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent">
+                This report shows custody requests grouped by approver.
+            </p>
         </field>
     </record>
 </odoo>

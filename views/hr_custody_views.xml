@@ -11,10 +11,18 @@
                             name="sent"
                             class="oe_highlight"
                             invisible="state != 'draft'"/>
-                    <button string="Approve" groups="hr.group_hr_manager"
-                            type="object" name="approve"
+
+                    <!-- ⭐ ปุ่มอนุมัติ - แสดงเฉพาะ Approver ที่ถูกเลือก -->
+                    <button string="Approve" type="object" name="approve"
                             class="oe_highlight"
-                            invisible="state != 'to_approve'"/>
+                            invisible="state != 'to_approve'"
+                            groups="base.group_user"/>
+
+                    <!-- ⭐ ปุ่มปฏิเสธ - แสดงเฉพาะ Approver ที่ถูกเลือก -->
+                    <button string="Refuse" type="object" name="refuse_with_reason"
+                            invisible="state != 'to_approve'"
+                            groups="base.group_user"/>
+
                     <button string="Set to Draft" type="object"
                             name="set_to_draft"
                             invisible="state != 'rejected'"/>
@@ -26,6 +34,17 @@
                            statusbar_visible="draft,to_approve,approved,returned"/>
                 </header>
                 <sheet>
+                    <!-- ⭐ Alert สำหรับ Pending Approval -->
+                    <div class="alert alert-info" invisible="state != 'to_approve'">
+                        <strong>🔔 Waiting for approval from:</strong>
+                        <field name="approver_id" readonly="1" nolabel="1"/>
+                    </div>
+
+                    <!-- ⭐ Alert สำหรับ Current User ที่เป็น Approver -->
+                    <div class="alert alert-warning" invisible="state != 'to_approve' or approver_id != uid">
+                        <strong>⚡ This request is waiting for YOUR approval!</strong>
+                    </div>
+
                     <h1>
                         <field name="name" readonly="1" nolabel="1"/>
                     </h1>
@@ -36,6 +55,12 @@
                                    readonly="state != 'draft'"
                                    domain="[('property_status', '=', 'available')]"/>
                             <field name="purpose" readonly="state != 'draft'"/>
+
+                            <!-- ⭐ Approver Field - เลือกได้ทุกคน -->
+                            <field name="approver_id"
+                                   readonly="state not in ['draft']"
+                                   options="{'no_create': True, 'no_create_edit': True}"
+                                   required="True"/>
                         </group>
                         <group>
                             <field name="date_request" readonly="state != 'draft'"/>
@@ -47,6 +72,11 @@
                             <field name="return_status_display" readonly="1"/>
                             <field name="rejected_reason"
                                    invisible="state != 'rejected'"/>
+
+                            <!-- ⭐ Approver Notes -->
+                            <field name="approver_notes"
+                                   invisible="state not in ['approved', 'rejected']"/>
+
                             <field name="company_id"
                                    options="{'no_create': True}"/>
                         </group>
@@ -71,6 +101,10 @@
                 <field name="employee_id"/>
                 <field name="custody_property_id"/>
                 <field name="purpose"/>
+
+                <!-- ⭐ Approver Column -->
+                <field name="approver_id"/>
+
                 <field name="date_request"/>
                 <field name="return_type"/>
                 <field name="return_status_display"/>
@@ -93,10 +127,24 @@
                 <field name="employee_id"/>
                 <field name="custody_property_id"/>
                 <field name="purpose"/>
+
+                <!-- ⭐ Search by Approver -->
+                <field name="approver_id"/>
+
                 <field name="state"/>
                 <field name="return_type"/>
 
-                <!-- Filters -->
+                <!-- ⭐ Important Filters -->
+                <filter string="🔔 Waiting My Approval" name="waiting_my_approval"
+                        domain="[('approver_id', '=', uid), ('state', '=', 'to_approve')]"/>
+                <filter string="📋 My Requests" name="my_requests"
+                        domain="[('employee_id.user_id', '=', uid)]"/>
+                <filter string="✅ Approved by Me" name="approved_by_me"
+                        domain="[('approver_id', '=', uid), ('state', '=', 'approved')]"/>
+
+                <separator/>
+
+                <!-- Original Filters -->
                 <filter string="Draft" name="draft"
                         domain="[('state', '=', 'draft')]"/>
                 <filter string="Waiting Approval" name="to_approve"
@@ -121,6 +169,11 @@
                             context="{'group_by':'state'}"/>
                     <filter string="Employee" name="group_employee"
                             context="{'group_by':'employee_id'}"/>
+
+                    <!-- ⭐ Group by Approver -->
+                    <filter string="Approver" name="group_approver"
+                            context="{'group_by':'approver_id'}"/>
+
                     <filter string="Return Type" name="group_return_type"
                             context="{'group_by':'return_type'}"/>
                 </group>
@@ -141,6 +194,20 @@
         </field>
     </record>
 
+    <!-- ⭐ NEW: Action สำหรับ Pending Approvals -->
+    <record id="hr_custody_pending_approval_action" model="ir.actions.act_window">
+        <field name="name">🔔 Pending My Approval</field>
+        <field name="res_model">hr.custody</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('approver_id', '=', uid), ('state', '=', 'to_approve')]</field>
+        <field name="context">{'search_default_waiting_my_approval': 1}</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent">
+                No custody requests waiting for your approval.
+            </p>
+        </field>
+    </record>
+
     <!-- ===== MENU STRUCTURE ===== -->
 
     <!-- Main menu -->
@@ -148,6 +215,7 @@
               name="Custody"
               sequence="20"
               web_icon="hr_custody,static/description/icon.png"/>
+
     <!-- Management submenu -->
     <menuitem id="hr_custody_menu_management"
               parent="hr_custody_main_menu"
@@ -160,6 +228,13 @@
               parent="hr_custody_menu_management"
               name="Custody Request"
               sequence="1"/>
+
+    <!-- ⭐ NEW: Pending Approvals menu -->
+    <menuitem action="hr_custody_pending_approval_action"
+              id="hr_custody_menu_pending_approval"
+              parent="hr_custody_menu_management"
+              name="🔔 Pending My Approval"
+              sequence="2"/>
 
     <!-- Properties menu - ใช้ action จาก custody_property_views.xml -->
     <menuitem action="custody_property_action"
