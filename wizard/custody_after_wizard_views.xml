@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- After Photos Wizard Line Tree View -->
+    <!-- After Photos Wizard Line List View -->
     <record id="custody_after_wizard_line_view_tree" model="ir.ui.view">
         <field name="name">custody.after.wizard.line.tree</field>
         <field name="model">custody.after.wizard.line</field>
         <field name="arch" type="xml">
-            <tree editable="bottom" create="true" delete="true">
+            <list editable="bottom" create="true" delete="true">
                 <field name="sequence" width="50px"/>
                 <field name="image" widget="image" width="150px"/>
                 <field name="description" placeholder="Brief description"/>
                 <field name="is_damage_photo"/>
                 <field name="notes" placeholder="Detailed notes"/>
                 <field name="display_name" readonly="1"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -116,15 +116,15 @@
                                 </div>
                             </div>
 
-                            <!-- ⭐ แก้ตรงนี้: ใช้ inline tree ที่ถูกต้อง -->
+                            <!-- ⭐ แก้ตรงนี้: ใช้ list แทน tree -->
                             <field name="image_line_ids" nolabel="1">
-                                <tree editable="bottom">
+                                <list editable="bottom">
                                     <field name="sequence" width="50px"/>
                                     <field name="image" widget="image" width="150px"/>
                                     <field name="description" placeholder="Brief description"/>
                                     <field name="is_damage_photo"/>
                                     <field name="notes" placeholder="Detailed notes"/>
-                                </tree>
+                                </list>
                             </field>
                         </page>
 
