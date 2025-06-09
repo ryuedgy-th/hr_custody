@@ -171,7 +171,7 @@ class CustodyImage(models.Model):
                 custody_state = record.custody_id.state
 
                 # Before images: only when custody is approved or later
-                if record.image_type == 'before' and custody_state not in ['approved', 'returned']:
+                if record.image_type == 'before' and custody_state not in ['to_approve', 'approved', 'returned']:
                     raise ValidationError(
                         _('Before images can only be added when custody is approved or later.')
                     )
