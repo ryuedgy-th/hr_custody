@@ -42,9 +42,12 @@ class ReportCustody(models.Model):
                                           help='Select the property associated'
                                                ' with this record.',
                                           string='Property Name')
-    # ⭐ NEW: Approver field
-    approver_id = fields.Many2one('res.users', string='Approver',
-                                  help='User who approved this custody')
+
+    # ⭐ NEW: Approved By field
+    approved_by_id = fields.Many2one('res.users', string='Approved By',
+                                     help='User who approved this custody')
+    approved_date = fields.Datetime(string='Approved Date',
+                                    help='When this request was approved')
 
     return_date = fields.Date(string='Return Date',
                               help='The date when the custody is expected to '
@@ -73,7 +76,8 @@ class ReportCustody(models.Model):
                     t.employee_id as employee,
                     t.purpose as purpose,
                     t.custody_property_id as custody_name,
-                    t.approver_id as approver_id,
+                    t.approved_by_id as approved_by_id,
+                    t.approved_date as approved_date,
                     t.return_date as return_date,
                     t.renew_date as renew_date,
                     t.is_renew_return_date as renew_return_date,
@@ -92,7 +96,8 @@ class ReportCustody(models.Model):
                     employee_id,
                     purpose,
                     custody_property_id,
-                    approver_id,
+                    approved_by_id,
+                    approved_date,
                     return_date,
                     renew_date,
                     is_renew_return_date,

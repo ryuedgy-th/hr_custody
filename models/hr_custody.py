@@ -51,22 +51,6 @@ class HrCustody(models.Model):
         default=lambda self: self.env.company
     )
 
-    # ⭐ NEW: Approver Selection (Any User)
-    approver_id = fields.Many2one(
-        'res.users',
-        string='Approver',
-        required=True,
-        help='Select who will approve this custody request',
-        tracking=True
-        # No domain = ทุกคนในระบบเลือกได้
-    )
-
-    approver_notes = fields.Text(
-        string='Approver Notes',
-        readonly=True,
-        help='Notes from the approver'
-    )
-
     rejected_reason = fields.Text(
         string='Rejected Reason',
         copy=False,
@@ -109,6 +93,29 @@ class HrCustody(models.Model):
         string='Property',
         required=True,
         help='The property associated with this custody record'
+    )
+
+    # ⭐ NEW: Related field for property approvers
+    property_approver_ids = fields.Many2many(
+        related='custody_property_id.approver_ids',
+        string='Available Approvers',
+        readonly=True,
+        help='Users who can approve this request based on the selected property'
+    )
+
+    # ⭐ NEW: Approval tracking
+    approved_by_id = fields.Many2one(
+        'res.users',
+        string='Approved By',
+        readonly=True,
+        tracking=True,
+        help='User who approved this request'
+    )
+
+    approved_date = fields.Datetime(
+        string='Approved Date',
+        readonly=True,
+        help='When this request was approved'
     )
 
     # New fields for flexible return date management
@@ -225,45 +232,6 @@ class HrCustody(models.Model):
         if self.return_type == 'date':
             self.expected_return_period = False
 
-    # ⭐ NEW: Auto-suggest Approver
-    @api.onchange('custody_property_id', 'employee_id')
-    def _onchange_suggest_approver(self):
-        """Auto-suggest approver based on property or employee department"""
-        if not self.approver_id:  # เฉพาะตอนยังไม่เลือก
-            suggested_approver = None
-
-            # 1. ลองหาตาม Property type
-            if self.custody_property_id:
-                property_name = self.custody_property_id.name.lower()
-
-                # MacBook/IT Equipment → หา IT Manager
-                if any(word in property_name for word in ['macbook', 'laptop', 'computer', 'it']):
-                    suggested_approver = self.env['res.users'].search([
-                        '|', ('name', 'ilike', 'IT'), ('name', 'ilike', 'Tech')
-                    ], limit=1)
-
-                # Car/Vehicle → หา Admin
-                elif any(word in property_name for word in ['car', 'vehicle', 'รถ']):
-                    suggested_approver = self.env['res.users'].search([
-                        '|', ('name', 'ilike', 'Admin'), ('name', 'ilike', 'Office')
-                    ], limit=1)
-
-            # 2. ถ้าไม่เจอ ลองหาตาม Department ของ Employee
-            if not suggested_approver and self.employee_id and self.employee_id.department_id:
-                dept_manager = self.employee_id.department_id.manager_id
-                if dept_manager and dept_manager.user_id:
-                    suggested_approver = dept_manager.user_id
-
-            # 3. ถ้ายังไม่เจอ ใช้ HR Manager
-            if not suggested_approver:
-                suggested_approver = self.env['res.users'].search([
-                    ('groups_id', 'in', [self.env.ref('hr.group_hr_manager').id])
-                ], limit=1)
-
-            # Set ค่า suggest
-            if suggested_approver:
-                self.approver_id = suggested_approver
-
     # Constraint Methods
     @api.constrains('return_type', 'return_date', 'expected_return_period', 'date_request')
     def _check_return_requirements(self):
@@ -290,15 +258,6 @@ class HrCustody(models.Model):
                 if record.return_date < record.date_request:
                     raise ValidationError(_('Return date must be after request date'))
 
-    # ⭐ NEW: Prevent self-approval
-    @api.constrains('approver_id', 'employee_id')
-    def _check_approver_not_self(self):
-        """Employee cannot approve their own request"""
-        for record in self:
-            if record.approver_id and record.employee_id and record.employee_id.user_id:
-                if record.approver_id == record.employee_id.user_id:
-                    raise ValidationError(_('Employee cannot approve their own custody request'))
-
     @api.constrains('custody_property_id')
     def _check_property_availability(self):
         """Check if property is available for custody"""
@@ -312,6 +271,13 @@ class HrCustody(models.Model):
                     raise ValidationError(
                         _('Cannot request custody for %s. Property status is: %s. Only Available properties can be requested.')
                         % (property_obj.name, status_name)
+                    )
+
+                # ⭐ NEW: Check if property has approvers
+                if not property_obj.approver_ids:
+                    raise ValidationError(
+                        _('Property "%s" has no approvers assigned. Please contact administrator to set up approvers for this property.')
+                        % property_obj.name
                     )
 
     # Email and Reminder Methods - UPDATED: Only for Fixed Return Date
@@ -389,9 +355,10 @@ class HrCustody(models.Model):
     def sent(self):
         """Move the current record to the 'to_approve' state."""
         self.state = 'to_approve'
-        # Send notification to approver
+        # Send notification to all approvers
+        approver_names = ', '.join(self.property_approver_ids.mapped('name'))
         self.message_post(
-            body=_('Custody request sent for approval to %s') % self.approver_id.name,
+            body=_('Custody request sent for approval to: %s') % approver_names,
             message_type='notification'
         )
 
@@ -425,13 +392,15 @@ class HrCustody(models.Model):
         self.renew_date = False
         self.state = 'approved'
 
-    # ⭐ UPDATED: Approve with User Check
+    # ⭐ UPDATED: Approve with Multiple Approvers Check
     def approve(self):
         """The function used to approve the current custody record."""
-        # ตรวจสอบสิทธิ์การอนุมัติ - เฉพาะคนที่ถูกเลือก หรือ HR Manager
-        if self.env.user != self.approver_id and not self.env.user.has_group('hr.group_hr_manager'):
+        # ⭐ NEW: ตรวจสอบสิทธิ์การอนุมัติ - เฉพาะคนที่อยู่ใน approvers หรือ HR Manager
+        if (self.env.user not in self.custody_property_id.approver_ids and
+            not self.env.user.has_group('hr.group_hr_manager')):
+            allowed_names = ', '.join(self.custody_property_id.approver_ids.mapped('name'))
             raise UserError(
-                _("Only %s or HR Manager can approve this request") % self.approver_id.name
+                _("Only these users can approve this request: %s") % allowed_names
             )
 
         # ตรวจสอบ Property ว่างไหม
@@ -442,6 +411,10 @@ class HrCustody(models.Model):
             if custody.state == "approved":
                 raise UserError(_("Custody is not available now"))
 
+        # ⭐ NEW: บันทึกว่าใครอนุมัติ
+        self.approved_by_id = self.env.user
+        self.approved_date = fields.Datetime.now()
+
         # Update property status to 'in_use' when approved
         if self.custody_property_id.property_status == 'available':
             self.custody_property_id.property_status = 'in_use'
@@ -450,7 +423,7 @@ class HrCustody(models.Model):
 
         # Post message เพื่อ tracking
         self.message_post(
-            body=_('Request approved by %s') % self.env.user.name,
+            body=_('✅ Request approved by %s') % self.env.user.name,
             message_type='notification'
         )
 
@@ -506,7 +479,7 @@ class HrCustody(models.Model):
             user_id = self.env.user.id
 
         return self.search([
-            ('approver_id', '=', user_id),
+            ('custody_property_id.approver_ids', 'in', [user_id]),
             ('state', '=', 'to_approve')
         ])
 
@@ -524,7 +497,7 @@ class HrCustody(models.Model):
                 ('custody_property_id.name', operator, name),  # Property name
                 ('purpose', operator, name),  # Reason
                 ('custody_property_id.property_code', operator, name),  # Property code
-                ('approver_id.name', operator, name)  # Approver name
+                ('approved_by_id.name', operator, name)  # Approved by name
             ]
             records = self.search(domain + args, limit=limit)
             return records.name_get()

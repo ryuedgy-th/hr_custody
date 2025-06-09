@@ -73,6 +73,13 @@
                         </group>
                     </group>
 
+                    <!-- ⭐ NEW: Approvers Section -->
+                    <group string="Approval Settings">
+                        <field name="approver_ids" widget="many2many_tags"
+                               placeholder="Select users who can approve custody requests for this property"
+                               options="{'no_create': True, 'no_create_edit': True}"/>
+                    </group>
+
                     <notebook>
                         <page name="desc" string="Description">
                             <field name="desc"/>
@@ -143,6 +150,8 @@
                 <field name="property_selection"/>
                 <field name="storage_location"/>
                 <field name="current_borrower_id"/>
+                <!-- ⭐ NEW: Approvers column -->
+                <field name="approver_ids" widget="many2many_tags"/>
                 <field name="property_status" widget="badge"
                        decoration-success="property_status == 'available'"
                        decoration-info="property_status == 'in_use'"
@@ -164,6 +173,8 @@
                 <field name="storage_location"/>
                 <field name="current_borrower_id"/>
                 <field name="department_id"/>
+                <!-- ⭐ NEW: Search by approvers -->
+                <field name="approver_ids"/>
 
                 <!-- Filters -->
                 <filter string="Available" name="available"

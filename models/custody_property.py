@@ -95,6 +95,16 @@ class CustodyProperty(models.Model):
         help='Internal code or asset tag for this property'
     )
 
+    # ⭐ NEW: Multiple Approvers
+    approver_ids = fields.Many2many(
+        'res.users',
+        'custody_property_approver_rel',
+        'property_id',
+        'user_id',
+        string='Approvers',
+        help='Users who can approve custody requests for this property'
+    )
+
     # Property Status and Availability
     property_status = fields.Selection([
         ('available', 'Available'),

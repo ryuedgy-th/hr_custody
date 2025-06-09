@@ -21,14 +21,14 @@
             </field>
         </record>
 
-        <!-- ⭐ UPDATED: Employee Level Access - Own Records + Assigned as Approver -->
+        <!-- ⭐ UPDATED: Employee Level Access - Own Records + Property Approvers -->
         <record id="hr_custody_employee_rule" model="ir.rule">
-            <field name="name">HR Custody: Employee Own Records + Approver</field>
+            <field name="name">HR Custody: Employee Own Records + Property Approvers</field>
             <field name="model_id" ref="model_hr_custody"/>
             <field name="domain_force">
                 ['|',
                     ('employee_id.user_id', '=', user.id),
-                    ('approver_id', '=', user.id)
+                    ('custody_property_id.approver_ids', 'in', [user.id])
                 ]
             </field>
             <field name="groups" eval="[(4, ref('base.group_user'))]"/>
@@ -38,16 +38,16 @@
             <field name="perm_unlink" eval="False"/>
         </record>
 
-        <!-- HR User Level Access: Department and Subordinate Records + Approver -->
+        <!-- HR User Level Access: Department and Subordinate Records + Property Approvers -->
         <record id="hr_custody_hr_user_rule" model="ir.rule">
-            <field name="name">HR Custody: HR User Department Access + Approver</field>
+            <field name="name">HR Custody: HR User Department Access + Property Approvers</field>
             <field name="model_id" ref="model_hr_custody"/>
             <field name="domain_force">
                 ['|', '|', '|',
                     ('employee_id.department_id.manager_id.user_id', '=', user.id),
                     ('employee_id.parent_id.user_id', '=', user.id),
                     ('employee_id.user_id', '=', user.id),
-                    ('approver_id', '=', user.id)
+                    ('custody_property_id.approver_ids', 'in', [user.id])
                 ]
             </field>
             <field name="groups" eval="[(4, ref('hr.group_hr_user'))]"/>
