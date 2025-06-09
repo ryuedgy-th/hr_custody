@@ -105,7 +105,7 @@ class HrCustody(models.Model):
     help='Select the type of return date arrangement')
 
     return_date = fields.Date(
-        string='Return Date',
+        string='Expected Return Date',
         tracking=True,
         help='The date when the custody is expected to be returned (for fixed date only)'
     )
@@ -120,6 +120,41 @@ class HrCustody(models.Model):
         compute='_compute_return_status_display',
         store=False,
         help='Display return status in readable format'
+    )
+
+    # ===== RETURN TRACKING FIELDS =====
+    actual_return_date = fields.Date(
+        string='Actual Return Date',
+        readonly=True,
+        tracking=True,
+        help='The actual date when the property was returned'
+    )
+
+    returned_by_id = fields.Many2one(
+        'res.users',
+        string='Returned By',
+        readonly=True,
+        tracking=True,
+        help='User who processed the return'
+    )
+
+    return_notes = fields.Text(
+        string='Return Notes',
+        readonly=True,
+        help='Notes about the return condition and process'
+    )
+
+    # Computed field for better return status display
+    is_overdue = fields.Boolean(
+        string='Is Overdue',
+        compute='_compute_overdue_status',
+        help='True if return is overdue (for fixed date returns)'
+    )
+
+    days_overdue = fields.Integer(
+        string='Days Overdue',
+        compute='_compute_overdue_status',
+        help='Number of days overdue (negative if not due yet)'
     )
 
     # Existing fields
@@ -246,12 +281,22 @@ class HrCustody(models.Model):
     )
 
     # Computed Fields
-    @api.depends('return_type', 'return_date', 'expected_return_period', 'state')
+    @api.depends('return_type', 'return_date', 'expected_return_period', 'state', 'actual_return_date')
     def _compute_return_status_display(self):
         """Compute return status display in readable format"""
         for record in self:
             if record.state == 'returned':
-                record.return_status_display = 'Returned'
+                if record.actual_return_date:
+                    return_str = f'Returned: {record.actual_return_date.strftime("%d/%m/%Y")}'
+                    # Check if returned late
+                    if (record.return_type == 'date' and
+                        record.return_date and
+                        record.actual_return_date > record.return_date):
+                        days_late = (record.actual_return_date - record.return_date).days
+                        return_str += f' ({days_late} days late)'
+                    record.return_status_display = return_str
+                else:
+                    record.return_status_display = 'Returned'
             elif record.return_type == 'date' and record.return_date:
                 record.return_status_display = f'Due: {record.return_date.strftime("%d/%m/%Y")}'
             elif record.return_type == 'flexible':
@@ -262,6 +307,24 @@ class HrCustody(models.Model):
                 record.return_status_display = f'Return {period}'
             else:
                 record.return_status_display = 'Pending'
+
+    @api.depends('return_type', 'return_date', 'actual_return_date', 'state')
+    def _compute_overdue_status(self):
+        """Compute overdue status for fixed date returns"""
+        today = fields.Date.today()
+
+        for record in self:
+            if (record.return_type == 'date' and
+                record.return_date and
+                record.state != 'returned'):
+
+                # Calculate days difference
+                delta = (today - record.return_date).days
+                record.days_overdue = delta
+                record.is_overdue = delta > 0
+            else:
+                record.days_overdue = 0
+                record.is_overdue = False
 
     @api.depends('employee_id')
     def _compute_is_read_only(self):
@@ -288,7 +351,7 @@ class HrCustody(models.Model):
     def _compute_image_permissions(self):
         """Compute whether images can be taken in current state - FIXED"""
         for record in self:
-            # Before photos: can take when to_approve, approved, or returned (for documentation)
+            # ✅ FIXED: Before photos - ซ่อนปุ่มใน state Returned (Option 1)
             record.can_take_before_photos = (
                 record.state in ['to_approve', 'approved'] and
                 (self.env.user.has_group('hr.group_hr_user') or
@@ -629,9 +692,9 @@ class HrCustody(models.Model):
             message_type='notification'
         )
 
-    # Updated return method with image validation
+    # Updated return method with actual return date tracking
     def set_to_return(self):
-        """Updated return method with after photos validation"""
+        """Updated return method with actual return date tracking"""
         # ⭐ NEW: Check if after photos are required but missing
         if self.requires_after_images and not self.has_after_images:
             raise UserError(
@@ -642,16 +705,27 @@ class HrCustody(models.Model):
         if self.custody_property_id.property_status == 'in_use':
             self.custody_property_id.property_status = 'available'
 
+        # ✅ NEW: Set actual return date and user
+        self.actual_return_date = fields.Date.today()
+        self.returned_by_id = self.env.user
+
         self.state = 'returned'
 
-        # Don't automatically set return_date for flexible returns
-        if self.return_type == 'date':
-            self.return_date = fields.Date.today()
+        # Post message with return info
+        message_body = _('📦 Equipment returned on %s by %s') % (
+            self.actual_return_date.strftime('%d/%m/%Y'),
+            self.env.user.name
+        )
 
-        # Post message with image info
-        message_body = _('📦 Equipment returned')
         if self.has_after_images:
             message_body += _(' with %d after photos documented.') % self.after_image_count
+
+        # Check if returned late
+        if (self.return_type == 'date' and
+            self.return_date and
+            self.actual_return_date > self.return_date):
+            days_late = (self.actual_return_date - self.return_date).days
+            message_body += _(' ⚠️ Returned %d days late.') % days_late
 
         self.message_post(
             body=message_body,

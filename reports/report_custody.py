@@ -21,26 +21,55 @@ class ReportCustody(models.Model):
                                                ' with this record.',
                                           string='Property Name')
 
-    # ⭐ NEW: Approved By field
+    # ⭐ Approval fields
     approved_by_id = fields.Many2one('res.users', string='Approved By',
                                      help='User who approved this custody')
     approved_date = fields.Datetime(string='Approved Date',
                                     help='When this request was approved')
 
-    return_date = fields.Date(string='Return Date',
+    # ⭐ Return fields
+    return_date = fields.Date(string='Expected Return Date',
                               help='The date when the custody is expected to '
                                    'be returned.')
+    actual_return_date = fields.Date(string='Actual Return Date',
+                                    help='When the custody was actually returned')
+    returned_by_id = fields.Many2one('res.users', string='Returned By',
+                                    help='User who processed the return')
+
+    # ⭐ Performance tracking
+    is_overdue = fields.Boolean(string='Was Overdue',
+                               help='Whether the return was overdue')
+    days_overdue = fields.Integer(string='Days Overdue',
+                                 help='Number of days the return was overdue (at time of return)')
+
+    # Renewal fields
     renew_date = fields.Date(string='Renewal Return Date',
                              help='The date when the custody is renewed and '
                                   'expected to be returned.')
     is_renew_return_date = fields.Boolean(string='Renewal Return Date',
                                           help='Indicates whether there is a '
                                                'renewal return date or not.')
+
+    # State and return type
     state = fields.Selection(
         [('draft', 'Draft'), ('to_approve', 'Waiting For Approval'),
          ('approved', 'Approved'),
          ('returned', 'Returned'), ('rejected', 'Refused')], string='Status',
         help='The current status of the record')
+
+    return_type = fields.Selection([
+        ('date', 'Fixed Return Date'),
+        ('flexible', 'No Fixed Return Date'),
+        ('term_end', 'Return at Term/Project End')
+    ], string='Return Type', help='Type of return arrangement')
+
+    # Performance metrics computed fields
+    return_performance = fields.Selection([
+        ('early', 'Returned Early'),
+        ('on_time', 'Returned On Time'),
+        ('late', 'Returned Late'),
+        ('not_returned', 'Not Yet Returned')
+    ], string='Return Performance', help='Performance analysis of return timing')
 
     def _select(self):
         """the function used to construct the
@@ -57,9 +86,22 @@ class ReportCustody(models.Model):
                     t.approved_by_id as approved_by_id,
                     t.approved_date as approved_date,
                     t.return_date as return_date,
+                    t.actual_return_date as actual_return_date,
+                    t.returned_by_id as returned_by_id,
+                    t.is_overdue as is_overdue,
+                    t.days_overdue as days_overdue,
+                    t.return_type as return_type,
                     t.renew_date as renew_date,
                     t.is_renew_return_date as renew_return_date,
-                    t.state as state
+                    t.state as state,
+                    CASE
+                        WHEN t.state != 'returned' THEN 'not_returned'
+                        WHEN t.return_type != 'date' THEN 'on_time'
+                        WHEN t.actual_return_date < t.return_date THEN 'early'
+                        WHEN t.actual_return_date = t.return_date THEN 'on_time'
+                        WHEN t.actual_return_date > t.return_date THEN 'late'
+                        ELSE 'on_time'
+                    END as return_performance
         """
         return select_str
 
@@ -77,6 +119,11 @@ class ReportCustody(models.Model):
                     approved_by_id,
                     approved_date,
                     return_date,
+                    actual_return_date,
+                    returned_by_id,
+                    is_overdue,
+                    days_overdue,
+                    return_type,
                     renew_date,
                     is_renew_return_date,
                     state

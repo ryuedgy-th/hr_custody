@@ -34,6 +34,11 @@
                            statusbar_visible="draft,to_approve,approved,returned"/>
                 </header>
                 <sheet>
+                    <!-- ⭐ Alert สำหรับ Overdue -->
+                    <div class="alert alert-danger" invisible="not is_overdue or state == 'returned'">
+                        <strong>⚠️ OVERDUE:</strong> This item is <field name="days_overdue" nolabel="1"/> days overdue!
+                    </div>
+
                     <!-- ⭐ Alert สำหรับ Pending Approval - แสดง Multiple Approvers -->
                     <div class="alert alert-info" invisible="state != 'to_approve'">
                         <strong>🔔 Waiting for approval from any of these users:</strong><br/>
@@ -53,6 +58,58 @@
                         <field name="approved_date" readonly="1" nolabel="1"/>
                     </div>
 
+                    <!-- ⭐ Alert สำหรับ Returned Status -->
+                    <div class="alert alert-success" invisible="state != 'returned'">
+                        <strong>📦 Returned:</strong>
+                        Equipment returned on <field name="actual_return_date" readonly="1" nolabel="1"/>
+                        by <field name="returned_by_id" readonly="1" nolabel="1"/>
+                    </div>
+
+                    <div class="oe_button_box" name="button_box">
+                        <!-- Before Images Button -->
+                        <button class="oe_stat_button"
+                                type="object"
+                                name="action_view_all_images"
+                                icon="fa-camera"
+                                invisible="before_image_count == 0 and after_image_count == 0">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="before_image_count"/> / <field name="after_image_count"/>
+                                </span>
+                                <span class="o_stat_text">Before / After</span>
+                            </div>
+                        </button>
+
+                        <!-- Image Comparison Button -->
+                        <button class="oe_stat_button"
+                                type="object"
+                                name="action_view_image_comparison"
+                                icon="fa-files-o"
+                                invisible="before_image_count == 0 and after_image_count == 0">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">📸</span>
+                                <span class="o_stat_text">Compare Images</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- Image Action Buttons -->
+                    <div class="oe_button_box" name="button_box_images">
+                        <!-- Before Photos Button -->
+                        <button string="📸 Take Before Photos"
+                                type="object"
+                                name="action_take_before_photos"
+                                class="btn-info"
+                                invisible="not can_take_before_photos"/>
+
+                        <!-- After Photos Button -->
+                        <button string="📸 Take After Photos &amp; Return"
+                                type="object"
+                                name="action_take_after_photos"
+                                class="btn-warning"
+                                invisible="not can_take_after_photos"/>
+                    </div>
+
                     <h1>
                         <field name="name" readonly="1" nolabel="1"/>
                     </h1>
@@ -68,7 +125,8 @@
                             <field name="date_request" readonly="state != 'draft'"/>
                             <field name="return_type" readonly="state != 'draft'" widget="radio"/>
                             <field name="return_date" readonly="state != 'draft'"
-                                   invisible="return_type != 'date'"/>
+                                   invisible="return_type != 'date'"
+                                   string="Expected Return Date"/>
                             <field name="expected_return_period" readonly="state != 'draft'"
                                    invisible="return_type == 'date'"/>
                             <field name="return_status_display" readonly="1"/>
@@ -81,13 +139,28 @@
                             <field name="approved_date"
                                    invisible="state not in ['approved', 'returned']"/>
 
+                            <!-- ⭐ Return Information -->
+                            <field name="actual_return_date"
+                                   invisible="state != 'returned'"/>
+                            <field name="returned_by_id"
+                                   invisible="state != 'returned'"/>
+
                             <field name="company_id"
                                    options="{'no_create': True}"/>
                         </group>
                     </group>
 
-                    <!-- ⭐ Hidden field for approvers (for domain/invisible conditions) -->
+                    <!-- ⭐ Hidden fields for permissions and overdue status -->
                     <field name="property_approver_ids" invisible="1"/>
+                    <field name="can_take_before_photos" invisible="1"/>
+                    <field name="can_take_after_photos" invisible="1"/>
+                    <field name="has_before_images" invisible="1"/>
+                    <field name="has_after_images" invisible="1"/>
+                    <field name="before_image_ids" invisible="1"/>
+                    <field name="after_image_ids" invisible="1"/>
+                    <field name="damage_image_ids" invisible="1"/>
+                    <field name="is_overdue" invisible="1"/>
+                    <field name="days_overdue" invisible="1"/>
 
                     <notebook>
                         <page string="Notes">
@@ -103,6 +176,63 @@
                                 <group string="Approval Details" invisible="state not in ['approved', 'returned']">
                                     <field name="approved_by_id" readonly="1"/>
                                     <field name="approved_date" readonly="1"/>
+                                </group>
+                            </group>
+                            <group string="Return Details" invisible="state != 'returned'">
+                                <group>
+                                    <field name="actual_return_date" readonly="1"/>
+                                    <field name="returned_by_id" readonly="1"/>
+                                </group>
+                                <group>
+                                    <field name="return_notes" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- Photo Documentation Tab -->
+                        <page string="📸 Photo Documentation" name="images"
+                              invisible="before_image_count == 0 and after_image_count == 0">
+                            <group>
+                                <group string="Before Images" invisible="before_image_count == 0">
+                                    <field name="before_image_ids" nolabel="1" readonly="1">
+                                        <kanban>
+                                            <field name="image"/>
+                                            <field name="description"/>
+                                            <field name="taken_date"/>
+                                            <templates>
+                                                <t t-name="kanban-box">
+                                                    <div class="oe_kanban_card">
+                                                        <div class="text-center">
+                                                            <field name="image" widget="image" style="max-height: 100px;"/>
+                                                            <div><field name="description"/></div>
+                                                            <div class="text-muted small"><field name="taken_date"/></div>
+                                                        </div>
+                                                    </div>
+                                                </t>
+                                            </templates>
+                                        </kanban>
+                                    </field>
+                                </group>
+
+                                <group string="After Images" invisible="after_image_count == 0">
+                                    <field name="after_image_ids" nolabel="1" readonly="1">
+                                        <kanban>
+                                            <field name="image"/>
+                                            <field name="description"/>
+                                            <field name="taken_date"/>
+                                            <templates>
+                                                <t t-name="kanban-box">
+                                                    <div class="oe_kanban_card">
+                                                        <div class="text-center">
+                                                            <field name="image" widget="image" style="max-height: 100px;"/>
+                                                            <div><field name="description"/></div>
+                                                            <div class="text-muted small"><field name="taken_date"/></div>
+                                                        </div>
+                                                    </div>
+                                                </t>
+                                            </templates>
+                                        </kanban>
+                                    </field>
                                 </group>
                             </group>
                         </page>
@@ -129,12 +259,19 @@
 
                 <field name="date_request"/>
                 <field name="return_type"/>
+                <field name="return_date" string="Expected Return"/>
+                <field name="actual_return_date" string="Actual Return"/>
                 <field name="return_status_display"/>
+
+                <!-- ⭐ Overdue indicator -->
+                <field name="is_overdue" invisible="1"/>
+                <field name="days_overdue" invisible="1"/>
+
                 <field name="state" widget="badge"
                        decoration-success="state == 'approved'"
                        decoration-info="state == 'to_approve'"
                        decoration-muted="state == 'returned'"
-                       decoration-danger="state == 'rejected'"/>
+                       decoration-danger="state == 'rejected' or is_overdue"/>
             </list>
         </field>
     </record>
@@ -167,6 +304,16 @@
 
                 <separator/>
 
+                <!-- ⭐ NEW: Overdue and Return Date Filters -->
+                <filter string="⚠️ Overdue" name="overdue"
+                        domain="[('is_overdue', '=', True)]"/>
+                <filter string="📅 Returned This Week" name="returned_this_week"
+                        domain="[('actual_return_date', '>=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <filter string="📅 Returned This Month" name="returned_this_month"
+                        domain="[('actual_return_date', '>=', (context_today().replace(day=1)).strftime('%Y-%m-%d'))]"/>
+
+                <separator/>
+
                 <!-- Original Filters -->
                 <filter string="Draft" name="draft"
                         domain="[('state', '=', 'draft')]"/>
@@ -174,6 +321,8 @@
                         domain="[('state', '=', 'to_approve')]"/>
                 <filter string="Approved" name="approved"
                         domain="[('state', '=', 'approved')]"/>
+                <filter string="Returned" name="returned"
+                        domain="[('state', '=', 'returned')]"/>
 
                 <separator/>
 
@@ -196,6 +345,12 @@
                     <!-- ⭐ Group by Approved By -->
                     <filter string="Approved By" name="group_approved_by"
                             context="{'group_by':'approved_by_id'}"/>
+
+                    <!-- ⭐ NEW: Group by Return Status -->
+                    <filter string="Return Status" name="group_return_status"
+                            context="{'group_by':'is_overdue'}"/>
+                    <filter string="Actual Return Date" name="group_actual_return_date"
+                            context="{'group_by':'actual_return_date'}"/>
 
                     <filter string="Return Type" name="group_return_type"
                             context="{'group_by':'return_type'}"/>
@@ -231,6 +386,20 @@
         </field>
     </record>
 
+    <!-- ⭐ NEW: Action สำหรับ Overdue Items -->
+    <record id="hr_custody_overdue_action" model="ir.actions.act_window">
+        <field name="name">⚠️ Overdue Items</field>
+        <field name="res_model">hr.custody</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('is_overdue', '=', True)]</field>
+        <field name="context">{'search_default_overdue': 1}</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent">
+                No overdue custody items found.
+            </p>
+        </field>
+    </record>
+
     <!-- ===== MENU STRUCTURE ===== -->
 
     <!-- Main menu -->
@@ -259,11 +428,26 @@
               name="🔔 Pending My Approval"
               sequence="2"/>
 
-    <!-- Properties menu - ใช้ action จาก custody_property_views.xml -->
+    <!-- ⭐ NEW: Overdue Items menu -->
+    <menuitem action="hr_custody_overdue_action"
+              id="hr_custody_menu_overdue"
+              parent="hr_custody_menu_management"
+              name="⚠️ Overdue Items"
+              sequence="3"/>
+
+    <!-- Properties menu -->
     <menuitem action="custody_property_action"
               id="hr_property_menu"
               parent="hr_custody_menu_management"
               name="Properties"
               sequence="5"
               groups="hr.group_hr_manager"/>
+
+    <!-- Add Image History Menu -->
+    <menuitem id="custody_image_menu"
+              name="📸 Image History"
+              parent="hr_custody_menu_management"
+              action="custody_image_action"
+              sequence="10"
+              groups="hr.group_hr_user"/>
 </odoo>
