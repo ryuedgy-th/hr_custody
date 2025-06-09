@@ -14,3 +14,21 @@ access_property_return_reason_hr_manager,property.return.reason.hr.manager,model
 access_report_custody_employee,report.custody.employee,model_report_custody,base.group_user,1,0,0,0
 access_report_custody_hr_user,report.custody.hr.user,model_report_custody,hr.group_hr_user,1,0,0,0
 access_report_custody_hr_manager,report.custody.hr.manager,model_report_custody,hr.group_hr_manager,1,0,0,0
+# Add these lines to the existing security/ir.model.access.csv file
+
+# Custody Images Access
+access_custody_image_employee,custody.image.employee,model_custody_image,base.group_user,1,0,0,0
+access_custody_image_hr_user,custody.image.hr.user,model_custody_image,hr.group_hr_user,1,1,1,1
+access_custody_image_hr_manager,custody.image.hr.manager,model_custody_image,hr.group_hr_manager,1,1,1,1
+
+# Before Photos Wizard Access
+access_custody_before_wizard_hr_user,custody.before.wizard.hr.user,model_custody_before_wizard,hr.group_hr_user,1,1,1,1
+access_custody_before_wizard_hr_manager,custody.before.wizard.hr.manager,model_custody_before_wizard,hr.group_hr_manager,1,1,1,1
+access_custody_before_wizard_line_hr_user,custody.before.wizard.line.hr.user,model_custody_before_wizard_line,hr.group_hr_user,1,1,1,1
+access_custody_before_wizard_line_hr_manager,custody.before.wizard.line.hr.manager,model_custody_before_wizard_line,hr.group_hr_manager,1,1,1,1
+
+# After Photos Wizard Access
+access_custody_after_wizard_hr_user,custody.after.wizard.hr.user,model_custody_after_wizard,hr.group_hr_user,1,1,1,1
+access_custody_after_wizard_hr_manager,custody.after.wizard.hr.manager,model_custody_after_wizard,hr.group_hr_manager,1,1,1,1
+access_custody_after_wizard_line_hr_user,custody.after.wizard.line.hr.user,model_custody_after_wizard_line,hr.group_hr_user,1,1,1,1
+access_custody_after_wizard_line_hr_manager,custody.after.wizard.line.hr.manager,model_custody_after_wizard_line,hr.group_hr_manager,1,1,1,1

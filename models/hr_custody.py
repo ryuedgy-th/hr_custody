@@ -491,3 +491,266 @@ class HrCustody(models.Model):
                 name += f" ({record.custody_property_id.name})"
             result.append((record.id, name))
         return result
+# Add these fields to the existing HrCustody class in models/hr_custody.py
+# Insert after the existing fields, before the computed fields section
+
+    # ===== IMAGE DOCUMENTATION FIELDS =====
+
+    # Image relationships
+    before_image_ids = fields.One2many(
+        'custody.image', 'custody_id',
+        domain=[('image_type', '=', 'before')],
+        string='Before Images',
+        help='Photos taken before handing over the equipment'
+    )
+
+    after_image_ids = fields.One2many(
+        'custody.image', 'custody_id',
+        domain=[('image_type', '=', 'after')],
+        string='After Images',
+        help='Photos taken when receiving back the equipment'
+    )
+
+    damage_image_ids = fields.One2many(
+        'custody.image', 'custody_id',
+        domain=[('image_type', '=', 'damage')],
+        string='Damage Documentation',
+        help='Photos documenting any damage or issues'
+    )
+
+    # Image computed fields
+    before_image_count = fields.Integer(
+        string='Before Images Count',
+        compute='_compute_image_counts',
+        help='Number of before images'
+    )
+
+    after_image_count = fields.Integer(
+        string='After Images Count',
+        compute='_compute_image_counts',
+        help='Number of after images'
+    )
+
+    has_before_images = fields.Boolean(
+        string='Has Before Images',
+        compute='_compute_image_counts',
+        help='True if there are before images'
+    )
+
+    has_after_images = fields.Boolean(
+        string='Has After Images',
+        compute='_compute_image_counts',
+        help='True if there are after images'
+    )
+
+    # Image workflow validation
+    can_take_before_photos = fields.Boolean(
+        string='Can Take Before Photos',
+        compute='_compute_image_permissions',
+        help='Whether before photos can be taken in current state'
+    )
+
+    can_take_after_photos = fields.Boolean(
+        string='Can Take After Photos',
+        compute='_compute_image_permissions',
+        help='Whether after photos can be taken in current state'
+    )
+
+    requires_before_images = fields.Boolean(
+        string='Requires Before Images',
+        compute='_compute_image_requirements',
+        help='Whether before images are required for approval'
+    )
+
+    requires_after_images = fields.Boolean(
+        string='Requires After Images',
+        compute='_compute_image_requirements',
+        help='Whether after images are required for return'
+    )
+
+    # Add these computed methods to the existing HrCustody class
+
+    @api.depends('before_image_ids', 'after_image_ids', 'damage_image_ids')
+    def _compute_image_counts(self):
+        """Compute image counts and availability"""
+        for record in self:
+            record.before_image_count = len(record.before_image_ids)
+            record.after_image_count = len(record.after_image_ids)
+            record.has_before_images = bool(record.before_image_ids)
+            record.has_after_images = bool(record.after_image_ids)
+
+    @api.depends('state', 'has_before_images', 'has_after_images')
+    def _compute_image_permissions(self):
+        """Compute whether images can be taken in current state"""
+        for record in self:
+            # Before photos: can take when to_approve or approved (for re-documentation)
+            record.can_take_before_photos = (
+                record.state in ['to_approve', 'approved'] and
+                self.env.user.has_group('hr.group_hr_user')
+            )
+
+            # After photos: can take when approved (ready to return)
+            record.can_take_after_photos = (
+                record.state == 'approved' and
+                self.env.user.has_group('hr.group_hr_user')
+            )
+
+    @api.depends('state')
+    def _compute_image_requirements(self):
+        """Compute whether images are required"""
+        for record in self:
+            # Before images are required for approval workflow
+            record.requires_before_images = record.state in ['to_approve', 'approved', 'returned']
+
+            # After images are required for return workflow
+            record.requires_after_images = record.state in ['returned']
+
+    # Add these action methods to the existing HrCustody class
+
+    def action_take_before_photos(self):
+        """Action to open before photos wizard"""
+        self.ensure_one()
+
+        if not self.can_take_before_photos:
+            raise UserError(_('Before photos cannot be taken in current state: %s') %
+                          dict(self._fields['state'].selection)[self.state])
+
+        return {
+            'name': _('📸 Take Before Photos'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'custody.before.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_custody_id': self.id,
+                'default_property_name': self.custody_property_id.name,
+                'default_employee_name': self.employee_id.name,
+            }
+        }
+
+    def action_take_after_photos(self):
+        """Action to open after photos wizard"""
+        self.ensure_one()
+
+        if not self.can_take_after_photos:
+            raise UserError(_('After photos cannot be taken in current state: %s') %
+                          dict(self._fields['state'].selection)[self.state])
+
+        return {
+            'name': _('📸 Take After Photos & Return'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'custody.after.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_custody_id': self.id,
+                'default_property_name': self.custody_property_id.name,
+                'default_employee_name': self.employee_id.name,
+                'default_before_image_count': self.before_image_count,
+            }
+        }
+
+    def action_view_image_comparison(self):
+        """Action to view before/after image comparison"""
+        self.ensure_one()
+
+        return {
+            'name': _('📸 Image Comparison - %s') % self.name,
+            'type': 'ir.actions.act_window',
+            'res_model': 'custody.image',
+            'view_mode': 'kanban,list',
+            'domain': [('custody_id', '=', self.id)],
+            'context': {
+                'group_by': 'image_type',
+                'default_custody_id': self.id,
+            }
+        }
+
+    def action_view_all_images(self):
+        """Action to view all images for this custody"""
+        self.ensure_one()
+
+        return {
+            'name': _('📸 All Images - %s') % self.name,
+            'type': 'ir.actions.act_window',
+            'res_model': 'custody.image',
+            'view_mode': 'kanban,list,form',
+            'domain': [('custody_id', '=', self.id)],
+            'context': {'default_custody_id': self.id}
+        }
+
+    # Update the existing approve method to include before photos validation
+
+    def approve(self):
+        """Updated approve method with before photos validation"""
+        # ⭐ NEW: Check if before photos are required but missing
+        if self.requires_before_images and not self.has_before_images:
+            raise UserError(
+                _('Before photos are required before approval. Please take before photos first.')
+            )
+
+        # ⭐ NEW: Check approval permissions (existing logic)
+        if (self.env.user not in self.custody_property_id.approver_ids and
+            not self.env.user.has_group('hr.group_hr_manager')):
+            allowed_names = ', '.join(self.custody_property_id.approver_ids.mapped('name'))
+            raise UserError(
+                _("Only these users can approve this request: %s") % allowed_names
+            )
+
+        # Check property availability (existing logic)
+        for custody in self.env['hr.custody'].search([
+            ('custody_property_id', '=', self.custody_property_id.id),
+            ('id', '!=', self.id)
+        ]):
+            if custody.state == "approved":
+                raise UserError(_("Custody is not available now"))
+
+        # Set approval info (existing logic)
+        self.approved_by_id = self.env.user
+        self.approved_date = fields.Datetime.now()
+
+        # Update property status (existing logic)
+        if self.custody_property_id.property_status == 'available':
+            self.custody_property_id.property_status = 'in_use'
+
+        self.state = 'approved'
+
+        # Post message (existing logic + new image info)
+        message_body = _('✅ Request approved by %s') % self.env.user.name
+        if self.has_before_images:
+            message_body += _(' with %d before photos documented.') % self.before_image_count
+
+        self.message_post(
+            body=message_body,
+            message_type='notification'
+        )
+
+    # Update the existing set_to_return method to include after photos validation
+
+    def set_to_return(self):
+        """Updated return method with after photos validation"""
+        # ⭐ NEW: Check if after photos are required but missing
+        if self.requires_after_images and not self.has_after_images:
+            raise UserError(
+                _('After photos are required before accepting return. Please take after photos first.')
+            )
+
+        # Update property status (existing logic)
+        if self.custody_property_id.property_status == 'in_use':
+            self.custody_property_id.property_status = 'available'
+
+        self.state = 'returned'
+
+        # Don't automatically set return_date for flexible returns (existing logic)
+        if self.return_type == 'date':
+            self.return_date = fields.Date.today()
+
+        # ⭐ NEW: Post message with image info
+        message_body = _('📦 Equipment returned')
+        if self.has_after_images:
+            message_body += _(' with %d after photos documented.') % self.after_image_count
+
+        self.message_post(
+            body=message_body,
+            message_type='notification'
+        )
