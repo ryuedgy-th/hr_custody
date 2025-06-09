@@ -79,12 +79,10 @@
 
                             <field name="image_line_ids" nolabel="1">
                                 <tree editable="bottom" create="true" delete="true">
-                                    <field name="sequence" width="50px"/>
                                     <field name="image" widget="image" width="150px"/>
                                     <field name="description" placeholder="Brief description"/>
                                     <field name="is_damage_photo"/>
                                     <field name="notes" placeholder="Detailed notes"/>
-                                    <field name="display_name" readonly="1"/>
                                 </tree>
                                 <form>
                                     <group>
