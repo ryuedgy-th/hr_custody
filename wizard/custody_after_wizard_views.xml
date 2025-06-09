@@ -1,5 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- After Photos Wizard Line Tree View -->
+    <record id="custody_after_wizard_line_view_tree" model="ir.ui.view">
+        <field name="name">custody.after.wizard.line.tree</field>
+        <field name="model">custody.after.wizard.line</field>
+        <field name="arch" type="xml">
+            <tree editable="bottom" create="true" delete="true">
+                <field name="sequence" width="50px"/>
+                <field name="image" widget="image" width="150px"/>
+                <field name="description" placeholder="Brief description"/>
+                <field name="is_damage_photo"/>
+                <field name="notes" placeholder="Detailed notes"/>
+                <field name="display_name" readonly="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- After Photos Wizard Line Form View -->
+    <record id="custody_after_wizard_line_view_form" model="ir.ui.view">
+        <field name="name">custody.after.wizard.line.form</field>
+        <field name="model">custody.after.wizard.line</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <group>
+                        <field name="sequence"/>
+                        <field name="description" placeholder="e.g., Overall condition, Damage area"/>
+                        <field name="is_damage_photo"/>
+                    </group>
+                    <group>
+                        <field name="image" widget="image"/>
+                    </group>
+                </group>
+                <group string="Notes">
+                    <field name="notes" placeholder="Detailed notes about this photo..."/>
+                </group>
+            </form>
+        </field>
+    </record>
+
     <!-- After Photos Wizard Form View -->
     <record id="custody_after_wizard_view_form" model="ir.ui.view">
         <field name="name">custody.after.wizard.form</field>
@@ -77,28 +116,15 @@
                                 </div>
                             </div>
 
+                            <!-- ⭐ แก้ตรงนี้: ใช้ inline tree ที่ถูกต้อง -->
                             <field name="image_line_ids" nolabel="1">
-                                <tree editable="bottom" create="true" delete="true">
+                                <tree editable="bottom">
+                                    <field name="sequence" width="50px"/>
                                     <field name="image" widget="image" width="150px"/>
                                     <field name="description" placeholder="Brief description"/>
                                     <field name="is_damage_photo"/>
                                     <field name="notes" placeholder="Detailed notes"/>
                                 </tree>
-                                <form>
-                                    <group>
-                                        <group>
-                                            <field name="sequence"/>
-                                            <field name="description" placeholder="e.g., Overall condition, Damage area"/>
-                                            <field name="is_damage_photo"/>
-                                        </group>
-                                        <group>
-                                            <field name="image" widget="image"/>
-                                        </group>
-                                    </group>
-                                    <group string="Notes">
-                                        <field name="notes" placeholder="Detailed notes about this photo..."/>
-                                    </group>
-                                </form>
                             </field>
                         </page>
 
