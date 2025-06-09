@@ -144,16 +144,18 @@ class HrCustody(models.Model):
         help='Notes about the return condition and process'
     )
 
-    # Computed field for better return status display
+    # ✅ FIXED: Computed fields with store=True for search compatibility
     is_overdue = fields.Boolean(
         string='Is Overdue',
         compute='_compute_overdue_status',
+        store=True,  # ← เพิ่ม store=True
         help='True if return is overdue (for fixed date returns)'
     )
 
     days_overdue = fields.Integer(
         string='Days Overdue',
         compute='_compute_overdue_status',
+        store=True,  # ← เพิ่ม store=True
         help='Number of days overdue (negative if not due yet)'
     )
 
@@ -308,6 +310,7 @@ class HrCustody(models.Model):
             else:
                 record.return_status_display = 'Pending'
 
+    # ✅ FIXED: Dependencies include all fields that affect the computation
     @api.depends('return_type', 'return_date', 'actual_return_date', 'state')
     def _compute_overdue_status(self):
         """Compute overdue status for fixed date returns"""
@@ -568,8 +571,13 @@ class HrCustody(models.Model):
         return super(HrCustody, self).unlink()
 
     def write(self, vals):
-        """Override write method to handle state changes"""
+        """Override write method to handle state changes and recompute overdue status"""
         result = super(HrCustody, self).write(vals)
+
+        # ✅ FIXED: Trigger recomputation of overdue status when relevant fields change
+        if any(field in vals for field in ['return_date', 'return_type', 'state', 'actual_return_date']):
+            self._compute_overdue_status()
+
         if 'state' in vals:
             for record in self:
                 record.message_post(
