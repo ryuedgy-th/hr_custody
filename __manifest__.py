@@ -1,6 +1,6 @@
 {
     'name': 'Open HRMS Custody',
-    'version': '18.0.1.0.0',
+    'version': '18.0.1.0.1',  # ← เพิ่ม version เพื่อให้ migration ทำงาน
     'category': 'Human Resources',
     'summary': """Manage the company properties with image documentation""",
     'description': """
@@ -13,6 +13,8 @@
         * Property status tracking
         * Email notifications
         * Comprehensive reporting
+        * Return date tracking with overdue management
+        * Performance analytics
     """,
     'author': 'Cybrosys Techno solutions',
     'company': 'Cybrosys Techno Solutions',

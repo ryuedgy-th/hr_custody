@@ -1,226 +1,105 @@
-# migrations/18.0.1.0.0/post-migration.py
+# migrations/18.0.1.0.1/pre-migration.py
 
 def migrate(cr, version):
-    """Post-migration script for hr_custody module to Odoo 18."""
+    """Pre-migration script to add new fields to hr_custody table"""
 
-    # 1. Update field references that changed in Odoo 18
-    # Remove deprecated fields and update field types
+    # 1. Add actual_return_date column
     try:
-        # Remove deprecated image fields (image_medium, image_small)
         cr.execute("""
-            ALTER TABLE custody_property
-            DROP COLUMN IF EXISTS image_medium;
+            ALTER TABLE hr_custody
+            ADD COLUMN IF NOT EXISTS actual_return_date DATE;
         """)
-        cr.execute("""
-            ALTER TABLE custody_property
-            DROP COLUMN IF EXISTS image_small;
-        """)
-    except Exception:
-        pass  # Fields might not exist
+        print("✅ Added actual_return_date column")
+    except Exception as e:
+        print(f"❌ Error adding actual_return_date: {e}")
 
-    # 2. Update tracking field references
-    # Replace track_visibility with tracking
-    cr.execute("""
-        UPDATE ir_model_fields
-        SET tracking = TRUE
-        WHERE model = 'hr.custody'
-        AND name IN ('date_request', 'purpose', 'return_date', 'renew_date', 'state')
-    """)
-
-    # 3. Update view references
-    # Update tree views to list views
-    cr.execute("""
-        UPDATE ir_ui_view
-        SET arch_db = REPLACE(arch_db, '<tree', '<list')
-        WHERE model = 'hr.custody'
-        AND arch_db LIKE '%<tree%'
-    """)
-
-    cr.execute("""
-        UPDATE ir_ui_view
-        SET arch_db = REPLACE(arch_db, '</tree>', '</list>')
-        WHERE model = 'hr.custody'
-        AND arch_db LIKE '%</tree>%'
-    """)
-
-    # Do the same for custody.property
-    cr.execute("""
-        UPDATE ir_ui_view
-        SET arch_db = REPLACE(arch_db, '<tree', '<list')
-        WHERE model = 'custody.property'
-        AND arch_db LIKE '%<tree%'
-    """)
-
-    cr.execute("""
-        UPDATE ir_ui_view
-        SET arch_db = REPLACE(arch_db, '</tree>', '</list>')
-        WHERE model = 'custody.property'
-        AND arch_db LIKE '%</tree>%'
-    """)
-
-    # 4. Update cron job records for Odoo 18
-    cr.execute("""
-        SELECT id FROM ir_cron
-        WHERE name = 'HR Custody Return Notification'
-    """)
-    cron_ids = cr.fetchall()
-
-    if cron_ids:
-        for cron_id in cron_ids:
-            # Update cron job configuration for Odoo 18
-            cr.execute("""
-                UPDATE ir_cron
-                SET active = true,
-                    interval_number = 1,
-                    interval_type = 'days',
-                    state = 'code',
-                    code = 'model.mail_reminder()'
-                WHERE id = %s
-            """, (cron_id[0],))
-
-    # 5. Update sequence generation
-    # Ensure all custody records have proper sequence numbers
-    cr.execute("""
-        UPDATE hr_custody
-        SET name = 'CR' || LPAD(id::text, 4, '0')
-        WHERE name IS NULL OR name = '' OR name = 'New'
-    """)
-
-    # 6. Update company references to use env.company instead of env.user.company_id
-    cr.execute("""
-        UPDATE hr_custody
-        SET company_id = (
-            SELECT company_id
-            FROM res_users
-            WHERE id = (
-                SELECT create_uid
-                FROM hr_custody AS hc
-                WHERE hc.id = hr_custody.id
-            )
-            LIMIT 1
-        )
-        WHERE company_id IS NULL
-    """)
-
-    cr.execute("""
-        UPDATE custody_property
-        SET company_id = (
-            SELECT company_id
-            FROM res_users
-            WHERE id = (
-                SELECT create_uid
-                FROM custody_property AS cp
-                WHERE cp.id = custody_property.id
-            )
-            LIMIT 1
-        )
-        WHERE company_id IS NULL
-    """)
-
-    # 7. Update mail template references
-    cr.execute("""
-        UPDATE mail_template
-        SET email_from = '{{object.company_id.email or \'\'}}'
-        WHERE model_id IN (
-            SELECT id FROM ir_model WHERE model = 'hr.custody'
-        )
-    """)
-
-    # 8. Update action references for Odoo 18
-    # Update view_mode from tree to list
-    cr.execute("""
-        UPDATE ir_actions_act_window
-        SET view_mode = REPLACE(view_mode, 'tree', 'list')
-        WHERE res_model IN ('hr.custody', 'custody.property', 'report.custody')
-    """)
-
-    # 9. Clean up old field references in views
-    # Remove references to deprecated fields
-    cr.execute("""
-        UPDATE ir_ui_view
-        SET arch_db = REPLACE(
-            REPLACE(arch_db, 'track_visibility="always"', 'tracking="True"'),
-            'track_visibility=''always''', 'tracking="True"'
-        )
-        WHERE model IN ('hr.custody', 'custody.property')
-    """)
-
-    # 10. Update invisible conditions for Odoo 18 syntax
-    cr.execute("""
-        UPDATE ir_ui_view
-        SET arch_db = REPLACE(
-            REPLACE(
-                REPLACE(arch_db, 'invisible=" ', 'invisible="'),
-                'invisible=\' ', 'invisible="'),
-            ' "', '"'
-        )
-        WHERE model IN ('hr.custody', 'custody.property')
-    """)
-
-    # 11. Ensure proper field types for Odoo 18
-    # Update boolean field defaults
-    cr.execute("""
-        UPDATE hr_custody
-        SET is_renew_return_date = FALSE
-        WHERE is_renew_return_date IS NULL
-    """)
-
-    cr.execute("""
-        UPDATE hr_custody
-        SET is_renew_reject = FALSE
-        WHERE is_renew_reject IS NULL
-    """)
-
-    cr.execute("""
-        UPDATE hr_custody
-        SET is_mail_send = FALSE
-        WHERE is_mail_send IS NULL
-    """)
-
-    # 12. Update menu sequence and structure
-    cr.execute("""
-        UPDATE ir_ui_menu
-        SET sequence = 20
-        WHERE name = 'Custody'
-        AND parent_id IS NULL
-    """)
-
-    # 13. Clean up old security records
+    # 2. Add returned_by_id column
     try:
-        # Remove duplicate access records if any
         cr.execute("""
-            DELETE FROM ir_model_access
-            WHERE id NOT IN (
-                SELECT MIN(id)
-                FROM ir_model_access
-                GROUP BY name, model_id, group_id
-            )
+            ALTER TABLE hr_custody
+            ADD COLUMN IF NOT EXISTS returned_by_id INTEGER;
         """)
-    except Exception:
-        pass
+        print("✅ Added returned_by_id column")
+    except Exception as e:
+        print(f"❌ Error adding returned_by_id: {e}")
 
-    # 14. Update report configurations
-    cr.execute("""
-        UPDATE ir_actions_act_window
-        SET help = '<p class="o_view_nocontent_smiling_face">Create your first custody request!</p><p>Track company assets and equipment assigned to employees.</p>'
-        WHERE res_model = 'hr.custody'
-    """)
+    # 3. Add return_notes column
+    try:
+        cr.execute("""
+            ALTER TABLE hr_custody
+            ADD COLUMN IF NOT EXISTS return_notes TEXT;
+        """)
+        print("✅ Added return_notes column")
+    except Exception as e:
+        print(f"❌ Error adding return_notes: {e}")
 
-    # 15. Ensure proper state values
-    cr.execute("""
-        UPDATE hr_custody
-        SET state = 'draft'
-        WHERE state IS NULL OR state = ''
-    """)
+    # 4. Add is_overdue column (computed field, but we need it for SQL queries)
+    try:
+        cr.execute("""
+            ALTER TABLE hr_custody
+            ADD COLUMN IF NOT EXISTS is_overdue BOOLEAN DEFAULT FALSE;
+        """)
+        print("✅ Added is_overdue column")
+    except Exception as e:
+        print(f"❌ Error adding is_overdue: {e}")
 
-    # 16. Update computed field dependencies
-    # This will be handled by the ORM when the module loads
+    # 5. Add days_overdue column
+    try:
+        cr.execute("""
+            ALTER TABLE hr_custody
+            ADD COLUMN IF NOT EXISTS days_overdue INTEGER DEFAULT 0;
+        """)
+        print("✅ Added days_overdue column")
+    except Exception as e:
+        print(f"❌ Error adding days_overdue: {e}")
 
-    # 17. Log migration completion
-    cr.execute("""
-        INSERT INTO ir_logging (name, level, message, path, line, func, create_date, create_uid)
-        VALUES ('hr_custody.migration', 'INFO', 'Successfully migrated hr_custody to Odoo 18.0',
-                'migrations/18.0.1.0.0/post-migration.py', 0, 'migrate', NOW(), 1)
-    """)
+    # 6. Add return_type column if not exists
+    try:
+        cr.execute("""
+            ALTER TABLE hr_custody
+            ADD COLUMN IF NOT EXISTS return_type VARCHAR;
+        """)
+        # Set default values for existing records
+        cr.execute("""
+            UPDATE hr_custody
+            SET return_type = 'date'
+            WHERE return_type IS NULL;
+        """)
+        print("✅ Added return_type column")
+    except Exception as e:
+        print(f"❌ Error adding return_type: {e}")
 
-    print("HR Custody module successfully migrated to Odoo 18.0")
+    # 7. Add expected_return_period column
+    try:
+        cr.execute("""
+            ALTER TABLE hr_custody
+            ADD COLUMN IF NOT EXISTS expected_return_period VARCHAR;
+        """)
+        print("✅ Added expected_return_period column")
+    except Exception as e:
+        print(f"❌ Error adding expected_return_period: {e}")
+
+    # 8. Create foreign key constraints
+    try:
+        # Add foreign key for returned_by_id
+        cr.execute("""
+            ALTER TABLE hr_custody
+            ADD CONSTRAINT IF NOT EXISTS hr_custody_returned_by_id_fkey
+            FOREIGN KEY (returned_by_id) REFERENCES res_users(id);
+        """)
+        print("✅ Added foreign key constraints")
+    except Exception as e:
+        print(f"❌ Error adding foreign keys: {e}")
+
+    # 9. Update existing returned records with actual return date
+    try:
+        cr.execute("""
+            UPDATE hr_custody
+            SET actual_return_date = CURRENT_DATE
+            WHERE state = 'returned' AND actual_return_date IS NULL;
+        """)
+        print("✅ Updated existing returned records")
+    except Exception as e:
+        print(f"❌ Error updating existing records: {e}")
+
+    print("🎉 Migration completed successfully!")
