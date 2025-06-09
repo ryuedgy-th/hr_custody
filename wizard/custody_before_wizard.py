@@ -166,7 +166,8 @@ class CustodyBeforeWizard(models.TransientModel):
         self.image_line_ids = [(0, 0, {'sequence': current_count + 1})]
 
         return {
-            'type': 'ir.actions.do_nothing',
+            'type': 'ir.actions.client',
+            'tag': 'reload',
         }
 
     def action_remove_empty_slots(self):
@@ -175,7 +176,8 @@ class CustodyBeforeWizard(models.TransientModel):
         empty_lines.unlink()
 
         return {
-            'type': 'ir.actions.do_nothing',
+            'type': 'ir.actions.client',
+            'tag': 'reload',
         }
 
     def action_save_photos_only(self):
