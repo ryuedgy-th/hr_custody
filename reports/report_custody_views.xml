@@ -92,12 +92,13 @@
 
                 <separator/>
 
+                <!-- ✅ FIXED: XML Syntax - ใช้ &lt; และ &gt; แทน < และ > -->
                 <filter string="📅 Returned This Week" name="returned_this_week"
-                        domain="[('actual_return_date', '>=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                        domain="[('actual_return_date', '&gt;=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
                 <filter string="📅 Returned This Month" name="returned_this_month"
-                        domain="[('actual_return_date', '>=', (context_today().replace(day=1)).strftime('%Y-%m-%d'))]"/>
+                        domain="[('actual_return_date', '&gt;=', (context_today().replace(day=1)).strftime('%Y-%m-%d'))]"/>
                 <filter string="📅 Due This Week" name="due_this_week"
-                        domain="[('return_date', '<=', (context_today() + datetime.timedelta(days=7)).strftime('%Y-%m-%d')), ('return_date', '>=', context_today().strftime('%Y-%m-%d'))]"/>
+                        domain="[('return_date', '&lt;=', (context_today() + datetime.timedelta(days=7)).strftime('%Y-%m-%d')), ('return_date', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
 
                 <separator/>
 
@@ -206,7 +207,7 @@
     <!-- Reports submenu -->
     <menuitem id="custody_report_menu"
               parent="hr_custody_main_menu"
-              name="📊 Reports & Analytics"
+              name="📊 Reports &amp; Analytics"
               sequence="20"/>
 
     <!-- Main Analysis menu -->
