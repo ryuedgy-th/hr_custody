@@ -222,6 +222,19 @@ class CustodyImage(models.Model):
             'target': 'new',
         }
 
+    def file_size_info(self):
+        """Action for file size button - show info"""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('File Information'),
+                'message': _('File size: %s KB') % self.file_size_kb,
+                'type': 'info'
+            }
+        }
+
     @api.model
     def get_before_after_comparison(self, custody_id):
         """Get before and after images for comparison"""

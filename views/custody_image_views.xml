@@ -98,7 +98,7 @@
                 <sheet>
                     <div class="oe_button_box" name="button_box">
                         <!-- File size info -->
-                        <button class="oe_stat_button" type="action" icon="fa-file-image-o">
+                        <button class="oe_stat_button" name="file_size_info" type="object" icon="fa-file-image-o">
                             <div class="o_field_widget o_stat_info">
                                 <span class="o_stat_value">
                                     <field name="file_size_kb"/>
