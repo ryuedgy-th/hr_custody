@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-// Updated 2025-06-11 - Fix form detection for Odoo wizard mode
+// Updated 2025-06-11 - Use direct RPC instead of form fields
 
 console.log('🚀 Loading Custody Upload Manager...');
 
@@ -51,8 +51,181 @@ export class CustodyUploadManager {
 
         console.log('✅ Found required elements, setting up events...');
         this.setupEvents(elements);
+        this.setupUploadButton();
         this.initialized = true;
         console.log('✅ Manager initialized successfully');
+    }
+
+    setupUploadButton() {
+        // Intercept the "Start Upload" button
+        const uploadButton = document.querySelector('button[name="action_upload_images"]');
+        if (uploadButton) {
+            console.log('✅ Found upload button, intercepting...');
+            
+            // Remove existing click handlers
+            const newButton = uploadButton.cloneNode(true);
+            uploadButton.parentNode.replaceChild(newButton, uploadButton);
+            
+            // Add our custom handler
+            newButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🚀 Custom upload handler triggered');
+                this.handleCustomUpload();
+            });
+        } else {
+            console.log('⚠️ Upload button not found, retrying...');
+            setTimeout(() => this.setupUploadButton(), 1000);
+        }
+    }
+
+    async handleCustomUpload() {
+        if (this.selectedFiles.length === 0) {
+            alert('Please select at least one image to upload.');
+            return;
+        }
+
+        try {
+            console.log('📡 Starting direct RPC upload...');
+            
+            // Prepare data for RPC call
+            const imagesData = this.selectedFiles
+                .filter(file => file.dataUrl)
+                .map(file => ({
+                    filename: file.filename,
+                    size: file.size,
+                    type: file.type,
+                    data: file.dataUrl,
+                    description: file.description || '',
+                    id: file.id
+                }));
+
+            // Get wizard record ID from the current page
+            const wizardId = this.getWizardId();
+            if (!wizardId) {
+                throw new Error('Could not find wizard ID');
+            }
+
+            console.log(`📡 Uploading ${imagesData.length} files via RPC to wizard ${wizardId}...`);
+
+            // Use Odoo RPC to update wizard and trigger upload
+            const rpcData = {
+                model: 'custody.image.upload.wizard',
+                method: 'write',
+                args: [[wizardId], {
+                    'images_data': JSON.stringify(imagesData),
+                    'total_files': this.selectedFiles.length,
+                    'total_size_mb': (this.totalSize / (1024 * 1024)).toFixed(2)
+                }],
+                kwargs: {}
+            };
+
+            // Call Odoo RPC
+            const result = await this.callOdooRPC('/web/dataset/call_kw', rpcData);
+            console.log('✅ Wizard updated via RPC');
+
+            // Now trigger the upload action
+            const uploadData = {
+                model: 'custody.image.upload.wizard',
+                method: 'action_upload_images',
+                args: [[wizardId]],
+                kwargs: {}
+            };
+
+            const uploadResult = await this.callOdooRPC('/web/dataset/call_kw', uploadData);
+            console.log('✅ Upload completed:', uploadResult);
+
+            // Handle the result
+            if (uploadResult && uploadResult.type === 'ir.actions.client') {
+                // Show success notification
+                this.showNotification(uploadResult.params);
+                
+                // Refresh the form or close dialog
+                window.location.reload();
+            }
+
+        } catch (error) {
+            console.error('❌ Upload failed:', error);
+            alert(`Upload failed: ${error.message}`);
+        }
+    }
+
+    getWizardId() {
+        // Try to find wizard ID from various sources
+        const url = window.location.href;
+        const match = url.match(/id=(\d+)/);
+        if (match) {
+            return parseInt(match[1]);
+        }
+
+        // Try to find from form data
+        const formData = document.querySelector('form')?.getAttribute('data-record-id');
+        if (formData) {
+            return parseInt(formData);
+        }
+
+        // Try to find from hidden inputs
+        const hiddenId = document.querySelector('input[name="id"]')?.value;
+        if (hiddenId) {
+            return parseInt(hiddenId);
+        }
+
+        console.warn('⚠️ Could not determine wizard ID');
+        return null;
+    }
+
+    async callOdooRPC(url, data) {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify({
+                jsonrpc: '2.0',
+                method: 'call',
+                params: data,
+                id: Math.floor(Math.random() * 1000000)
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.error) {
+            throw new Error(result.error.message || 'RPC call failed');
+        }
+
+        return result.result;
+    }
+
+    showNotification(params) {
+        // Create a simple notification
+        const notification = document.createElement('div');
+        notification.className = 'alert alert-success alert-dismissible';
+        notification.style.position = 'fixed';
+        notification.style.top = '20px';
+        notification.style.right = '20px';
+        notification.style.zIndex = '9999';
+        notification.innerHTML = `
+            <strong>${params.title || 'Success'}</strong><br>
+            ${params.message || 'Operation completed successfully'}
+            <button type="button" class="close" onclick="this.parentElement.remove()">
+                <span>&times;</span>
+            </button>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.remove();
+            }
+        }, 5000);
     }
 
     triggerFileDialog() {
@@ -269,7 +442,6 @@ export class CustodyUploadManager {
         reader.onload = (e) => {
             fileData.dataUrl = e.target.result;
             this.renderPreviews();
-            this.updateFormData();
         };
 
         reader.onerror = () => {
@@ -330,9 +502,6 @@ export class CustodyUploadManager {
         this.updateOdooField('total_files', this.selectedFiles.length);
         this.updateOdooField('total_size_mb', (this.totalSize / (1024 * 1024)).toFixed(2));
         
-        // เก็บข้อมูลไฟล์สำหรับการ upload
-        this.updateFormData();
-        
         console.log('📊 Display updated:', {
             files: this.selectedFiles.length,
             totalSizeMB: (this.totalSize / (1024 * 1024)).toFixed(2)
@@ -348,108 +517,12 @@ export class CustodyUploadManager {
             if (span) {
                 span.textContent = value;
                 console.log(`✅ Updated Odoo field ${fieldName}: ${value}`);
-                
-                // สร้าง change event เพื่อแจ้งให้ Odoo รู้ว่า field เปลี่ยน
-                const changeEvent = new CustomEvent('odoo-field-changed', {
-                    detail: { fieldName, value },
-                    bubbles: true
-                });
-                fieldWidget.dispatchEvent(changeEvent);
             } else {
                 console.warn(`⚠️ Span not found in field widget: ${fieldName}`);
             }
         } else {
             console.warn(`⚠️ Odoo field widget not found: ${fieldName}`);
         }
-    }
-
-    updateFormData() {
-        console.log('💾 Preparing images data for upload...');
-        
-        const imagesData = this.selectedFiles
-            .filter(file => file.dataUrl)
-            .map(file => ({
-                filename: file.filename,
-                size: file.size,
-                type: file.type,
-                data: file.dataUrl,
-                description: file.description || '',
-                id: file.id
-            }));
-        
-        // เก็บใน global variable สำหรับ Python access
-        window.custodyUploadData = {
-            totalFiles: this.selectedFiles.length,
-            totalSizeMB: (this.totalSize / (1024 * 1024)).toFixed(2),
-            imagesData: JSON.stringify(imagesData)
-        };
-        
-        // พยายามสร้าง/อัพเดท hidden field สำหรับ images_data
-        this.ensureImagesDataField(window.custodyUploadData.imagesData);
-        
-        console.log('💾 Form data updated:', {
-            files: window.custodyUploadData.totalFiles,
-            totalSizeMB: window.custodyUploadData.totalSizeMB,
-            dataSize: window.custodyUploadData.imagesData.length + ' chars'
-        });
-    }
-
-    ensureImagesDataField(jsonData) {
-        // หา form container ด้วยหลายวิธี (Odoo มีหลาย structure)
-        let container = document.querySelector('form') || 
-                       document.querySelector('.o_form_view') ||
-                       document.querySelector('.o_dialog') ||
-                       document.querySelector('[role="dialog"]') ||
-                       document.querySelector('.modal') ||
-                       document.querySelector('.o_content') ||
-                       document.querySelector('#custody_multiple_upload_zone').closest('div') ||
-                       document.body; // fallback to body
-        
-        if (container === document.body) {
-            console.log('📝 Using body as container (Odoo wizard mode)');
-        } else {
-            console.log('✅ Found form container');
-        }
-        
-        // หา hidden field ที่มีอยู่แล้ว
-        let hiddenField = container.querySelector('input[name="images_data"]') || 
-                         container.querySelector('textarea[name="images_data"]') ||
-                         document.querySelector('input[name="images_data"]') ||
-                         document.querySelector('textarea[name="images_data"]');
-        
-        if (!hiddenField) {
-            // สร้าง hidden field ใหม่
-            hiddenField = document.createElement('textarea');
-            hiddenField.name = 'images_data';
-            hiddenField.id = 'custody_images_data_field';
-            hiddenField.style.display = 'none';
-            hiddenField.style.visibility = 'hidden';
-            container.appendChild(hiddenField);
-            console.log('✅ Created hidden images_data field in container');
-        } else {
-            console.log('✅ Found existing images_data field');
-        }
-        
-        // อัพเดทค่า
-        hiddenField.value = jsonData;
-        
-        // Trigger events สำหรับ Odoo
-        ['change', 'input', 'blur'].forEach(eventType => {
-            const event = new Event(eventType, { bubbles: true, cancelable: true });
-            hiddenField.dispatchEvent(event);
-        });
-        
-        // เพิ่ม custom event สำหรับ Odoo
-        const odooEvent = new CustomEvent('odoo-field-update', {
-            detail: { fieldName: 'images_data', value: jsonData },
-            bubbles: true
-        });
-        hiddenField.dispatchEvent(odooEvent);
-        
-        console.log('✅ Updated images_data field with', jsonData.length, 'characters');
-        
-        // Debug: แสดงว่าใส่ไว้ที่ไหน
-        console.log('📍 Field location:', hiddenField.parentElement?.tagName || 'unknown');
     }
 
     removeFile(fileId) {
@@ -469,7 +542,6 @@ export class CustodyUploadManager {
         const file = this.selectedFiles.find(f => f.id == fileId);
         if (file) {
             file.description = description;
-            this.updateFormData();
             console.log('📝 Updated description for:', file.filename);
         }
     }
@@ -517,4 +589,4 @@ window.addEventListener('load', () => {
     setTimeout(initializeUpload, 1000);
 });
 
-console.log('✅ Custody Upload Module Loaded - Fixed Form Detection');
+console.log('✅ Custody Upload Module Loaded - Direct RPC Upload');
