@@ -95,19 +95,37 @@
 
                     <!-- Image Action Buttons -->
                     <div class="oe_button_box" name="button_box_images">
-                        <!-- Before Photos Button -->
+                        <!-- Single Photo Buttons -->
                         <button string="📸 Take Before Photos"
                                 type="object"
                                 name="action_take_before_photos"
                                 class="btn-info"
                                 invisible="not can_take_before_photos"/>
 
-                        <!-- After Photos Button -->
                         <button string="📸 Take After Photos &amp; Return"
                                 type="object"
                                 name="action_take_after_photos"
                                 class="btn-warning"
                                 invisible="not can_take_after_photos"/>
+                        
+                        <!-- NEW: Multiple Image Upload Buttons -->
+                        <button string="📁 Upload Multiple Before Images"
+                                type="object"
+                                name="action_upload_before_images"
+                                class="btn-primary"
+                                invisible="not can_take_before_photos"/>
+
+                        <button string="📁 Upload Multiple After Images"
+                                type="object"
+                                name="action_upload_after_images"
+                                class="btn-success"
+                                invisible="not can_take_after_photos"/>
+
+                        <button string="📁 Upload Damage Images"
+                                type="object"
+                                name="action_upload_damage_images"
+                                class="btn-danger"
+                                invisible="state not in ['approved', 'returned']"/>
                     </div>
 
                     <h1>
