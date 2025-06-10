@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-// Updated 2025-06-11 - Fix Odoo field widgets handling
+// Updated 2025-06-11 - Fix form detection for Odoo wizard mode
 
 console.log('🚀 Loading Custody Upload Manager...');
 
@@ -395,36 +395,61 @@ export class CustodyUploadManager {
     }
 
     ensureImagesDataField(jsonData) {
-        // หา form
-        const form = document.querySelector('form');
-        if (!form) {
-            console.warn('⚠️ Form not found');
-            return;
+        // หา form container ด้วยหลายวิธี (Odoo มีหลาย structure)
+        let container = document.querySelector('form') || 
+                       document.querySelector('.o_form_view') ||
+                       document.querySelector('.o_dialog') ||
+                       document.querySelector('[role="dialog"]') ||
+                       document.querySelector('.modal') ||
+                       document.querySelector('.o_content') ||
+                       document.querySelector('#custody_multiple_upload_zone').closest('div') ||
+                       document.body; // fallback to body
+        
+        if (container === document.body) {
+            console.log('📝 Using body as container (Odoo wizard mode)');
+        } else {
+            console.log('✅ Found form container');
         }
         
         // หา hidden field ที่มีอยู่แล้ว
-        let hiddenField = form.querySelector('input[name="images_data"]') || 
-                         form.querySelector('textarea[name="images_data"]');
+        let hiddenField = container.querySelector('input[name="images_data"]') || 
+                         container.querySelector('textarea[name="images_data"]') ||
+                         document.querySelector('input[name="images_data"]') ||
+                         document.querySelector('textarea[name="images_data"]');
         
         if (!hiddenField) {
             // สร้าง hidden field ใหม่
             hiddenField = document.createElement('textarea');
             hiddenField.name = 'images_data';
+            hiddenField.id = 'custody_images_data_field';
             hiddenField.style.display = 'none';
-            form.appendChild(hiddenField);
-            console.log('✅ Created hidden images_data field');
+            hiddenField.style.visibility = 'hidden';
+            container.appendChild(hiddenField);
+            console.log('✅ Created hidden images_data field in container');
+        } else {
+            console.log('✅ Found existing images_data field');
         }
         
         // อัพเดทค่า
         hiddenField.value = jsonData;
         
         // Trigger events สำหรับ Odoo
-        ['change', 'input'].forEach(eventType => {
+        ['change', 'input', 'blur'].forEach(eventType => {
             const event = new Event(eventType, { bubbles: true, cancelable: true });
             hiddenField.dispatchEvent(event);
         });
         
+        // เพิ่ม custom event สำหรับ Odoo
+        const odooEvent = new CustomEvent('odoo-field-update', {
+            detail: { fieldName: 'images_data', value: jsonData },
+            bubbles: true
+        });
+        hiddenField.dispatchEvent(odooEvent);
+        
         console.log('✅ Updated images_data field with', jsonData.length, 'characters');
+        
+        // Debug: แสดงว่าใส่ไว้ที่ไหน
+        console.log('📍 Field location:', hiddenField.parentElement?.tagName || 'unknown');
     }
 
     removeFile(fileId) {
@@ -492,4 +517,4 @@ window.addEventListener('load', () => {
     setTimeout(initializeUpload, 1000);
 });
 
-console.log('✅ Custody Upload Module Loaded - Fixed Odoo Field Widgets');
+console.log('✅ Custody Upload Module Loaded - Fixed Form Detection');
