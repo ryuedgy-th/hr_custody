@@ -34,15 +34,22 @@ export class CustodyMultipleImageUpload extends Component {
         const browseBtn = document.getElementById('browse_files_btn');
 
         if (!dropzone || !fileInput || !browseBtn) {
-            console.warn('Upload elements not found');
+            console.warn('Upload elements not found, retrying...');
+            // Retry after a short delay
+            setTimeout(() => this.initializeUploadZone(), 500);
             return;
         }
+
+        console.log('Initializing upload zone with elements:', { dropzone, fileInput, browseBtn });
 
         // Setup drag and drop
         this.setupDragAndDrop(dropzone);
         
         // Setup file input
         this.setupFileInput(fileInput, browseBtn);
+        
+        // Setup browse button click
+        this.setupBrowseButton(browseBtn, fileInput);
     }
 
     setupDragAndDrop(dropzone) {
@@ -54,30 +61,53 @@ export class CustodyMultipleImageUpload extends Component {
 
         // Highlight drop zone when item is dragged over it
         ['dragenter', 'dragover'].forEach(eventName => {
-            dropzone.addEventListener(eventName, () => dropzone.classList.add('dragover'), false);
+            dropzone.addEventListener(eventName, () => {
+                dropzone.classList.add('dragover');
+                console.log('Drag over detected');
+            }, false);
         });
 
         ['dragleave', 'drop'].forEach(eventName => {
-            dropzone.addEventListener(eventName, () => dropzone.classList.remove('dragover'), false);
+            dropzone.addEventListener(eventName, () => {
+                dropzone.classList.remove('dragover');
+                console.log('Drag leave/drop detected');
+            }, false);
         });
 
         // Handle dropped files
         dropzone.addEventListener('drop', this.handleDrop.bind(this), false);
         
         // Handle click to browse
-        dropzone.addEventListener('click', () => {
-            document.getElementById('file_input').click();
+        dropzone.addEventListener('click', (e) => {
+            // Only trigger if clicked on dropzone itself, not on browse button
+            if (e.target === dropzone || e.target.closest('.upload-content')) {
+                document.getElementById('file_input').click();
+            }
         });
     }
 
     setupFileInput(fileInput, browseBtn) {
         fileInput.addEventListener('change', (e) => {
+            console.log('File input changed, files:', e.target.files);
             this.handleFiles(e.target.files);
         });
+    }
 
+    setupBrowseButton(browseBtn, fileInput) {
         browseBtn.addEventListener('click', (e) => {
+            e.preventDefault();
             e.stopPropagation();
+            console.log('Browse button clicked');
             fileInput.click();
+        });
+        
+        // Add visual feedback
+        browseBtn.addEventListener('mouseenter', () => {
+            browseBtn.style.backgroundColor = '#0056b3';
+        });
+        
+        browseBtn.addEventListener('mouseleave', () => {
+            browseBtn.style.backgroundColor = '';
         });
     }
 
@@ -89,12 +119,14 @@ export class CustodyMultipleImageUpload extends Component {
     handleDrop(e) {
         const dt = e.dataTransfer;
         const files = dt.files;
+        console.log('Files dropped:', files);
         this.handleFiles(files);
     }
 
     async handleFiles(files) {
         try {
             const fileArray = Array.from(files);
+            console.log('Processing files:', fileArray);
             
             // Validate file count
             if (this.selectedFiles.length + fileArray.length > this.maxFiles) {
@@ -121,6 +153,8 @@ export class CustodyMultipleImageUpload extends Component {
 
     async processFile(file) {
         return new Promise((resolve, reject) => {
+            console.log('Processing file:', file.name, file.type, file.size);
+            
             // Validate file type
             if (!this.allowedTypes.includes(file.type)) {
                 reject(new Error(`File "${file.name}" has unsupported format. Allowed: JPEG, PNG, GIF, WebP, BMP`));
@@ -154,6 +188,7 @@ export class CustodyMultipleImageUpload extends Component {
 
                 this.selectedFiles.push(fileData);
                 this.totalSize += file.size;
+                console.log('File processed successfully:', file.name);
                 resolve(fileData);
             };
 
@@ -175,6 +210,7 @@ export class CustodyMultipleImageUpload extends Component {
         const filesList = document.getElementById('files_list');
 
         if (!previewContainer || !filesList) {
+            console.warn('Preview containers not found');
             return;
         }
 
@@ -191,7 +227,7 @@ export class CustodyMultipleImageUpload extends Component {
             fileItem.className = 'col-md-3 col-sm-4 col-6';
             fileItem.innerHTML = `
                 <div class="file-preview-item" data-file-id="${file.id}">
-                    <button type="button" class="file-remove-btn" onclick="removeFile('${file.id}')">
+                    <button type="button" class="file-remove-btn" onclick="window.custodyUploadWidget.removeFile('${file.id}')">
                         ×
                     </button>
                     <img src="${file.data}" alt="${file.filename}" class="file-preview-img">
@@ -201,16 +237,12 @@ export class CustodyMultipleImageUpload extends Component {
                         <input type="text" 
                                placeholder="Description (optional)" 
                                value="${file.description}"
-                               onchange="updateFileDescription('${file.id}', this.value)">
+                               onchange="window.custodyUploadWidget.updateFileDescription('${file.id}', this.value)">
                     </div>
                 </div>
             `;
             filesList.appendChild(fileItem);
         });
-
-        // Make functions globally available
-        window.removeFile = this.removeFile.bind(this);
-        window.updateFileDescription = this.updateFileDescription.bind(this);
     }
 
     updateStats() {
@@ -267,21 +299,44 @@ export class CustodyMultipleImageUpload extends Component {
     }
 
     cleanup() {
-        // Clean up global functions
-        if (window.removeFile) {
-            delete window.removeFile;
-        }
-        if (window.updateFileDescription) {
-            delete window.updateFileDescription;
+        // Clean up global references
+        if (window.custodyUploadWidget) {
+            delete window.custodyUploadWidget;
         }
     }
 }
 
 // Auto-initialize when the DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    if (document.querySelector('.custody-upload-zone')) {
-        new CustodyMultipleImageUpload();
-    }
+    console.log('DOM ready, looking for upload zone...');
+    
+    // Wait for the upload zone to appear
+    const checkForUploadZone = () => {
+        if (document.querySelector('.custody-upload-zone')) {
+            console.log('Upload zone found, initializing...');
+            const widget = new CustodyMultipleImageUpload();
+            window.custodyUploadWidget = widget; // Make globally available
+            widget.setup();
+        } else {
+            console.log('Upload zone not found, retrying...');
+            setTimeout(checkForUploadZone, 100);
+        }
+    };
+    
+    checkForUploadZone();
+});
+
+// Also try when window loads (backup)
+window.addEventListener('load', function() {
+    console.log('Window loaded, checking for upload zone...');
+    setTimeout(() => {
+        if (document.querySelector('.custody-upload-zone') && !window.custodyUploadWidget) {
+            console.log('Upload zone found on window load, initializing...');
+            const widget = new CustodyMultipleImageUpload();
+            window.custodyUploadWidget = widget;
+            widget.setup();
+        }
+    }, 1000);
 });
 
 // Register component for potential future use
