@@ -119,22 +119,25 @@ class PropertyCategory(models.Model):
         tracking=True
     )
 
-    # Category Statistics (computed fields)
+    # ⭐ FIXED: Category Statistics with store=True for searchability
     property_count = fields.Integer(
         string='Properties Count',
         compute='_compute_property_statistics',
+        store=True,  # ⭐ Added store=True
         help='Number of properties directly in this category'
     )
 
     total_property_count = fields.Integer(
         string='Total Properties',
         compute='_compute_property_statistics',
+        store=True,  # ⭐ Added store=True
         help='Total properties in this category and all subcategories'
     )
 
     active_custody_count = fields.Integer(
         string='Active Custodies',
         compute='_compute_property_statistics',
+        store=True,  # ⭐ Added store=True
         help='Number of active custodies for properties in this category tree'
     )
 
@@ -177,6 +180,9 @@ class PropertyCategory(models.Model):
             else:
                 category.level = 0
 
+    # ⭐ FIXED: Add dependencies to trigger recomputation
+    @api.depends('property_ids', 'child_ids.property_count', 'child_ids.total_property_count', 
+                 'property_ids.custody_ids.state')
     def _compute_property_statistics(self):
         """Compute statistics about properties in this category"""
         for category in self:
