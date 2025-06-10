@@ -62,8 +62,8 @@
                         </div>
                     </div>
 
-                    <!-- Current Status Information -->
-                    <div class="alert alert-info" invisible="active_custody_count == 0">
+                    <!-- ✅ FIXED: Current Status Information - เพิ่ม role="alert" -->
+                    <div class="alert alert-info" role="alert" invisible="active_custody_count == 0">
                         <strong>Currently in use by:</strong>
                         <field name="current_borrower_id" readonly="1"/>
                     </div>
@@ -91,11 +91,13 @@
                                options="{'no_create': True, 'no_create_edit': True}"/>
                         <field name="effective_approver_ids" widget="many2many_tags" readonly="1"/>
                         <div class="text-muted" invisible="not category_id or approver_ids">
-                            <i class="fa fa-info-circle"/> 
+                            <!-- ✅ FIXED: เพิ่ม title สำหรับ icon -->
+                            <i class="fa fa-info-circle" title="Information"/> 
                             Property-specific approvers override category defaults.
                         </div>
                         <div class="text-muted" invisible="not category_id or not approver_ids">
-                            <i class="fa fa-info-circle"/> 
+                            <!-- ✅ FIXED: เพิ่ม title สำหรับ icon -->
+                            <i class="fa fa-info-circle" title="Information"/> 
                             No property-specific approvers set. Inheriting from category: 
                             <field name="category_id" readonly="1" class="oe_inline"/>
                         </div>
@@ -233,7 +235,7 @@
         </field>
     </record>
 
-    <!-- Custody Property Kanban View -->
+    <!-- ✅ FIXED: Custody Property Kanban View - แก้ kanban template -->
     <record id="custody_property_kanban_view" model="ir.ui.view">
         <field name="name">custody.property.kanban</field>
         <field name="model">custody.property</field>
@@ -248,7 +250,8 @@
                 <field name="storage_location"/>
                 <field name="image"/>
                 <templates>
-                    <t t-name="kanban-box">
+                    <!-- ✅ FIXED: เปลี่ยนจาก kanban-box เป็น card -->
+                    <t t-name="card">
                         <div class="oe_kanban_card oe_kanban_global_click">
                             <div class="o_kanban_image">
                                 <img t-att-src="kanban_image('custody.property', 'image', record.id.raw_value)" 
