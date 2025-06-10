@@ -1,13 +1,14 @@
 {
     'name': 'Open HRMS Custody',
-    'version': '18.0.1.0.1',  # ← เพิ่ม version เพื่อให้ migration ทำงาน
+    'version': '18.0.1.1.0',  # ⭐ NEW: Increment version for Phase 4 - Hierarchical Categories
     'category': 'Human Resources',
-    'summary': """Manage the company properties with image documentation""",
+    'summary': """Manage the company properties with hierarchical categories and image documentation""",
     'description': """
         Manage the company properties when it is in the custody of an employee.
 
         Features:
-        * Multiple approvers system
+        * Hierarchical property categories for better organization
+        * Multiple approvers system with category inheritance
         * Flexible return date management
         * Before/after photo documentation
         * Property status tracking
@@ -15,6 +16,8 @@
         * Comprehensive reporting
         * Return date tracking with overdue management
         * Performance analytics
+        * Category-based property management
+        * Default approvers per category
     """,
     'author': 'Cybrosys Techno solutions',
     'company': 'Cybrosys Techno Solutions',
@@ -38,7 +41,8 @@
         'wizard/custody_after_wizard_views.xml',
 
         # Main views - ORDER MATTERS!
-        'views/custody_property_views.xml',  # Must come first - defines custody_property_action
+        'views/property_category_views.xml',  # ⭐ NEW: Categories first
+        'views/custody_property_views.xml',  # Must come after categories - references category fields
         'views/hr_custody_views.xml',        # References custody_property_action
         'views/hr_employee_views.xml',
         'views/custody_image_views.xml',     # Image views and history
