@@ -180,9 +180,8 @@ class PropertyCategory(models.Model):
             else:
                 category.level = 0
 
-    # ⭐ FIXED: Add dependencies to trigger recomputation
-    @api.depends('property_ids', 'child_ids.property_count', 'child_ids.total_property_count', 
-                 'property_ids.custody_ids.state')
+    # ⭐ FIXED: Simplified dependencies to avoid field resolution errors
+    @api.depends('property_ids', 'child_ids.property_count', 'child_ids.total_property_count')
     def _compute_property_statistics(self):
         """Compute statistics about properties in this category"""
         for category in self:
