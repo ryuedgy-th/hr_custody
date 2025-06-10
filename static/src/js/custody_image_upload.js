@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-// Updated 2025-06-11 - Fix field selectors for invisible fields
+// Updated 2025-06-11 - Add DOM inspection for debugging
 
 console.log('🚀 Loading Custody Upload Manager...');
 
@@ -16,9 +16,49 @@ export class CustodyUploadManager {
         this.isProcessing = false;
         this.clickTimeout = null;
         this.lastClickTime = 0;
-        this.browseButtonClicked = false; // Track browse button clicks
+        this.browseButtonClicked = false;
         
         console.log('📋 Upload Manager Created');
+    }
+
+    // Debug function to inspect DOM
+    debugDOMStructure() {
+        console.log('🔍 DEBUG: Inspecting DOM structure...');
+        
+        // ดู form elements ทั้งหมด
+        const allInputs = document.querySelectorAll('input');
+        const allTextareas = document.querySelectorAll('textarea');
+        const allFields = document.querySelectorAll('[name*="total_files"], [name*="total_size"], [name*="images_data"]');
+        
+        console.log('📋 All inputs:', allInputs.length);
+        allInputs.forEach((input, i) => {
+            if (input.name) {
+                console.log(`  Input ${i}: name="${input.name}", type="${input.type}", class="${input.className}"`);
+            }
+        });
+        
+        console.log('📋 All textareas:', allTextareas.length);
+        allTextareas.forEach((textarea, i) => {
+            if (textarea.name) {
+                console.log(`  Textarea ${i}: name="${textarea.name}", class="${textarea.className}"`);
+            }
+        });
+        
+        console.log('📋 Fields with target names:', allFields.length);
+        allFields.forEach((field, i) => {
+            console.log(`  Field ${i}:`, field.outerHTML.substring(0, 100) + '...');
+        });
+        
+        // ดู Odoo field widgets
+        const odooFields = document.querySelectorAll('.o_field_widget, [data-field-name], .o_field');
+        console.log('📋 Odoo field widgets:', odooFields.length);
+        odooFields.forEach((field, i) => {
+            const name = field.getAttribute('name') || field.getAttribute('data-field-name') || field.dataset.fieldName;
+            if (name && (name.includes('total_files') || name.includes('total_size') || name.includes('images_data'))) {
+                console.log(`  Odoo Field ${i}: name="${name}", class="${field.className}"`);
+                console.log(`    HTML:`, field.outerHTML.substring(0, 150) + '...');
+            }
+        });
     }
 
     init() {
@@ -28,6 +68,9 @@ export class CustodyUploadManager {
         }
 
         console.log('🔍 Looking for upload elements...');
+        
+        // เรียก debug function
+        setTimeout(() => this.debugDOMStructure(), 1000);
         
         const elements = {
             uploadZoneById: document.querySelector('#custody_multiple_upload_zone'),
@@ -67,13 +110,11 @@ export class CustodyUploadManager {
     triggerFileDialog() {
         const now = Date.now();
         
-        // ป้องกัน rapid clicks (ภายใน 300ms)
         if (now - this.lastClickTime < 300) {
             console.log('⚠️ Rapid click detected, ignoring');
             return;
         }
         
-        // ป้องกัน multiple calls ในเวลาใกล้กัน
         if (this.clickTimeout) {
             console.log('⚠️ File dialog already triggered, ignoring');
             return;
@@ -81,17 +122,16 @@ export class CustodyUploadManager {
 
         console.log('🎯 Triggering file dialog...');
         this.lastClickTime = now;
-        this.browseButtonClicked = true; // Set flag เมื่อกด browse button
+        this.browseButtonClicked = true;
         
         const fileInput = document.getElementById('file_input');
         if (fileInput) {
             fileInput.click();
             console.log('✅ File dialog opened');
             
-            // Set timeout เพื่อป้องกัน multiple triggers
             this.clickTimeout = setTimeout(() => {
                 this.clickTimeout = null;
-                this.browseButtonClicked = false; // Reset flag หลังจาก 500ms
+                this.browseButtonClicked = false;
             }, 500);
         } else {
             console.error('❌ File input not found');
@@ -104,7 +144,7 @@ export class CustodyUploadManager {
         
         console.log('🔧 Setting up event listeners...');
 
-        // Browse button events - ใช้หลาย events เพื่อ block อย่างสมบูรณ์
+        // Browse button events
         ['mousedown', 'mouseup', 'click'].forEach(eventType => {
             browseBtn.addEventListener(eventType, (e) => {
                 e.preventDefault();
@@ -141,15 +181,13 @@ export class CustodyUploadManager {
             }
         });
 
-        // Dropzone click - เช็คทั้ง flag และ position
+        // Dropzone click
         dropzone.addEventListener('click', (e) => {
-            // ถ้า browse button เพิ่งถูกกด ให้ skip
             if (this.browseButtonClicked) {
                 console.log('🚫 Browse button just clicked, ignoring dropzone');
                 return;
             }
 
-            // เช็คอย่างละเอียดว่าคลิกบริเวณ browse button หรือไม่
             const browseArea = browseBtn.getBoundingClientRect();
             const clickX = e.clientX;
             const clickY = e.clientY;
@@ -338,58 +376,66 @@ export class CustodyUploadManager {
     }
 
     updateDisplay() {
-        // ลองหา fields ด้วยหลายวิธี
-        const totalFilesField = this.findFormField('total_files');
-        const totalSizeField = this.findFormField('total_size_mb');
-
-        if (totalFilesField) {
-            totalFilesField.value = this.selectedFiles.length;
-            this.triggerOdooFieldUpdate(totalFilesField);
-            console.log('✅ Updated total_files field:', this.selectedFiles.length);
-        } else {
-            console.warn('⚠️ total_files field not found');
-        }
-
-        if (totalSizeField) {
-            const sizeInMB = (this.totalSize / (1024 * 1024)).toFixed(2);
-            totalSizeField.value = sizeInMB;
-            this.triggerOdooFieldUpdate(totalSizeField);
-            console.log('✅ Updated total_size_mb field:', sizeInMB);
-        } else {
-            console.warn('⚠️ total_size_mb field not found');
-        }
-
-        this.updateFormData();
-
-        console.log('📊 Display updated:', {
-            files: this.selectedFiles.length,
-            totalSizeMB: (this.totalSize / (1024 * 1024)).toFixed(2)
+        // ใช้ alternative approach: ตั้งค่าใน global variables แทน
+        console.log('💾 Storing data in global variables for form submission...');
+        
+        // เก็บข้อมูลใน window object เพื่อให้ Odoo access ได้
+        window.custodyUploadData = {
+            totalFiles: this.selectedFiles.length,
+            totalSizeMB: (this.totalSize / (1024 * 1024)).toFixed(2),
+            filesData: this.selectedFiles
+                .filter(file => file.dataUrl)
+                .map(file => ({
+                    filename: file.filename,
+                    size: file.size,
+                    type: file.type,
+                    data: file.dataUrl,
+                    description: file.description || '',
+                    id: file.id
+                }))
+        };
+        
+        console.log('📊 Global data updated:', {
+            files: window.custodyUploadData.totalFiles,
+            totalSizeMB: window.custodyUploadData.totalSizeMB,
+            dataLength: window.custodyUploadData.filesData.length
         });
+        
+        // พยายาม inject ข้อมูลลงใน form field ถ้าเจอ
+        this.injectFormData();
     }
 
-    findFormField(fieldName) {
-        // ลองหา field ด้วยหลาย selector
-        const selectors = [
-            `input[name="${fieldName}"]`,
-            `textarea[name="${fieldName}"]`,
-            `field[name="${fieldName}"] input`,
-            `field[name="${fieldName}"] textarea`,
-            `.o_field_widget[name="${fieldName}"] input`,
-            `.o_field_widget[name="${fieldName}"] textarea`,
-            `[data-field-name="${fieldName}"] input`,
-            `[data-field-name="${fieldName}"] textarea`
-        ];
-
-        for (const selector of selectors) {
-            const field = document.querySelector(selector);
-            if (field) {
-                console.log(`🎯 Found ${fieldName} using selector: ${selector}`);
-                return field;
-            }
+    injectFormData() {
+        // ลองหา form และ inject ข้อมูลโดยตรง
+        const form = document.querySelector('form');
+        if (form) {
+            console.log('📝 Found form, attempting to inject data...');
+            
+            // ลองสร้าง hidden fields
+            const fieldsToCreate = [
+                { name: 'total_files', value: this.selectedFiles.length },
+                { name: 'total_size_mb', value: (this.totalSize / (1024 * 1024)).toFixed(2) },
+                { name: 'images_data', value: JSON.stringify(window.custodyUploadData.filesData) }
+            ];
+            
+            fieldsToCreate.forEach(fieldInfo => {
+                // ลบ field เก่าถ้ามี
+                const existingField = form.querySelector(`input[name="${fieldInfo.name}"], textarea[name="${fieldInfo.name}"]`);
+                if (existingField) {
+                    existingField.value = fieldInfo.value;
+                    this.triggerOdooFieldUpdate(existingField);
+                    console.log(`✅ Updated existing field: ${fieldInfo.name} = ${fieldInfo.value}`);
+                } else {
+                    // สร้าง hidden field ใหม่
+                    const hiddenField = document.createElement('input');
+                    hiddenField.type = 'hidden';
+                    hiddenField.name = fieldInfo.name;
+                    hiddenField.value = fieldInfo.value;
+                    form.appendChild(hiddenField);
+                    console.log(`✅ Created hidden field: ${fieldInfo.name} = ${fieldInfo.value}`);
+                }
+            });
         }
-        
-        console.warn(`⚠️ Field ${fieldName} not found with any selector`);
-        return null;
     }
 
     triggerOdooFieldUpdate(field) {
@@ -402,31 +448,8 @@ export class CustodyUploadManager {
     }
 
     updateFormData() {
-        const imagesDataField = this.findFormField('images_data');
-        
-        if (imagesDataField) {
-            const formData = this.selectedFiles
-                .filter(file => file.dataUrl)
-                .map(file => ({
-                    filename: file.filename,
-                    size: file.size,
-                    type: file.type,
-                    data: file.dataUrl,
-                    description: file.description || '',
-                    id: file.id
-                }));
-
-            imagesDataField.value = JSON.stringify(formData);
-            this.triggerOdooFieldUpdate(imagesDataField);
-
-            console.log('💾 Form data updated with', formData.length, 'files');
-            if (formData.length > 0) {
-                console.log('📄 Sample data length:', formData[0].data.length);
-                console.log('📄 Sample filename:', formData[0].filename);
-            }
-        } else {
-            console.error('❌ images_data field not found');
-        }
+        // อัพเดท global data
+        this.updateDisplay();
     }
 
     removeFile(fileId) {
@@ -494,4 +517,4 @@ window.addEventListener('load', () => {
     setTimeout(initializeUpload, 1000);
 });
 
-console.log('✅ Custody Upload Module Loaded - Fixed Field Selectors');
+console.log('✅ Custody Upload Module Loaded - With DOM Debug & Form Injection');
