@@ -1,6 +1,4 @@
-// Simple and Reliable Upload Manager for Custody Images
-// แก้ไข: ใช้ flag เพื่อป้องกัน event ซ้ำแทน cloneNode
-
+// Fixed Upload Manager - แก้ไข selector ให้ตรงกับ XML
 console.log('🚀 Custody Upload Script Loading...');
 
 (function() {
@@ -21,7 +19,7 @@ console.log('🚀 Custody Upload Script Loading...');
         this.maxTotalSize = 100 * 1024 * 1024; // 100MB
         this.allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
         this.initialized = false;
-        this.isProcessing = false; // Flag เพื่อป้องกัน double click
+        this.isProcessing = false;
         
         console.log('📋 Upload Manager Created');
     }
@@ -33,18 +31,35 @@ console.log('🚀 Custody Upload Script Loading...');
         }
         
         console.log('🔍 Looking for upload elements...');
+        console.log('DOM state:', document.readyState);
+        console.log('Available elements in DOM:', {
+            custodyUploadZone: !!document.querySelector('#custody_multiple_upload_zone'),
+            custodyUploadZoneDash: !!document.querySelector('.custody-upload-zone'),
+            uploadDropzone: !!document.querySelector('.upload-dropzone'),
+            fileInput: !!document.getElementById('file_input'),
+            browseBtn: !!document.getElementById('browse_files_btn')
+        });
         
+        // แก้ไข: ใช้ ID selector แทน class selector
+        var uploadZone = document.querySelector('#custody_multiple_upload_zone');
         var dropzone = document.querySelector('.upload-dropzone');
         var fileInput = document.getElementById('file_input');
         var browseBtn = document.getElementById('browse_files_btn');
         
-        if (!dropzone || !fileInput || !browseBtn) {
+        if (!uploadZone || !dropzone || !fileInput || !browseBtn) {
             console.log('⏳ Elements not found, retrying in 500ms...');
+            console.log('Missing elements:', {
+                uploadZone: !uploadZone,
+                dropzone: !dropzone,
+                fileInput: !fileInput,
+                browseBtn: !browseBtn
+            });
             setTimeout(this.init.bind(this), 500);
             return;
         }
         
         console.log('✅ Found all elements:', {
+            uploadZone: !!uploadZone,
             dropzone: !!dropzone,
             fileInput: !!fileInput, 
             browseBtn: !!browseBtn
@@ -59,6 +74,8 @@ console.log('🚀 Custody Upload Script Loading...');
         var self = this;
         
         console.log('🔧 Setting up events...');
+        console.log('Browse button element:', browseBtn);
+        console.log('File input element:', fileInput);
         
         // Browse button click - ใช้ flag แทน cloneNode
         browseBtn.addEventListener('click', function(e) {
@@ -70,8 +87,10 @@ console.log('🚀 Custody Upload Script Loading...');
                 return;
             }
             
-            console.log('🖱️ Browse button clicked');
+            console.log('🖱️ Browse button clicked!');
+            console.log('File input before click:', fileInput);
             fileInput.click();
+            console.log('✅ File input click triggered');
         });
         
         // File input change
@@ -131,12 +150,14 @@ console.log('🚀 Custody Upload Script Loading...');
         ['dragenter', 'dragover'].forEach(function(eventName) {
             dropzone.addEventListener(eventName, function() {
                 dropzone.classList.add('dragover');
+                console.log('🎯 Drag over detected');
             }, false);
         });
         
         ['dragleave', 'drop'].forEach(function(eventName) {
             dropzone.addEventListener(eventName, function() {
                 dropzone.classList.remove('dragover');
+                console.log('🎯 Drag leave/drop detected');
             }, false);
         });
         
@@ -226,7 +247,7 @@ console.log('🚀 Custody Upload Script Loading...');
         reader.onload = function(e) {
             fileData.dataUrl = e.target.result;
             self.renderPreviews();
-            self.updateFormData(); // อัพเดท form data ทุกครั้งที่มีรูปใหม่
+            self.updateFormData();
         };
         
         reader.onerror = function() {
@@ -310,7 +331,6 @@ console.log('🚀 Custody Upload Script Loading...');
         
         if (totalFilesField) {
             totalFilesField.value = this.selectedFiles.length;
-            // Trigger multiple events to ensure Odoo detects change
             totalFilesField.dispatchEvent(new Event('change', { bubbles: true }));
             totalFilesField.dispatchEvent(new Event('input', { bubbles: true }));
         }
@@ -332,9 +352,8 @@ console.log('🚀 Custody Upload Script Loading...');
     CustodyUploadManager.prototype.updateFormData = function() {
         var imagesDataField = document.querySelector('textarea[name="images_data"]');
         if (imagesDataField) {
-            // สร้าง data ที่จะส่งไป Python wizard
             var formData = this.selectedFiles.filter(function(file) {
-                return file.dataUrl; // เฉพาะไฟล์ที่ read เสร็จแล้ว
+                return file.dataUrl;
             }).map(function(file) {
                 return {
                     filename: file.filename,
@@ -347,8 +366,6 @@ console.log('🚀 Custody Upload Script Loading...');
             });
             
             imagesDataField.value = JSON.stringify(formData);
-            
-            // Trigger multiple events to ensure Odoo form detects change
             imagesDataField.dispatchEvent(new Event('change', { bubbles: true }));
             imagesDataField.dispatchEvent(new Event('input', { bubbles: true }));
             
@@ -369,12 +386,17 @@ console.log('🚀 Custody Upload Script Loading...');
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
     
-    // Initialize function
+    // Initialize function - แก้ไข selector
     function initializeUpload() {
         console.log('🔍 Checking for upload zone...');
+        console.log('Available upload elements:', {
+            custodyUploadZoneId: !!document.querySelector('#custody_multiple_upload_zone'),
+            custodyUploadZoneClass: !!document.querySelector('.custody-upload-zone')
+        });
         
-        if (document.querySelector('.custody-upload-zone')) {
-            console.log('✅ Upload zone found!');
+        // ใช้ ID selector แทน class selector
+        if (document.querySelector('#custody_multiple_upload_zone')) {
+            console.log('✅ Upload zone found via ID!');
             
             if (!window.custodyUploadManager) {
                 var manager = new CustodyUploadManager();
