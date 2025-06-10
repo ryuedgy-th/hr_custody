@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-// แก้ไขปัญหา event conflict - prevent double click events
+// Updated 2025-06-10 17:20 - Final fix for event conflicts
 
 console.log('🚀 Loading Custody Upload Manager...');
 
@@ -14,7 +14,8 @@ export class CustodyUploadManager {
         this.allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
         this.initialized = false;
         this.isProcessing = false;
-        this.clickTimeout = null; // เพิ่ม timeout เพื่อป้องกัน double click
+        this.clickTimeout = null;
+        this.lastClickTime = 0; // เพิ่ม timestamp เพื่อป้องกัน rapid clicks
         
         console.log('📋 Upload Manager Created');
     }
@@ -27,7 +28,6 @@ export class CustodyUploadManager {
 
         console.log('🔍 Looking for upload elements...');
         
-        // เช็ค elements ที่มีอยู่
         const elements = {
             uploadZoneById: document.querySelector('#custody_multiple_upload_zone'),
             uploadZoneByClass: document.querySelector('.custody-upload-zone'),
@@ -43,7 +43,6 @@ export class CustodyUploadManager {
 
         console.log('🔍 Available elements:', elements);
 
-        // ใช้ element ที่หาเจอ
         const uploadZone = elements.uploadZoneById || elements.uploadZoneByClass;
         
         if (!uploadZone || !elements.dropzone || !elements.fileInput || !elements.browseBtn) {
@@ -59,6 +58,14 @@ export class CustodyUploadManager {
     }
 
     triggerFileDialog() {
+        const now = Date.now();
+        
+        // ป้องกัน rapid clicks (ภายใน 300ms)
+        if (now - this.lastClickTime < 300) {
+            console.log('⚠️ Rapid click detected, ignoring');
+            return;
+        }
+        
         // ป้องกัน multiple calls ในเวลาใกล้กัน
         if (this.clickTimeout) {
             console.log('⚠️ File dialog already triggered, ignoring');
@@ -66,6 +73,8 @@ export class CustodyUploadManager {
         }
 
         console.log('🎯 Triggering file dialog...');
+        this.lastClickTime = now;
+        
         const fileInput = document.getElementById('file_input');
         if (fileInput) {
             fileInput.click();
@@ -85,11 +94,11 @@ export class CustodyUploadManager {
         
         console.log('🔧 Setting up event listeners...');
 
-        // Browse button click - หยุด propagation
-        browseBtn.addEventListener('click', (e) => {
+        // Browse button click - สูตรลับ: ใช้ mousedown แทน click
+        browseBtn.addEventListener('mousedown', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            e.stopImmediatePropagation(); // หยุด event ทันที
+            e.stopImmediatePropagation();
             
             if (this.isProcessing) {
                 console.log('⚠️ Already processing, ignoring click');
@@ -98,7 +107,15 @@ export class CustodyUploadManager {
             
             console.log('🖱️ Browse button clicked!');
             this.triggerFileDialog();
-        }, true); // ใช้ capture phase
+        }, true);
+
+        // ป้องกัน click event บน browse button
+        browseBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            console.log('🚫 Browse button click prevented');
+        }, true);
 
         // File input change
         fileInput.addEventListener('change', (e) => {
@@ -114,7 +131,6 @@ export class CustodyUploadManager {
                 console.log('📝 Processing selected files...');
                 this.handleFiles(e.target.files);
                 
-                // Reset processing flag และ clear input
                 setTimeout(() => {
                     this.isProcessing = false;
                     e.target.value = '';
@@ -122,13 +138,25 @@ export class CustodyUploadManager {
             }
         });
 
-        // Dropzone click - เฉพาะเมื่อไม่ได้คลิกที่ browse button
+        // Dropzone click - เฉพาะเมื่อไม่ได้คลิกบริเวณ browse button
         dropzone.addEventListener('click', (e) => {
-            // เช็คว่าคลิกที่ browse button หรือลูกของมันหรือไม่
-            if (e.target === browseBtn || 
+            // เช็คอย่างละเอียดว่าคลิกบริเวณ browse button หรือไม่
+            const browseArea = browseBtn.getBoundingClientRect();
+            const clickX = e.clientX;
+            const clickY = e.clientY;
+            
+            const isInBrowseArea = (
+                clickX >= browseArea.left &&
+                clickX <= browseArea.right &&
+                clickY >= browseArea.top &&
+                clickY <= browseArea.bottom
+            );
+            
+            if (isInBrowseArea || 
+                e.target === browseBtn || 
                 browseBtn.contains(e.target) || 
                 e.target.closest('#browse_files_btn')) {
-                console.log('🚫 Click on browse button, ignoring dropzone event');
+                console.log('🚫 Click in browse area, ignoring dropzone event');
                 return;
             }
 
@@ -136,7 +164,7 @@ export class CustodyUploadManager {
 
             e.preventDefault();
             e.stopPropagation();
-            console.log('🖱️ Dropzone area clicked');
+            console.log('🖱️ Dropzone area clicked (outside browse button)');
             this.triggerFileDialog();
         });
 
@@ -201,13 +229,11 @@ export class CustodyUploadManager {
             const file = files[i];
             console.log('🔍 Checking file:', file.name, file.type, file.size);
 
-            // Validate file type
             if (!this.allowedTypes.includes(file.type)) {
                 alert(`File "${file.name}" has unsupported format. Allowed: JPEG, PNG, GIF, WebP, BMP`);
                 continue;
             }
 
-            // Validate file size
             if (file.size > this.maxFileSize) {
                 alert(`File "${file.name}" exceeds 5MB limit`);
                 continue;
@@ -418,4 +444,4 @@ window.addEventListener('load', () => {
     setTimeout(initializeUpload, 1000);
 });
 
-console.log('✅ Custody Upload Module Loaded (Fixed Event Conflicts)');
+console.log('✅ Custody Upload Module Loaded - Final Version');
