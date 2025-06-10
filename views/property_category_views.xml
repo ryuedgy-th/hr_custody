@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Property Category Tree View -->
+    <record id="property_category_tree_view" model="ir.ui.view">
+        <field name="name">property.category.tree</field>
+        <field name="model">property.category</field>
+        <field name="arch" type="xml">
+            <tree string="Property Categories" 
+                  decoration-muted="not active"
+                  decoration-bf="is_parent">
+                <field name="active" column_invisible="1"/>
+                <field name="is_parent" column_invisible="1"/>
+                <field name="complete_name" string="Category"/>
+                <field name="property_count" string="Properties"/>
+                <field name="total_property_count" string="Total Properties"/>
+                <field name="active_custody_count" string="Active Custodies"/>
+                <field name="responsible_department_id"/>
+                <field name="sequence" optional="hide"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Property Category Hierarchy View -->
+    <record id="property_category_hierarchy_view" model="ir.ui.view">
+        <field name="name">property.category.hierarchy</field>
+        <field name="model">property.category</field>
+        <field name="arch" type="xml">
+            <tree string="Category Hierarchy" 
+                  decoration-muted="not active"
+                  decoration-bf="is_parent"
+                  create="false" 
+                  edit="false"
+                  delete="false">
+                <field name="active" column_invisible="1"/>
+                <field name="is_parent" column_invisible="1"/>
+                <field name="name"/>
+                <field name="property_count" string="Direct Properties"/>
+                <field name="total_property_count" string="Total Properties"/>
+                <field name="active_custody_count" string="Active Custodies"/>
+                <field name="level" string="Level" optional="hide"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Property Category Form View -->
+    <record id="property_category_form_view" model="ir.ui.view">
+        <field name="name">property.category.form</field>
+        <field name="model">property.category</field>
+        <field name="arch" type="xml">
+            <form string="Property Category">
+                <header>
+                    <button name="action_view_properties" 
+                            type="object" 
+                            string="View Properties"
+                            class="btn-primary"
+                            invisible="total_property_count == 0"/>
+                    <button name="action_view_custodies" 
+                            type="object" 
+                            string="View Custodies"
+                            class="btn-secondary"
+                            invisible="active_custody_count == 0"/>
+                    <button name="action_create_subcategory" 
+                            type="object" 
+                            string="Create Subcategory"
+                            class="btn-secondary"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_properties"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-cube">
+                            <field name="total_property_count" widget="statinfo" string="Properties"/>
+                        </button>
+                        <button name="action_view_custodies"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-handshake-o"
+                                invisible="active_custody_count == 0">
+                            <field name="active_custody_count" widget="statinfo" string="Active Custodies"/>
+                        </button>
+                    </div>
+
+                    <widget name="web_ribbon" title="Archived" bg_color="bg-danger" invisible="active"/>
+                    
+                    <field name="image" widget="image" class="oe_avatar"/>
+                    
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="Category Name..."/></h1>
+                        <field name="complete_name" readonly="1" class="text-muted"/>
+                    </div>
+
+                    <group>
+                        <group name="category_info" string="Category Information">
+                            <field name="parent_id" 
+                                   domain="[('id', '!=', id)]"
+                                   options="{'no_create_edit': True}"/>
+                            <field name="sequence"/>
+                            <field name="active"/>
+                            <field name="color" widget="color"/>
+                        </group>
+                        <group name="management" string="Management">
+                            <field name="responsible_department_id"/>
+                            <field name="level" readonly="1"/>
+                            <field name="property_count" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Description" name="description">
+                            <field name="description" placeholder="Detailed description of this category..."/>
+                        </page>
+                        
+                        <page string="Default Approvers" name="approvers">
+                            <field name="approver_ids" widget="many2many_tags">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="email"/>
+                                </tree>
+                            </field>
+                            <div class="text-muted mt-2">
+                                <i class="fa fa-info-circle"/> 
+                                These users will be set as default approvers for new properties in this category.
+                                Properties can override these settings with their own approvers.
+                            </div>
+                        </page>
+
+                        <page string="Child Categories" name="children" invisible="not child_ids">
+                            <field name="child_ids" readonly="1">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="property_count" string="Properties"/>
+                                    <field name="total_property_count" string="Total Properties"/>
+                                    <field name="responsible_department_id"/>
+                                    <field name="active"/>
+                                </tree>
+                            </field>
+                        </page>
+
+                        <page string="Properties" name="properties" invisible="property_count == 0">
+                            <field name="property_ids" readonly="1" context="{'tree_view_ref': 'hr_custody.custody_property_tree_view'}">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="property_code"/>
+                                    <field name="property_status"/>
+                                    <field name="current_borrower_id"/>
+                                    <field name="responsible_person"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Property Category Kanban View -->
+    <record id="property_category_kanban_view" model="ir.ui.view">
+        <field name="name">property.category.kanban</field>
+        <field name="model">property.category</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile">
+                <field name="id"/>
+                <field name="name"/>
+                <field name="complete_name"/>
+                <field name="property_count"/>
+                <field name="total_property_count"/>
+                <field name="active_custody_count"/>
+                <field name="color"/>
+                <field name="image"/>
+                <field name="active"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="#{!record.active.raw_value ? 'o_kanban_color_0' : 'oe_kanban_color_' + (record.color.raw_value || 0)} oe_kanban_card oe_kanban_global_click">
+                            <div class="o_kanban_image">
+                                <img t-att-src="kanban_image('property.category', 'image', record.id.raw_value)" alt="Category Image" class="o_image_64_cover"/>
+                            </div>
+                            <div class="oe_kanban_details">
+                                <div class="o_kanban_record_top">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title">
+                                            <field name="name"/>
+                                        </strong>
+                                        <small class="text-muted">
+                                            <field name="complete_name"/>
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="o_kanban_record_bottom">
+                                    <div class="oe_kanban_bottom_left">
+                                        <span class="badge badge-pill badge-info" t-if="record.property_count.raw_value">
+                                            <i class="fa fa-cube"/> <t t-esc="record.property_count.value"/> Properties
+                                        </span>
+                                        <span class="badge badge-pill badge-warning" t-if="record.active_custody_count.raw_value">
+                                            <i class="fa fa-handshake-o"/> <t t-esc="record.active_custody_count.value"/> Active
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Property Category Search View -->
+    <record id="property_category_search_view" model="ir.ui.view">
+        <field name="name">property.category.search</field>
+        <field name="model">property.category</field>
+        <field name="arch" type="xml">
+            <search string="Search Property Categories">
+                <field name="name" string="Category Name"/>
+                <field name="complete_name" string="Complete Name"/>
+                <field name="description"/>
+                <field name="responsible_department_id"/>
+                <field name="approver_ids"/>
+                
+                <filter string="Active Categories" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Inactive Categories" name="inactive" domain="[('active', '=', False)]"/>
+                <separator/>
+                <filter string="Parent Categories" name="parent_categories" domain="[('child_ids', '!=', False)]"/>
+                <filter string="Leaf Categories" name="leaf_categories" domain="[('child_ids', '=', False)]"/>
+                <separator/>
+                <filter string="With Properties" name="with_properties" domain="[('property_count', '>', 0)]"/>
+                <filter string="Empty Categories" name="empty_categories" domain="[('property_count', '=', 0)]"/>
+                <filter string="With Active Custodies" name="with_custodies" domain="[('active_custody_count', '>', 0)]"/>
+
+                <group expand="0" string="Group By">
+                    <filter string="Parent Category" name="group_by_parent" context="{'group_by': 'parent_id'}"/>
+                    <filter string="Department" name="group_by_department" context="{'group_by': 'responsible_department_id'}"/>
+                    <filter string="Level" name="group_by_level" context="{'group_by': 'level'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Property Category Action -->
+    <record id="property_category_action" model="ir.actions.act_window">
+        <field name="name">Property Categories</field>
+        <field name="res_model">property.category</field>
+        <field name="view_mode">tree,kanban,form</field>
+        <field name="view_id" ref="property_category_tree_view"/>
+        <field name="search_view_id" ref="property_category_search_view"/>
+        <field name="context">{
+            'search_default_active': 1
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first property category!
+            </p>
+            <p>
+                Property categories help you organize your equipment and assets
+                in a hierarchical structure. For example:
+                <br/>• Electronics → Computers → Laptops
+                <br/>• Furniture → Office Furniture → Desks
+                <br/>• Educational Materials → Laboratory Equipment
+            </p>
+            <p>
+                Categories can have default approvers and responsible departments
+                that will be inherited by properties assigned to them.
+            </p>
+        </field>
+    </record>
+
+    <!-- Property Category Hierarchy Action -->
+    <record id="property_category_hierarchy_action" model="ir.actions.act_window">
+        <field name="name">Category Hierarchy</field>
+        <field name="res_model">property.category</field>
+        <field name="view_mode">tree</field>
+        <field name="view_id" ref="property_category_hierarchy_view"/>
+        <field name="search_view_id" ref="property_category_search_view"/>
+        <field name="context">{
+            'search_default_active': 1
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                View the complete category hierarchy!
+            </p>
+            <p>
+                This view shows all categories organized in their hierarchical structure,
+                making it easy to understand the organization of your property categories.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Items -->
+    <menuitem id="property_category_menu" 
+              name="Property Categories" 
+              parent="hr_custody.hr_custody_menu_config"
+              action="property_category_action" 
+              sequence="10"/>
+
+    <menuitem id="property_category_hierarchy_menu" 
+              name="Category Hierarchy" 
+              parent="hr_custody.hr_custody_menu_config"
+              action="property_category_hierarchy_action" 
+              sequence="11"/>
+
+</odoo>
