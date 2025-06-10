@@ -2,15 +2,18 @@
 
 import { Component, onMounted, onWillUnmount } from "@odoo/owl";
 import { registry } from "@web/core/registry";
-import { useService } from "@web/core/utils/hooks";
 
 /**
  * Multiple Image Upload Widget for Custody Images
+ * แก้ไขปัญหา: useService ต้องใช้ใน OWL Component เท่านั้น
  */
 export class CustodyMultipleImageUpload extends Component {
+    static template = "hr_custody.CustodyMultipleImageUpload";
+
     setup() {
-        this.orm = useService("orm");
-        this.notification = useService("notification");
+        // ⚠️ ลบการใช้ useService ออก เพราะจะเกิด error ถ้าไม่ได้อยู่ใน OWL context
+        // this.orm = useService("orm");
+        // this.notification = useService("notification");
         
         this.selectedFiles = [];
         this.totalSize = 0;
@@ -81,7 +84,8 @@ export class CustodyMultipleImageUpload extends Component {
         dropzone.addEventListener('click', (e) => {
             // Only trigger if clicked on dropzone itself, not on browse button
             if (e.target === dropzone || e.target.closest('.upload-content')) {
-                document.getElementById('file_input').click();
+                const fileInput = document.getElementById('file_input');
+                if (fileInput) fileInput.click();
             }
         });
     }
@@ -130,10 +134,8 @@ export class CustodyMultipleImageUpload extends Component {
             
             // Validate file count
             if (this.selectedFiles.length + fileArray.length > this.maxFiles) {
-                this.notification.add(
-                    `Maximum ${this.maxFiles} files allowed. Currently selected: ${this.selectedFiles.length}`,
-                    { type: 'warning' }
-                );
+                // แทนที่ notification service ด้วย alert ธรรมดา
+                alert(`Maximum ${this.maxFiles} files allowed. Currently selected: ${this.selectedFiles.length}`);
                 return;
             }
 
@@ -147,7 +149,7 @@ export class CustodyMultipleImageUpload extends Component {
 
         } catch (error) {
             console.error('Error handling files:', error);
-            this.notification.add('Error processing files: ' + error.message, { type: 'danger' });
+            alert('Error processing files: ' + error.message);
         }
     }
 
@@ -227,7 +229,7 @@ export class CustodyMultipleImageUpload extends Component {
             fileItem.className = 'col-md-3 col-sm-4 col-6';
             fileItem.innerHTML = `
                 <div class="file-preview-item" data-file-id="${file.id}">
-                    <button type="button" class="file-remove-btn" onclick="window.custodyUploadWidget.removeFile('${file.id}')">
+                    <button type="button" class="file-remove-btn" onclick="window.custodyUploadWidget?.removeFile('${file.id}')">
                         ×
                     </button>
                     <img src="${file.data}" alt="${file.filename}" class="file-preview-img">
@@ -237,7 +239,7 @@ export class CustodyMultipleImageUpload extends Component {
                         <input type="text" 
                                placeholder="Description (optional)" 
                                value="${file.description}"
-                               onchange="window.custodyUploadWidget.updateFileDescription('${file.id}', this.value)">
+                               onchange="window.custodyUploadWidget?.updateFileDescription('${file.id}', this.value)">
                     </div>
                 </div>
             `;
@@ -306,39 +308,36 @@ export class CustodyMultipleImageUpload extends Component {
     }
 }
 
-// Auto-initialize when the DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM ready, looking for upload zone...');
-    
-    // Wait for the upload zone to appear
-    const checkForUploadZone = () => {
-        if (document.querySelector('.custody-upload-zone')) {
-            console.log('Upload zone found, initializing...');
-            const widget = new CustodyMultipleImageUpload();
-            window.custodyUploadWidget = widget; // Make globally available
-            widget.setup();
-        } else {
-            console.log('Upload zone not found, retrying...');
-            setTimeout(checkForUploadZone, 100);
-        }
-    };
-    
-    checkForUploadZone();
-});
-
-// Also try when window loads (backup)
-window.addEventListener('load', function() {
-    console.log('Window loaded, checking for upload zone...');
-    setTimeout(() => {
-        if (document.querySelector('.custody-upload-zone') && !window.custodyUploadWidget) {
-            console.log('Upload zone found on window load, initializing...');
+// ปรับปรุงการ initialize ให้ safer
+function initializeCustodyUpload() {
+    const uploadZone = document.querySelector('.custody-upload-zone');
+    if (uploadZone && !window.custodyUploadWidget) {
+        console.log('Initializing custody upload widget...');
+        try {
             const widget = new CustodyMultipleImageUpload();
             window.custodyUploadWidget = widget;
             widget.setup();
+            console.log('Custody upload widget initialized successfully');
+        } catch (error) {
+            console.error('Error initializing custody upload widget:', error);
+            // ถ้า error ให้ลองใหม่หลัง 2 วินาที
+            setTimeout(initializeCustodyUpload, 2000);
         }
-    }, 1000);
+    }
+}
+
+// เรียกใช้เมื่อ DOM พร้อม
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeCustodyUpload);
+} else {
+    // DOM พร้อมแล้ว ลองเลย
+    initializeCustodyUpload();
+}
+
+// Backup - ลองอีกครั้งเมื่อ window load
+window.addEventListener('load', () => {
+    setTimeout(initializeCustodyUpload, 1000);
 });
 
-// Register component for potential future use
-CustodyMultipleImageUpload.template = "hr_custody.CustodyMultipleImageUpload";
+// Register เป็น component (optional สำหรับ OWL usage)
 registry.category("fields").add("custody_multiple_image_upload", CustodyMultipleImageUpload);
