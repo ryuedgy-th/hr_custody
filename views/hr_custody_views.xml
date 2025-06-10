@@ -34,32 +34,32 @@
                            statusbar_visible="draft,to_approve,approved,returned"/>
                 </header>
                 <sheet>
-                    <!-- ⭐ Alert สำหรับ Overdue -->
-                    <div class="alert alert-danger" invisible="not is_overdue or state == 'returned'">
+                    <!-- ✅ FIXED: Alert สำหรับ Overdue - เพิ่ม role="alert" -->
+                    <div class="alert alert-danger" role="alert" invisible="not is_overdue or state == 'returned'">
                         <strong>⚠️ OVERDUE:</strong> This item is <field name="days_overdue" nolabel="1"/> days overdue!
                     </div>
 
-                    <!-- ⭐ Alert สำหรับ Pending Approval - แสดง Multiple Approvers -->
-                    <div class="alert alert-info" invisible="state != 'to_approve'">
+                    <!-- ✅ FIXED: Alert สำหรับ Pending Approval - เพิ่ม role="alert" -->
+                    <div class="alert alert-info" role="alert" invisible="state != 'to_approve'">
                         <strong>🔔 Waiting for approval from any of these users:</strong><br/>
                         <field name="property_approver_ids" widget="many2many_tags" readonly="1"/>
                     </div>
 
-                    <!-- ⭐ Alert สำหรับ Current User ที่เป็น Approver -->
-                    <div class="alert alert-warning" invisible="state != 'to_approve' or uid not in property_approver_ids">
+                    <!-- ✅ FIXED: Alert สำหรับ Current User ที่เป็น Approver - เพิ่ม role="alert" -->
+                    <div class="alert alert-warning" role="alert" invisible="state != 'to_approve' or uid not in property_approver_ids">
                         <strong>⚡ This request is waiting for YOUR approval!</strong>
                     </div>
 
-                    <!-- ⭐ Alert สำหรับ Approved Status -->
-                    <div class="alert alert-success" invisible="state not in ['approved', 'returned']">
+                    <!-- ✅ FIXED: Alert สำหรับ Approved Status - เพิ่ม role="alert" -->
+                    <div class="alert alert-success" role="alert" invisible="state not in ['approved', 'returned']">
                         <strong>✅ Approved by:</strong>
                         <field name="approved_by_id" readonly="1" nolabel="1"/>
                         <strong>on</strong>
                         <field name="approved_date" readonly="1" nolabel="1"/>
                     </div>
 
-                    <!-- ⭐ Alert สำหรับ Returned Status -->
-                    <div class="alert alert-success" invisible="state != 'returned'">
+                    <!-- ✅ FIXED: Alert สำหรับ Returned Status - เพิ่ม role="alert" -->
+                    <div class="alert alert-success" role="alert" invisible="state != 'returned'">
                         <strong>📦 Returned:</strong>
                         Equipment returned on <field name="actual_return_date" readonly="1" nolabel="1"/>
                         by <field name="returned_by_id" readonly="1" nolabel="1"/>
@@ -189,7 +189,7 @@
                             </group>
                         </page>
 
-                        <!-- Photo Documentation Tab -->
+                        <!-- ✅ FIXED: Photo Documentation Tab - แก้ kanban template -->
                         <page string="📸 Photo Documentation" name="images"
                               invisible="before_image_count == 0 and after_image_count == 0">
                             <group>
@@ -200,7 +200,8 @@
                                             <field name="description"/>
                                             <field name="taken_date"/>
                                             <templates>
-                                                <t t-name="kanban-box">
+                                                <!-- ✅ FIXED: เปลี่ยนจาก kanban-box เป็น card -->
+                                                <t t-name="card">
                                                     <div class="oe_kanban_card">
                                                         <div class="text-center">
                                                             <field name="image" widget="image" style="max-height: 100px;"/>
@@ -221,7 +222,8 @@
                                             <field name="description"/>
                                             <field name="taken_date"/>
                                             <templates>
-                                                <t t-name="kanban-box">
+                                                <!-- ✅ FIXED: เปลี่ยนจาก kanban-box เป็น card -->
+                                                <t t-name="card">
                                                     <div class="oe_kanban_card">
                                                         <div class="text-center">
                                                             <field name="image" widget="image" style="max-height: 100px;"/>
