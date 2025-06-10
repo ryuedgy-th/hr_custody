@@ -1,5 +1,5 @@
-// Fixed Upload Manager for Custody Images
-// แก้ไข: event ซ้อน และ form data integration
+// Simple and Reliable Upload Manager for Custody Images
+// แก้ไข: ใช้ flag เพื่อป้องกัน event ซ้ำแทน cloneNode
 
 console.log('🚀 Custody Upload Script Loading...');
 
@@ -21,6 +21,7 @@ console.log('🚀 Custody Upload Script Loading...');
         this.maxTotalSize = 100 * 1024 * 1024; // 100MB
         this.allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
         this.initialized = false;
+        this.isProcessing = false; // Flag เพื่อป้องกัน double click
         
         console.log('📋 Upload Manager Created');
     }
@@ -43,7 +44,12 @@ console.log('🚀 Custody Upload Script Loading...');
             return;
         }
         
-        console.log('✅ Found all elements');
+        console.log('✅ Found all elements:', {
+            dropzone: !!dropzone,
+            fileInput: !!fileInput, 
+            browseBtn: !!browseBtn
+        });
+        
         this.setupEvents(dropzone, fileInput, browseBtn);
         this.initialized = true;
         console.log('✅ Manager initialized successfully');
@@ -52,22 +58,18 @@ console.log('🚀 Custody Upload Script Loading...');
     CustodyUploadManager.prototype.setupEvents = function(dropzone, fileInput, browseBtn) {
         var self = this;
         
-        // Remove any existing event listeners to prevent duplicates
-        var newFileInput = fileInput.cloneNode(true);
-        fileInput.parentNode.replaceChild(newFileInput, fileInput);
-        fileInput = newFileInput;
+        console.log('🔧 Setting up events...');
         
-        var newBrowseBtn = browseBtn.cloneNode(true);
-        browseBtn.parentNode.replaceChild(newBrowseBtn, browseBtn);
-        browseBtn = newBrowseBtn;
-        
-        console.log('🔧 Setting up clean events...');
-        
-        // Browse button click - ป้องกันการเปิด dialog ซ้ำ
+        // Browse button click - ใช้ flag แทน cloneNode
         browseBtn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            e.stopImmediatePropagation();
+            
+            if (self.isProcessing) {
+                console.log('⚠️ Already processing, ignoring click');
+                return;
+            }
+            
             console.log('🖱️ Browse button clicked');
             fileInput.click();
         });
@@ -76,19 +78,34 @@ console.log('🚀 Custody Upload Script Loading...');
         fileInput.addEventListener('change', function(e) {
             console.log('📁 File input changed! Files:', e.target.files.length);
             
+            if (self.isProcessing) {
+                console.log('⚠️ Already processing files, ignoring');
+                return;
+            }
+            
             if (e.target.files.length > 0) {
+                self.isProcessing = true;
                 console.log('📝 Processing selected files...');
                 self.handleFiles(e.target.files);
-                // Clear the input for next selection
-                e.target.value = '';
+                // Reset flag after processing
+                setTimeout(function() {
+                    self.isProcessing = false;
+                    e.target.value = ''; // Clear for next selection
+                }, 1000);
             }
         });
         
-        // Dropzone click - ป้องกันการเปิด dialog ซ้ำ
+        // Dropzone click
         dropzone.addEventListener('click', function(e) {
+            // เช็คว่าคลิกที่ browse button หรือไม่
             if (e.target === browseBtn || browseBtn.contains(e.target)) {
-                return; // Let browse button handle it
+                return; // ปล่อยให้ browse button จัดการ
             }
+            
+            if (self.isProcessing) {
+                return;
+            }
+            
             e.preventDefault();
             e.stopPropagation();
             console.log('🖱️ Dropzone clicked - opening file dialog');
@@ -125,9 +142,17 @@ console.log('🚀 Custody Upload Script Loading...');
         
         // Handle file drop
         dropzone.addEventListener('drop', function(e) {
+            if (self.isProcessing) {
+                return;
+            }
+            
             var files = e.dataTransfer.files;
             console.log('📂 Files dropped:', files.length);
+            self.isProcessing = true;
             self.handleFiles(files);
+            setTimeout(function() {
+                self.isProcessing = false;
+            }, 1000);
         }, false);
     };
     
@@ -285,12 +310,15 @@ console.log('🚀 Custody Upload Script Loading...');
         
         if (totalFilesField) {
             totalFilesField.value = this.selectedFiles.length;
-            totalFilesField.dispatchEvent(new Event('change'));
+            // Trigger multiple events to ensure Odoo detects change
+            totalFilesField.dispatchEvent(new Event('change', { bubbles: true }));
+            totalFilesField.dispatchEvent(new Event('input', { bubbles: true }));
         }
         
         if (totalSizeField) {
             totalSizeField.value = (this.totalSize / (1024 * 1024)).toFixed(2);
-            totalSizeField.dispatchEvent(new Event('change'));
+            totalSizeField.dispatchEvent(new Event('change', { bubbles: true }));
+            totalSizeField.dispatchEvent(new Event('input', { bubbles: true }));
         }
         
         this.updateFormData();
@@ -305,7 +333,9 @@ console.log('🚀 Custody Upload Script Loading...');
         var imagesDataField = document.querySelector('textarea[name="images_data"]');
         if (imagesDataField) {
             // สร้าง data ที่จะส่งไป Python wizard
-            var formData = this.selectedFiles.map(function(file) {
+            var formData = this.selectedFiles.filter(function(file) {
+                return file.dataUrl; // เฉพาะไฟล์ที่ read เสร็จแล้ว
+            }).map(function(file) {
                 return {
                     filename: file.filename,
                     size: file.size,
@@ -318,12 +348,14 @@ console.log('🚀 Custody Upload Script Loading...');
             
             imagesDataField.value = JSON.stringify(formData);
             
-            // Force trigger change event for Odoo form
-            var event = new Event('input', { bubbles: true });
-            imagesDataField.dispatchEvent(event);
+            // Trigger multiple events to ensure Odoo form detects change
+            imagesDataField.dispatchEvent(new Event('change', { bubbles: true }));
+            imagesDataField.dispatchEvent(new Event('input', { bubbles: true }));
             
             console.log('💾 Form data updated with', formData.length, 'files');
-            console.log('📄 Data preview:', JSON.stringify(formData).substring(0, 200) + '...');
+            if (formData.length > 0) {
+                console.log('📄 Sample data:', formData[0].filename, formData[0].data.substring(0, 50) + '...');
+            }
         } else {
             console.warn('⚠️ images_data field not found');
         }
