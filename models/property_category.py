@@ -58,6 +58,14 @@ class PropertyCategory(models.Model):
         help='Technical field for hierarchical operations'
     )
 
+    # ⭐ NEW: Relationship to properties
+    property_ids = fields.One2many(
+        'custody.property',
+        'category_id',
+        string='Properties',
+        help='Properties directly assigned to this category'
+    )
+
     # Category Information
     description = fields.Text(
         string='Description',
