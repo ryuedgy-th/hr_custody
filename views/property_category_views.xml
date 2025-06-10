@@ -290,17 +290,25 @@
         </field>
     </record>
 
+    <!-- Configuration submenu for categories -->
+    <menuitem id="hr_custody_menu_config"
+              parent="hr_custody_main_menu"
+              name="Configuration"
+              sequence="20"/>
+
     <!-- Menu Items -->
     <menuitem id="property_category_menu" 
               name="Property Categories" 
-              parent="hr_custody.hr_custody_menu_config"
+              parent="hr_custody_menu_config"
               action="property_category_action" 
-              sequence="10"/>
+              sequence="10"
+              groups="hr.group_hr_user"/>
 
     <menuitem id="property_category_hierarchy_menu" 
               name="Category Hierarchy" 
-              parent="hr_custody.hr_custody_menu_config"
+              parent="hr_custody_menu_config"
               action="property_category_hierarchy_action" 
-              sequence="11"/>
+              sequence="11"
+              groups="hr.group_hr_user"/>
 
 </odoo>
