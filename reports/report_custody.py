@@ -42,11 +42,11 @@ class ReportCustody(models.Model):
     days_overdue = fields.Integer(string='Days Overdue',
                                  help='Number of days the return was overdue (at time of return)')
 
-    # Renewal fields
-    renew_date = fields.Date(string='Renewal Return Date',
+    # ✅ FIXED: Change field labels to be unique in report model
+    renew_date = fields.Date(string='Renewed Return Date',  # ← เปลี่ยนจาก 'Renewal Return Date'
                              help='The date when the custody is renewed and '
                                   'expected to be returned.')
-    is_renew_return_date = fields.Boolean(string='Renewal Return Date',
+    is_renew_return_date = fields.Boolean(string='Is Renewal Rejected',  # ← เปลี่ยนจาก 'Renewal Return Date'
                                           help='Indicates whether there is a '
                                                'renewal return date or not.')
 
