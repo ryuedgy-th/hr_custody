@@ -148,20 +148,20 @@ class HrCustody(models.Model):
     is_overdue = fields.Boolean(
         string='Is Overdue',
         compute='_compute_overdue_status',
-        store=True,  # ← เพิ่ม store=True
+        store=True,
         help='True if return is overdue (for fixed date returns)'
     )
 
     days_overdue = fields.Integer(
         string='Days Overdue',
         compute='_compute_overdue_status',
-        store=True,  # ← เพิ่ม store=True
+        store=True,
         help='Number of days overdue (negative if not due yet)'
     )
 
-    # Existing fields
+    # ✅ FIXED: Change field label to be unique
     renew_date = fields.Date(
-        string='Renewal Return Date',
+        string='Renewed Return Date',  # ← เปลี่ยนจาก 'Renewal Return Date'
         tracking=True,
         help="Return date for the renewal",
         readonly=True,
@@ -173,13 +173,16 @@ class HrCustody(models.Model):
         help='Note for Custody'
     )
 
+    # ✅ FIXED: Change field label to be unique  
     is_renew_return_date = fields.Boolean(
+        string='Is Renewal Rejected',  # ← เปลี่ยนจาก 'Renewal Return Date'
         default=False,
         copy=False,
         help='Rejected Renew Date'
     )
 
     is_renew_reject = fields.Boolean(
+        string='Renewal Rejected',
         default=False,
         copy=False,
         help='Indicates whether the renewal is rejected or not.'
@@ -310,7 +313,6 @@ class HrCustody(models.Model):
             else:
                 record.return_status_display = 'Pending'
 
-    # ✅ FIXED: Dependencies include all fields that affect the computation
     @api.depends('return_type', 'return_date', 'actual_return_date', 'state')
     def _compute_overdue_status(self):
         """Compute overdue status for fixed date returns"""
@@ -352,16 +354,14 @@ class HrCustody(models.Model):
 
     @api.depends('state')
     def _compute_image_permissions(self):
-        """Compute whether images can be taken in current state - FIXED"""
+        """Compute whether images can be taken in current state"""
         for record in self:
-            # ✅ FIXED: Before photos - ซ่อนปุ่มใน state Returned (Option 1)
             record.can_take_before_photos = (
                 record.state in ['to_approve', 'approved'] and
                 (self.env.user.has_group('hr.group_hr_user') or
                  self.env.user in record.custody_property_id.approver_ids)
             )
 
-            # After photos: can take when approved (ready to return)
             record.can_take_after_photos = (
                 record.state == 'approved' and
                 (self.env.user.has_group('hr.group_hr_user') or
@@ -370,48 +370,24 @@ class HrCustody(models.Model):
 
     @api.depends('state')
     def _compute_image_requirements(self):
-        """Compute whether images are required - FIXED"""
+        """Compute whether images are required"""
         for record in self:
-            # Before images are NOT required for approval anymore
             record.requires_before_images = False
-
-            # After images are required for return workflow only
             record.requires_after_images = record.state == 'returned'
 
-    # Onchange Methods
-    @api.onchange('return_type')
-    def _onchange_return_type(self):
-        """Clear fields when changing return type"""
-        if self.return_type != 'date':
-            self.return_date = False
-        if self.return_type == 'date':
-            self.expected_return_period = False
-
-    # Constraint Methods
+    # Constraint and validation methods
     @api.constrains('return_type', 'return_date', 'expected_return_period', 'date_request')
     def _check_return_requirements(self):
         """Validate required fields based on return type"""
         for record in self:
-            # Check for fixed date return type
             if record.return_type == 'date':
                 if not record.return_date:
                     raise ValidationError('Please specify return date when selecting "Fixed Return Date"')
                 if record.return_date < record.date_request:
                     raise ValidationError('Return date must not be before request date')
-
-            # Check for flexible or term end return types
             elif record.return_type in ['flexible', 'term_end']:
                 if not record.expected_return_period:
                     raise ValidationError('Please specify expected return period')
-
-    @api.constrains('return_date', 'date_request')
-    def validate_return_date(self):
-        """The function validate the return
-        date to ensure it is after the request date"""
-        for record in self:
-            if record.return_date and record.date_request:
-                if record.return_date < record.date_request:
-                    raise ValidationError(_('Return date must be after request date'))
 
     @api.constrains('custody_property_id')
     def _check_property_availability(self):
@@ -419,149 +395,38 @@ class HrCustody(models.Model):
         for record in self:
             if record.custody_property_id:
                 property_obj = record.custody_property_id
-
-                # Only allow Available properties
                 if property_obj.property_status != 'available':
                     status_name = dict(property_obj._fields['property_status'].selection)[property_obj.property_status]
                     raise ValidationError(
                         _('Cannot request custody for %s. Property status is: %s. Only Available properties can be requested.')
                         % (property_obj.name, status_name)
                     )
-
-                # ⭐ NEW: Check if property has approvers
                 if not property_obj.approver_ids:
                     raise ValidationError(
                         _('Property "%s" has no approvers assigned. Please contact administrator to set up approvers for this property.')
                         % property_obj.name
                     )
 
-    # Email and Reminder Methods - UPDATED: Only for Fixed Return Date
-    def mail_reminder(self):
-        """ Send return reminder mail for FIXED DATE returns only"""
-        now = datetime.now() + timedelta(days=1)
-        date_now = now.date()
-
-        # ✅ Send reminders ONLY for fixed date returns that are overdue
-        fixed_date_records = self.search([
-            ('state', '=', 'approved'),
-            ('return_type', '=', 'date'),
-            ('return_date', '!=', False)
-        ])
-
-        for custody_record in fixed_date_records:
-            if custody_record.return_date <= date_now:
-                self._send_fixed_date_reminder(custody_record)
-
-        # ❌ REMOVED: No more reminders for flexible and term_end returns
-
-    def _send_fixed_date_reminder(self, custody_record):
-        """Send reminder for fixed date returns only"""
-        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
-        url = f"{base_url}/web#id={custody_record.id}&view_type=form&model=hr.custody"
-
-        mail_content = _(
-            'Hi %s,<br/>As per the %s you took %s on %s for the reason of %s.<br/>'
-            'Due date was %s which has passed.<br/><br/>'
-            'Please return the property as soon as possible. Otherwise, you can '
-            'renew the reference number(%s) by extending the return date through '
-            'following link.<br/><br/>'
-            '<div style = "text-align: center; margin-top: 16px;"><a href = "%s"'
-            'style = "padding: 5px 10px; font-size: 12px; line-height: 18px; color: #FFFFFF; '
-            'border-color:#875A7B;text-decoration: none; display: inline-block; '
-            'margin-bottom: 0px; font-weight: 400;text-align: center; vertical-align: middle; '
-            'cursor: pointer; white-space: nowrap; background-image: none; '
-            'background-color: #875A7B; border: 1px solid #875A7B; border-radius:3px;">'
-            'Renew %s</a></div>'
-        ) % (
-            custody_record.employee_id.name,
-            custody_record.name,
-            custody_record.custody_property_id.name,
-            custody_record.date_request,
-            custody_record.purpose,
-            custody_record.return_date,
-            custody_record.name,
-            url,
-            custody_record.name
-        )
-
-        main_content = {
-            'subject': _('REMINDER On %s') % custody_record.name,
-            'author_id': self.env.user.partner_id.id,
-            'body_html': mail_content,
-            'email_to': custody_record.employee_id.work_email,
-        }
-
-        mail_id = self.env['mail.mail'].create(main_content)
-        mail_id.send()
-
+    # CRUD methods
     @api.model_create_multi
     def create(self, vals_list):
-        """Create a new record for the HrCustody model.
-            This method is responsible for creating a new
-            record for the HrCustody model with the provided values.
-            It automatically generates a unique name for
-            the record using the 'ir.sequence'
-            and assigns it to the 'name' field."""
+        """Create a new record for the HrCustody model."""
         for vals in vals_list:
             if not vals.get('name'):
                 vals['name'] = self.env['ir.sequence'].next_by_code('hr.custody') or 'New'
         return super(HrCustody, self).create(vals_list)
 
-    def sent(self):
-        """Move the current record to the 'to_approve' state."""
-        self.state = 'to_approve'
-        # Send notification to all approvers
-        approver_names = ', '.join(self.property_approver_ids.mapped('name'))
-        self.message_post(
-            body=_('Custody request sent for approval to: %s') % approver_names,
-            message_type='notification'
-        )
-
-    def send_mail(self):
-        """Send email notification using a predefined template."""
-        template = self.env.ref('hr_custody.custody_email_notification_template')
-        template.send_mail(self.id)
-        self.is_mail_send = True
-
-    def set_to_draft(self):
-        """Set the current record to the 'draft' state."""
-        self.state = 'draft'
-
-    def renew_approve(self):
-        """The function Used to renew and approve
-        the current custody record."""
-        for custody in self.env['hr.custody'].search([
-            ('custody_property_id', '=', self.custody_property_id.id),
-            ('id', '!=', self.id)
-        ]):
-            if custody.state == "approved":
-                raise UserError(_("Custody is not available now"))
-
-        self.return_date = self.renew_date
-        self.renew_date = False
-        self.state = 'approved'
-
-    def renew_refuse(self):
-        """the function used to refuse
-        the renewal of the current custody record"""
-        self.renew_date = False
-        self.state = 'approved'
-
-    # ⭐ NEW: Refuse with reason
-    def refuse_with_reason(self):
-        """Refuse with reason - open wizard"""
-        return {
-            'type': 'ir.actions.act_window',
-            'name': _('Refuse Reason'),
-            'res_model': 'property.return.reason',
-            'view_mode': 'form',
-            'target': 'new',
-            'context': {
-                'default_reason': '',
-                'model_id': 'hr.custody',
-                'reject_id': self.id,
-            }
-        }
+    def write(self, vals):
+        """Override write method to handle state changes"""
+        result = super(HrCustody, self).write(vals)
+        if any(field in vals for field in ['return_date', 'return_type', 'state', 'actual_return_date']):
+            self._compute_overdue_status()
+        if 'state' in vals:
+            for record in self:
+                record.message_post(
+                    body=_('Custody state changed to %s') % dict(record._fields['state'].selection)[record.state]
+                )
+        return result
 
     def unlink(self):
         """Override unlink to prevent deletion of approved records"""
@@ -570,26 +435,78 @@ class HrCustody(models.Model):
                 raise UserError(_('You cannot delete approved custody records'))
         return super(HrCustody, self).unlink()
 
-    def write(self, vals):
-        """Override write method to handle state changes and recompute overdue status"""
-        result = super(HrCustody, self).write(vals)
+    # Business logic methods
+    def sent(self):
+        """Move the current record to the 'to_approve' state."""
+        self.state = 'to_approve'
+        approver_names = ', '.join(self.property_approver_ids.mapped('name'))
+        self.message_post(
+            body=_('Custody request sent for approval to: %s') % approver_names,
+            message_type='notification'
+        )
 
-        # ✅ FIXED: Trigger recomputation of overdue status when relevant fields change
-        if any(field in vals for field in ['return_date', 'return_type', 'state', 'actual_return_date']):
-            self._compute_overdue_status()
+    def approve(self):
+        """Approve custody request"""
+        if (self.env.user not in self.custody_property_id.approver_ids and
+            not self.env.user.has_group('hr.group_hr_manager')):
+            allowed_names = ', '.join(self.custody_property_id.approver_ids.mapped('name'))
+            raise UserError(_("Only these users can approve this request: %s") % allowed_names)
 
-        if 'state' in vals:
-            for record in self:
-                record.message_post(
-                    body=_('Custody state changed to %s') % dict(record._fields['state'].selection)[record.state]
-                )
-        return result
+        for custody in self.env['hr.custody'].search([
+            ('custody_property_id', '=', self.custody_property_id.id),
+            ('id', '!=', self.id)
+        ]):
+            if custody.state == "approved":
+                raise UserError(_("Custody is not available now"))
 
-    # Action methods for images
+        self.approved_by_id = self.env.user
+        self.approved_date = fields.Datetime.now()
+
+        if self.custody_property_id.property_status == 'available':
+            self.custody_property_id.property_status = 'in_use'
+
+        self.state = 'approved'
+
+        message_body = _('✅ Request approved by %s') % self.env.user.name
+        if self.has_before_images:
+            message_body += _(' with %d before photos documented.') % self.before_image_count
+        else:
+            message_body += _(' (Before photos can be taken later)')
+
+        self.message_post(body=message_body, message_type='notification')
+
+    def set_to_return(self):
+        """Process equipment return"""
+        if self.requires_after_images and not self.has_after_images:
+            raise UserError(_('After photos are required before accepting return. Please take after photos first.'))
+
+        if self.custody_property_id.property_status == 'in_use':
+            self.custody_property_id.property_status = 'available'
+
+        self.actual_return_date = fields.Date.today()
+        self.returned_by_id = self.env.user
+        self.state = 'returned'
+
+        message_body = _('📦 Equipment returned on %s by %s') % (
+            self.actual_return_date.strftime('%d/%m/%Y'),
+            self.env.user.name
+        )
+
+        if self.has_after_images:
+            message_body += _(' with %d after photos documented.') % self.after_image_count
+
+        if (self.return_type == 'date' and
+            self.return_date and
+            self.actual_return_date > self.return_date):
+            days_late = (self.actual_return_date - self.return_date).days
+            message_body += _(' ⚠️ Returned %d days late.') % days_late
+
+        self.message_post(body=message_body, message_type='notification')
+
+    # Image action methods
     def action_take_before_photos(self):
         """Action to open before photos wizard"""
         self.ensure_one()
-
         if not self.can_take_before_photos:
             raise UserError(_('Before photos cannot be taken in current state: %s') %
                           dict(self._fields['state'].selection)[self.state])
@@ -610,7 +527,6 @@ class HrCustody(models.Model):
     def action_take_after_photos(self):
         """Action to open after photos wizard"""
         self.ensure_one()
-
         if not self.can_take_after_photos:
             raise UserError(_('After photos cannot be taken in current state: %s') %
                           dict(self._fields['state'].selection)[self.state])
@@ -629,124 +545,12 @@ class HrCustody(models.Model):
             }
         }
 
-    def action_view_image_comparison(self):
-        """Action to view before/after image comparison"""
-        self.ensure_one()
-
-        return {
-            'name': _('📸 Image Comparison - %s') % self.name,
-            'type': 'ir.actions.act_window',
-            'res_model': 'custody.image',
-            'view_mode': 'kanban,list',
-            'domain': [('custody_id', '=', self.id)],
-            'context': {
-                'group_by': 'image_type',
-                'default_custody_id': self.id,
-            }
-        }
-
-    def action_view_all_images(self):
-        """Action to view all images for this custody"""
-        self.ensure_one()
-
-        return {
-            'name': _('📸 All Images - %s') % self.name,
-            'type': 'ir.actions.act_window',
-            'res_model': 'custody.image',
-            'view_mode': 'kanban,list,form',
-            'domain': [('custody_id', '=', self.id)],
-            'context': {'default_custody_id': self.id}
-        }
-
-    # Updated approve method - FIXED: Before photos are optional
-    def approve(self):
-        """Updated approve method - Before photos are optional"""
-
-        # ✅ ตรวจสอบ approval permissions เท่านั้น
-        if (self.env.user not in self.custody_property_id.approver_ids and
-            not self.env.user.has_group('hr.group_hr_manager')):
-            allowed_names = ', '.join(self.custody_property_id.approver_ids.mapped('name'))
-            raise UserError(
-                _("Only these users can approve this request: %s") % allowed_names
-            )
-
-        # Check property availability
-        for custody in self.env['hr.custody'].search([
-            ('custody_property_id', '=', self.custody_property_id.id),
-            ('id', '!=', self.id)
-        ]):
-            if custody.state == "approved":
-                raise UserError(_("Custody is not available now"))
-
-        # Set approval info
-        self.approved_by_id = self.env.user
-        self.approved_date = fields.Datetime.now()
-
-        # Update property status
-        if self.custody_property_id.property_status == 'available':
-            self.custody_property_id.property_status = 'in_use'
-
-        self.state = 'approved'
-
-        # Post message with optional image info
-        message_body = _('✅ Request approved by %s') % self.env.user.name
-        if self.has_before_images:
-            message_body += _(' with %d before photos documented.') % self.before_image_count
-        else:
-            message_body += _(' (Before photos can be taken later)')
-
-        self.message_post(
-            body=message_body,
-            message_type='notification'
-        )
-
-    # Updated return method with actual return date tracking
-    def set_to_return(self):
-        """Updated return method with actual return date tracking"""
-        # ⭐ NEW: Check if after photos are required but missing
-        if self.requires_after_images and not self.has_after_images:
-            raise UserError(
-                _('After photos are required before accepting return. Please take after photos first.')
-            )
-
-        # Update property status
-        if self.custody_property_id.property_status == 'in_use':
-            self.custody_property_id.property_status = 'available'
-
-        # ✅ NEW: Set actual return date and user
-        self.actual_return_date = fields.Date.today()
-        self.returned_by_id = self.env.user
-
-        self.state = 'returned'
-
-        # Post message with return info
-        message_body = _('📦 Equipment returned on %s by %s') % (
-            self.actual_return_date.strftime('%d/%m/%Y'),
-            self.env.user.name
-        )
-
-        if self.has_after_images:
-            message_body += _(' with %d after photos documented.') % self.after_image_count
-
-        # Check if returned late
-        if (self.return_type == 'date' and
-            self.return_date and
-            self.actual_return_date > self.return_date):
-            days_late = (self.actual_return_date - self.return_date).days
-            message_body += _(' ⚠️ Returned %d days late.') % days_late
-
-        self.message_post(
-            body=message_body,
-            message_type='notification'
-        )
-
-    # ⭐ NEW: Helper method for approvals
+    # Helper methods
     @api.model
     def get_pending_approvals(self, user_id=None):
         """Get custody requests pending approval for specific user"""
         if not user_id:
             user_id = self.env.user.id
-
         return self.search([
             ('custody_property_id.approver_ids', 'in', [user_id]),
             ('state', '=', 'to_approve')
@@ -757,20 +561,18 @@ class HrCustody(models.Model):
         """Override name_search to search in multiple fields"""
         if args is None:
             args = []
-
         if name:
             domain = [
                 '|', '|', '|', '|', '|',
-                ('name', operator, name),  # Code
-                ('employee_id.name', operator, name),  # Employee name
-                ('custody_property_id.name', operator, name),  # Property name
-                ('purpose', operator, name),  # Reason
-                ('custody_property_id.property_code', operator, name),  # Property code
-                ('approved_by_id.name', operator, name)  # Approved by name
+                ('name', operator, name),
+                ('employee_id.name', operator, name),
+                ('custody_property_id.name', operator, name),
+                ('purpose', operator, name),
+                ('custody_property_id.property_code', operator, name),
+                ('approved_by_id.name', operator, name)
             ]
             records = self.search(domain + args, limit=limit)
             return records.name_get()
-
         return super(HrCustody, self).name_search(name, args, operator, limit)
 
     def name_get(self):
