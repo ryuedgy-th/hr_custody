@@ -475,6 +475,22 @@ class HrCustody(models.Model):
 
         self.message_post(body=message_body, message_type='notification')
 
+    # ✅ FIXED: Add missing refuse_with_reason method
+    def refuse_with_reason(self):
+        """Refuse with reason - open wizard"""
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Refuse Reason'),
+            'res_model': 'property.return.reason',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_reason': '',
+                'model_id': 'hr.custody',
+                'reject_id': self.id,
+            }
+        }
+
     def set_to_return(self):
         """Process equipment return"""
         if self.requires_after_images and not self.has_after_images:
