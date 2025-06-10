@@ -5,136 +5,124 @@ import { registry } from "@web/core/registry";
 
 /**
  * Multiple Image Upload Widget for Custody Images
- * แก้ไขปัญหา: useService ต้องใช้ใน OWL Component เท่านั้น
+ * แก้ไขปัญหา: Simple approach ที่ทำงานได้จริง
  */
-export class CustodyMultipleImageUpload extends Component {
-    static template = "hr_custody.CustodyMultipleImageUpload";
-
-    setup() {
-        // ⚠️ ลบการใช้ useService ออก เพราะจะเกิด error ถ้าไม่ได้อยู่ใน OWL context
-        // this.orm = useService("orm");
-        // this.notification = useService("notification");
-        
+class CustodyUploadManager {
+    constructor() {
         this.selectedFiles = [];
         this.totalSize = 0;
         this.maxFiles = 20;
         this.maxFileSize = 5 * 1024 * 1024; // 5MB
         this.maxTotalSize = 100 * 1024 * 1024; // 100MB
         this.allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
-
-        onMounted(() => {
-            this.initializeUploadZone();
-        });
-
-        onWillUnmount(() => {
-            this.cleanup();
-        });
+        this.initialized = false;
     }
 
-    initializeUploadZone() {
+    init() {
+        if (this.initialized) return;
+        
+        console.log('🚀 Initializing CustodyUploadManager...');
+        
         const dropzone = document.querySelector('.upload-dropzone');
         const fileInput = document.getElementById('file_input');
         const browseBtn = document.getElementById('browse_files_btn');
 
         if (!dropzone || !fileInput || !browseBtn) {
-            console.warn('Upload elements not found, retrying...');
-            // Retry after a short delay
-            setTimeout(() => this.initializeUploadZone(), 500);
+            console.warn('⚠️ Upload elements not found, retrying in 500ms...');
+            setTimeout(() => this.init(), 500);
             return;
         }
 
-        console.log('Initializing upload zone with elements:', { dropzone, fileInput, browseBtn });
+        console.log('✅ Found all elements:', { dropzone, fileInput, browseBtn });
 
-        // Setup drag and drop
+        // Setup event listeners
+        this.setupEventListeners(dropzone, fileInput, browseBtn);
+        this.initialized = true;
+        
+        console.log('✅ CustodyUploadManager initialized successfully!');
+    }
+
+    setupEventListeners(dropzone, fileInput, browseBtn) {
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            console.log('📁 File input changed, files:', e.target.files);
+            this.handleFiles(e.target.files);
+        });
+
+        // Browse button click - สำคัญมาก!
+        browseBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🖱️ Browse button clicked - triggering file input');
+            
+            // ตรวจสอบว่า file input ยังอยู่หรือไม่
+            const currentFileInput = document.getElementById('file_input');
+            if (currentFileInput) {
+                currentFileInput.click();
+                console.log('✅ File input triggered');
+            } else {
+                console.error('❌ File input not found!');
+            }
+        });
+
+        // Drag and drop
         this.setupDragAndDrop(dropzone);
         
-        // Setup file input
-        this.setupFileInput(fileInput, browseBtn);
-        
-        // Setup browse button click
-        this.setupBrowseButton(browseBtn, fileInput);
+        // Dropzone click (เผื่อคลิกที่อื่น)
+        dropzone.addEventListener('click', (e) => {
+            // ถ้าคลิกที่ dropzone แต่ไม่ใช่ browse button
+            if (e.target !== browseBtn && !browseBtn.contains(e.target)) {
+                console.log('🖱️ Dropzone clicked - triggering file input');
+                const currentFileInput = document.getElementById('file_input');
+                if (currentFileInput) {
+                    currentFileInput.click();
+                }
+            }
+        });
+
+        console.log('✅ All event listeners setup complete');
     }
 
     setupDragAndDrop(dropzone) {
         // Prevent default drag behaviors
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropzone.addEventListener(eventName, this.preventDefaults.bind(this), false);
-            document.body.addEventListener(eventName, this.preventDefaults.bind(this), false);
+            dropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }, false);
         });
 
         // Highlight drop zone when item is dragged over it
         ['dragenter', 'dragover'].forEach(eventName => {
             dropzone.addEventListener(eventName, () => {
                 dropzone.classList.add('dragover');
-                console.log('Drag over detected');
+                console.log('🎯 Drag over detected');
             }, false);
         });
 
         ['dragleave', 'drop'].forEach(eventName => {
             dropzone.addEventListener(eventName, () => {
                 dropzone.classList.remove('dragover');
-                console.log('Drag leave/drop detected');
+                console.log('🎯 Drag leave/drop detected');
             }, false);
         });
 
         // Handle dropped files
-        dropzone.addEventListener('drop', this.handleDrop.bind(this), false);
-        
-        // Handle click to browse
-        dropzone.addEventListener('click', (e) => {
-            // Only trigger if clicked on dropzone itself, not on browse button
-            if (e.target === dropzone || e.target.closest('.upload-content')) {
-                const fileInput = document.getElementById('file_input');
-                if (fileInput) fileInput.click();
-            }
-        });
-    }
-
-    setupFileInput(fileInput, browseBtn) {
-        fileInput.addEventListener('change', (e) => {
-            console.log('File input changed, files:', e.target.files);
-            this.handleFiles(e.target.files);
-        });
-    }
-
-    setupBrowseButton(browseBtn, fileInput) {
-        browseBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('Browse button clicked');
-            fileInput.click();
-        });
-        
-        // Add visual feedback
-        browseBtn.addEventListener('mouseenter', () => {
-            browseBtn.style.backgroundColor = '#0056b3';
-        });
-        
-        browseBtn.addEventListener('mouseleave', () => {
-            browseBtn.style.backgroundColor = '';
-        });
-    }
-
-    preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-
-    handleDrop(e) {
-        const dt = e.dataTransfer;
-        const files = dt.files;
-        console.log('Files dropped:', files);
-        this.handleFiles(files);
+        dropzone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            console.log('📂 Files dropped:', files);
+            this.handleFiles(files);
+        }, false);
     }
 
     async handleFiles(files) {
         try {
             const fileArray = Array.from(files);
-            console.log('Processing files:', fileArray);
+            console.log('📝 Processing files:', fileArray.length, 'files');
             
             // Validate file count
             if (this.selectedFiles.length + fileArray.length > this.maxFiles) {
-                // แทนที่ notification service ด้วย alert ธรรมดา
                 alert(`Maximum ${this.maxFiles} files allowed. Currently selected: ${this.selectedFiles.length}`);
                 return;
             }
@@ -148,14 +136,14 @@ export class CustodyMultipleImageUpload extends Component {
             this.updateFormData();
 
         } catch (error) {
-            console.error('Error handling files:', error);
+            console.error('❌ Error handling files:', error);
             alert('Error processing files: ' + error.message);
         }
     }
 
     async processFile(file) {
         return new Promise((resolve, reject) => {
-            console.log('Processing file:', file.name, file.type, file.size);
+            console.log('⚙️ Processing file:', file.name, file.type, file.size);
             
             // Validate file type
             if (!this.allowedTypes.includes(file.type)) {
@@ -190,7 +178,7 @@ export class CustodyMultipleImageUpload extends Component {
 
                 this.selectedFiles.push(fileData);
                 this.totalSize += file.size;
-                console.log('File processed successfully:', file.name);
+                console.log('✅ File processed successfully:', file.name);
                 resolve(fileData);
             };
 
@@ -212,7 +200,7 @@ export class CustodyMultipleImageUpload extends Component {
         const filesList = document.getElementById('files_list');
 
         if (!previewContainer || !filesList) {
-            console.warn('Preview containers not found');
+            console.warn('⚠️ Preview containers not found');
             return;
         }
 
@@ -229,7 +217,7 @@ export class CustodyMultipleImageUpload extends Component {
             fileItem.className = 'col-md-3 col-sm-4 col-6';
             fileItem.innerHTML = `
                 <div class="file-preview-item" data-file-id="${file.id}">
-                    <button type="button" class="file-remove-btn" onclick="window.custodyUploadWidget?.removeFile('${file.id}')">
+                    <button type="button" class="file-remove-btn" onclick="window.custodyUploadManager?.removeFile('${file.id}')">
                         ×
                     </button>
                     <img src="${file.data}" alt="${file.filename}" class="file-preview-img">
@@ -239,7 +227,7 @@ export class CustodyMultipleImageUpload extends Component {
                         <input type="text" 
                                placeholder="Description (optional)" 
                                value="${file.description}"
-                               onchange="window.custodyUploadWidget?.updateFileDescription('${file.id}', this.value)">
+                               onchange="window.custodyUploadManager?.updateFileDescription('${file.id}', this.value)">
                     </div>
                 </div>
             `;
@@ -254,13 +242,11 @@ export class CustodyMultipleImageUpload extends Component {
 
         if (totalFilesField) {
             totalFilesField.value = this.selectedFiles.length;
-            // Trigger change event
             totalFilesField.dispatchEvent(new Event('change'));
         }
 
         if (totalSizeField) {
             totalSizeField.value = (this.totalSize / (1024 * 1024)).toFixed(2);
-            // Trigger change event
             totalSizeField.dispatchEvent(new Event('change'));
         }
     }
@@ -269,7 +255,6 @@ export class CustodyMultipleImageUpload extends Component {
         const imagesDataField = document.querySelector('textarea[name="images_data"]');
         if (imagesDataField) {
             imagesDataField.value = JSON.stringify(this.selectedFiles);
-            // Trigger change event
             imagesDataField.dispatchEvent(new Event('change'));
         }
     }
@@ -299,45 +284,88 @@ export class CustodyMultipleImageUpload extends Component {
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
-
-    cleanup() {
-        // Clean up global references
-        if (window.custodyUploadWidget) {
-            delete window.custodyUploadWidget;
-        }
-    }
 }
 
-// ปรับปรุงการ initialize ให้ safer
+// Initialize function
 function initializeCustodyUpload() {
+    console.log('🔍 Checking for custody upload zone...');
     const uploadZone = document.querySelector('.custody-upload-zone');
-    if (uploadZone && !window.custodyUploadWidget) {
-        console.log('Initializing custody upload widget...');
+    
+    if (uploadZone && !window.custodyUploadManager) {
+        console.log('✅ Upload zone found! Creating manager...');
+        
         try {
-            const widget = new CustodyMultipleImageUpload();
-            window.custodyUploadWidget = widget;
-            widget.setup();
-            console.log('Custody upload widget initialized successfully');
+            const manager = new CustodyUploadManager();
+            window.custodyUploadManager = manager;
+            manager.init();
+            console.log('🎉 Custody upload manager ready!');
         } catch (error) {
-            console.error('Error initializing custody upload widget:', error);
-            // ถ้า error ให้ลองใหม่หลัง 2 วินาที
+            console.error('❌ Error creating custody upload manager:', error);
+            // Retry after 2 seconds
             setTimeout(initializeCustodyUpload, 2000);
         }
+    } else if (!uploadZone) {
+        console.log('⏳ Upload zone not found, retrying in 500ms...');
+        setTimeout(initializeCustodyUpload, 500);
+    } else {
+        console.log('ℹ️ Manager already exists');
     }
 }
 
-// เรียกใช้เมื่อ DOM พร้อม
+// Multiple initialization strategies
+console.log('📋 Setting up custody upload initialization...');
+
+// Strategy 1: DOM ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeCustodyUpload);
 } else {
-    // DOM พร้อมแล้ว ลองเลย
     initializeCustodyUpload();
 }
 
-// Backup - ลองอีกครั้งเมื่อ window load
+// Strategy 2: Window load backup
 window.addEventListener('load', () => {
     setTimeout(initializeCustodyUpload, 1000);
 });
 
-// Register เป็น component (optional สำหรับ OWL usage)
+// Strategy 3: MutationObserver for dynamic content
+const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+        if (mutation.type === 'childList') {
+            mutation.addedNodes.forEach((node) => {
+                if (node.nodeType === 1 && node.querySelector && node.querySelector('.custody-upload-zone')) {
+                    console.log('🔄 Upload zone detected via MutationObserver');
+                    setTimeout(initializeCustodyUpload, 100);
+                }
+            });
+        }
+    });
+});
+
+// Start observing
+observer.observe(document.body, {
+    childList: true,
+    subtree: true
+});
+
+// OWL Component (optional - สำหรับ future use)
+export class CustodyMultipleImageUpload extends Component {
+    static template = "hr_custody.CustodyMultipleImageUpload";
+
+    setup() {
+        onMounted(() => {
+            console.log('🦉 OWL Component mounted, triggering initialization...');
+            setTimeout(initializeCustodyUpload, 100);
+        });
+
+        onWillUnmount(() => {
+            if (window.custodyUploadManager) {
+                delete window.custodyUploadManager;
+            }
+        });
+    }
+}
+
+// Register component
 registry.category("fields").add("custody_multiple_image_upload", CustodyMultipleImageUpload);
+
+console.log('✅ Custody upload module loaded');
