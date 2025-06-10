@@ -1,7 +1,6 @@
 /** @odoo-module **/
 
-// Odoo 18 compatible file upload manager
-// ใช้ native ES6 modules แทน odoo.define
+// แก้ไขปัญหา event conflict - prevent double click events
 
 console.log('🚀 Loading Custody Upload Manager...');
 
@@ -15,6 +14,7 @@ export class CustodyUploadManager {
         this.allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
         this.initialized = false;
         this.isProcessing = false;
+        this.clickTimeout = null; // เพิ่ม timeout เพื่อป้องกัน double click
         
         console.log('📋 Upload Manager Created');
     }
@@ -58,15 +58,38 @@ export class CustodyUploadManager {
         console.log('✅ Manager initialized successfully');
     }
 
+    triggerFileDialog() {
+        // ป้องกัน multiple calls ในเวลาใกล้กัน
+        if (this.clickTimeout) {
+            console.log('⚠️ File dialog already triggered, ignoring');
+            return;
+        }
+
+        console.log('🎯 Triggering file dialog...');
+        const fileInput = document.getElementById('file_input');
+        if (fileInput) {
+            fileInput.click();
+            console.log('✅ File dialog opened');
+            
+            // Set timeout เพื่อป้องกัน multiple triggers
+            this.clickTimeout = setTimeout(() => {
+                this.clickTimeout = null;
+            }, 500);
+        } else {
+            console.error('❌ File input not found');
+        }
+    }
+
     setupEvents(elements) {
         const { dropzone, fileInput, browseBtn } = elements;
         
         console.log('🔧 Setting up event listeners...');
 
-        // Browse button click
+        // Browse button click - หยุด propagation
         browseBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
+            e.stopImmediatePropagation(); // หยุด event ทันที
             
             if (this.isProcessing) {
                 console.log('⚠️ Already processing, ignoring click');
@@ -74,9 +97,8 @@ export class CustodyUploadManager {
             }
             
             console.log('🖱️ Browse button clicked!');
-            fileInput.click();
-            console.log('✅ File dialog triggered');
-        });
+            this.triggerFileDialog();
+        }, true); // ใช้ capture phase
 
         // File input change
         fileInput.addEventListener('change', (e) => {
@@ -100,18 +122,22 @@ export class CustodyUploadManager {
             }
         });
 
-        // Dropzone click
+        // Dropzone click - เฉพาะเมื่อไม่ได้คลิกที่ browse button
         dropzone.addEventListener('click', (e) => {
-            if (e.target === browseBtn || browseBtn.contains(e.target)) {
-                return; // ให้ browse button จัดการเอง
+            // เช็คว่าคลิกที่ browse button หรือลูกของมันหรือไม่
+            if (e.target === browseBtn || 
+                browseBtn.contains(e.target) || 
+                e.target.closest('#browse_files_btn')) {
+                console.log('🚫 Click on browse button, ignoring dropzone event');
+                return;
             }
 
             if (this.isProcessing) return;
 
             e.preventDefault();
             e.stopPropagation();
-            console.log('🖱️ Dropzone clicked');
-            fileInput.click();
+            console.log('🖱️ Dropzone area clicked');
+            this.triggerFileDialog();
         });
 
         // Drag & Drop
@@ -131,6 +157,7 @@ export class CustodyUploadManager {
         ['dragenter', 'dragover'].forEach(eventName => {
             dropzone.addEventListener(eventName, () => {
                 dropzone.classList.add('dragover');
+                console.log('🎯 Drag over detected');
             }, false);
         });
 
@@ -391,4 +418,4 @@ window.addEventListener('load', () => {
     setTimeout(initializeUpload, 1000);
 });
 
-console.log('✅ Custody Upload Module Loaded (Odoo 18 ES6)');
+console.log('✅ Custody Upload Module Loaded (Fixed Event Conflicts)');
