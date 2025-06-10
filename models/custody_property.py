@@ -91,7 +91,7 @@ class CustodyProperty(models.Model):
         help='Users who can approve custody requests for this property. If empty, inherits from category.'
     )
 
-    # Computed field for effective approvers (property + category)
+    # ⭐ FIXED: Computed field for effective approvers (property + category) - ใช้ compute เท่านั้น
     effective_approver_ids = fields.Many2many(
         'res.users',
         string='Effective Approvers',
