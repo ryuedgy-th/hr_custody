@@ -119,25 +119,27 @@ class PropertyCategory(models.Model):
         tracking=True
     )
 
-    # ⭐ FIXED: Category Statistics with store=True for searchability
+    # ⭐ FIXED: Category Statistics with store=True and recursive=True for searchability
     property_count = fields.Integer(
         string='Properties Count',
         compute='_compute_property_statistics',
-        store=True,  # ⭐ Added store=True
+        store=True,
+        recursive=True,  # ⭐ Added recursive=True to fix warning
         help='Number of properties directly in this category'
     )
 
     total_property_count = fields.Integer(
         string='Total Properties',
         compute='_compute_property_statistics',
-        store=True,  # ⭐ Added store=True
+        store=True,
+        recursive=True,  # ⭐ Added recursive=True to fix warning
         help='Total properties in this category and all subcategories'
     )
 
     active_custody_count = fields.Integer(
         string='Active Custodies',
         compute='_compute_property_statistics',
-        store=True,  # ⭐ Added store=True
+        store=True,
         help='Number of active custodies for properties in this category tree'
     )
 
@@ -224,7 +226,8 @@ class PropertyCategory(models.Model):
     @api.constrains('parent_id')
     def _check_parent_recursion(self):
         """Prevent circular references in the hierarchy"""
-        if not self._check_recursion():
+        # ⭐ FIXED: Use not _has_cycle() instead of _check_recursion() for Odoo 18
+        if self._has_cycle():
             raise ValidationError(_('You cannot create recursive categories.'))
 
     @api.constrains('parent_id')
