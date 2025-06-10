@@ -33,6 +33,7 @@
         'data/custody_sequence_data.xml',
         'data/ir_cron_data.xml',
         'data/mail_custody_notification_data.xml',
+        'data/property_category_data.xml',  # ⭐ NEW: Default categories
 
         # Wizard views
         'wizard/property_return_reason_views.xml',
