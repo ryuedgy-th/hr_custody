@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-// Updated 2025-06-11 - Final fix for event conflicts with complete event blocking
+// Updated 2025-06-11 - Fix field selectors for invisible fields
 
 console.log('🚀 Loading Custody Upload Manager...');
 
@@ -37,9 +37,15 @@ export class CustodyUploadManager {
             browseBtn: document.getElementById('browse_files_btn'),
             previewContainer: document.getElementById('selected_files_preview'),
             filesList: document.getElementById('files_list'),
-            imagesDataField: document.querySelector('textarea[name="images_data"]'),
-            totalFilesField: document.querySelector('input[name="total_files"]'),
-            totalSizeField: document.querySelector('input[name="total_size_mb"]')
+            // ปรับ selector สำหรับ invisible fields ใน Odoo
+            imagesDataField: document.querySelector('textarea[name="images_data"]') || 
+                           document.querySelector('input[name="images_data"]') ||
+                           document.querySelector('field[name="images_data"] textarea') ||
+                           document.querySelector('field[name="images_data"] input'),
+            totalFilesField: document.querySelector('input[name="total_files"]') ||
+                           document.querySelector('field[name="total_files"] input'),
+            totalSizeField: document.querySelector('input[name="total_size_mb"]') ||
+                          document.querySelector('field[name="total_size_mb"] input')
         };
 
         console.log('🔍 Available elements:', elements);
@@ -332,19 +338,25 @@ export class CustodyUploadManager {
     }
 
     updateDisplay() {
-        const totalFilesField = document.querySelector('input[name="total_files"]');
-        const totalSizeField = document.querySelector('input[name="total_size_mb"]');
+        // ลองหา fields ด้วยหลายวิธี
+        const totalFilesField = this.findFormField('total_files');
+        const totalSizeField = this.findFormField('total_size_mb');
 
         if (totalFilesField) {
             totalFilesField.value = this.selectedFiles.length;
-            totalFilesField.dispatchEvent(new Event('change', { bubbles: true }));
-            totalFilesField.dispatchEvent(new Event('input', { bubbles: true }));
+            this.triggerOdooFieldUpdate(totalFilesField);
+            console.log('✅ Updated total_files field:', this.selectedFiles.length);
+        } else {
+            console.warn('⚠️ total_files field not found');
         }
 
         if (totalSizeField) {
-            totalSizeField.value = (this.totalSize / (1024 * 1024)).toFixed(2);
-            totalSizeField.dispatchEvent(new Event('change', { bubbles: true }));
-            totalSizeField.dispatchEvent(new Event('input', { bubbles: true }));
+            const sizeInMB = (this.totalSize / (1024 * 1024)).toFixed(2);
+            totalSizeField.value = sizeInMB;
+            this.triggerOdooFieldUpdate(totalSizeField);
+            console.log('✅ Updated total_size_mb field:', sizeInMB);
+        } else {
+            console.warn('⚠️ total_size_mb field not found');
         }
 
         this.updateFormData();
@@ -355,8 +367,43 @@ export class CustodyUploadManager {
         });
     }
 
+    findFormField(fieldName) {
+        // ลองหา field ด้วยหลาย selector
+        const selectors = [
+            `input[name="${fieldName}"]`,
+            `textarea[name="${fieldName}"]`,
+            `field[name="${fieldName}"] input`,
+            `field[name="${fieldName}"] textarea`,
+            `.o_field_widget[name="${fieldName}"] input`,
+            `.o_field_widget[name="${fieldName}"] textarea`,
+            `[data-field-name="${fieldName}"] input`,
+            `[data-field-name="${fieldName}"] textarea`
+        ];
+
+        for (const selector of selectors) {
+            const field = document.querySelector(selector);
+            if (field) {
+                console.log(`🎯 Found ${fieldName} using selector: ${selector}`);
+                return field;
+            }
+        }
+        
+        console.warn(`⚠️ Field ${fieldName} not found with any selector`);
+        return null;
+    }
+
+    triggerOdooFieldUpdate(field) {
+        // Trigger Odoo field update events
+        const events = ['change', 'input', 'blur'];
+        events.forEach(eventType => {
+            const event = new Event(eventType, { bubbles: true, cancelable: true });
+            field.dispatchEvent(event);
+        });
+    }
+
     updateFormData() {
-        const imagesDataField = document.querySelector('textarea[name="images_data"]');
+        const imagesDataField = this.findFormField('images_data');
+        
         if (imagesDataField) {
             const formData = this.selectedFiles
                 .filter(file => file.dataUrl)
@@ -370,15 +417,15 @@ export class CustodyUploadManager {
                 }));
 
             imagesDataField.value = JSON.stringify(formData);
-            imagesDataField.dispatchEvent(new Event('change', { bubbles: true }));
-            imagesDataField.dispatchEvent(new Event('input', { bubbles: true }));
+            this.triggerOdooFieldUpdate(imagesDataField);
 
             console.log('💾 Form data updated with', formData.length, 'files');
             if (formData.length > 0) {
-                console.log('📄 Sample:', formData[0].filename);
+                console.log('📄 Sample data length:', formData[0].data.length);
+                console.log('📄 Sample filename:', formData[0].filename);
             }
         } else {
-            console.warn('⚠️ images_data field not found');
+            console.error('❌ images_data field not found');
         }
     }
 
@@ -447,4 +494,4 @@ window.addEventListener('load', () => {
     setTimeout(initializeUpload, 1000);
 });
 
-console.log('✅ Custody Upload Module Loaded - Final Version with Complete Event Blocking');
+console.log('✅ Custody Upload Module Loaded - Fixed Field Selectors');
