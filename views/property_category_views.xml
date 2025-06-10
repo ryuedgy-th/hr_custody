@@ -241,7 +241,7 @@
         </field>
     </record>
 
-    <!-- Property Category Action -->
+    <!-- Property Category Action - FIX: Force list view first -->
     <record id="property_category_action" model="ir.actions.act_window">
         <field name="name">Property Categories</field>
         <field name="res_model">property.category</field>
