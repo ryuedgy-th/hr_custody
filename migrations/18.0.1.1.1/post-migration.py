@@ -4,7 +4,7 @@ def migrate(cr, version):
     """
     # Check if category_id column exists and has wrong constraint
     cr.execute("""
-        SELECT constraint_name 
+        SELECT tc.constraint_name 
         FROM information_schema.table_constraints tc
         JOIN information_schema.constraint_column_usage ccu 
         ON tc.constraint_name = ccu.constraint_name
@@ -30,5 +30,13 @@ def migrate(cr, version):
         """)
         
         print("✅ Fixed foreign key constraint to SET NULL")
+    else:
+        # If no constraint found, just add the correct one
+        cr.execute("""
+            ALTER TABLE custody_property 
+            ADD CONSTRAINT custody_property_category_id_fkey 
+            FOREIGN KEY (category_id) REFERENCES property_category(id) ON DELETE SET NULL
+        """)
+        print("✅ Added foreign key constraint with SET NULL")
     
     print("✅ Phase 4 Migration Fix completed: Foreign key constraint updated")
