@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-// Updated 2025-06-10 17:20 - Final fix for event conflicts
+// Updated 2025-06-11 - Final fix for event conflicts with complete event blocking
 
 console.log('🚀 Loading Custody Upload Manager...');
 
@@ -15,7 +15,8 @@ export class CustodyUploadManager {
         this.initialized = false;
         this.isProcessing = false;
         this.clickTimeout = null;
-        this.lastClickTime = 0; // เพิ่ม timestamp เพื่อป้องกัน rapid clicks
+        this.lastClickTime = 0;
+        this.browseButtonClicked = false; // Track browse button clicks
         
         console.log('📋 Upload Manager Created');
     }
@@ -74,6 +75,7 @@ export class CustodyUploadManager {
 
         console.log('🎯 Triggering file dialog...');
         this.lastClickTime = now;
+        this.browseButtonClicked = true; // Set flag เมื่อกด browse button
         
         const fileInput = document.getElementById('file_input');
         if (fileInput) {
@@ -83,9 +85,11 @@ export class CustodyUploadManager {
             // Set timeout เพื่อป้องกัน multiple triggers
             this.clickTimeout = setTimeout(() => {
                 this.clickTimeout = null;
+                this.browseButtonClicked = false; // Reset flag หลังจาก 500ms
             }, 500);
         } else {
             console.error('❌ File input not found');
+            this.browseButtonClicked = false;
         }
     }
 
@@ -94,28 +98,21 @@ export class CustodyUploadManager {
         
         console.log('🔧 Setting up event listeners...');
 
-        // Browse button click - สูตรลับ: ใช้ mousedown แทน click
-        browseBtn.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            
-            if (this.isProcessing) {
-                console.log('⚠️ Already processing, ignoring click');
-                return;
-            }
-            
-            console.log('🖱️ Browse button clicked!');
-            this.triggerFileDialog();
-        }, true);
-
-        // ป้องกัน click event บน browse button
-        browseBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            console.log('🚫 Browse button click prevented');
-        }, true);
+        // Browse button events - ใช้หลาย events เพื่อ block อย่างสมบูรณ์
+        ['mousedown', 'mouseup', 'click'].forEach(eventType => {
+            browseBtn.addEventListener(eventType, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                
+                if (eventType === 'mousedown' && !this.isProcessing) {
+                    console.log('🖱️ Browse button clicked!');
+                    this.triggerFileDialog();
+                } else if (eventType !== 'mousedown') {
+                    console.log(`🚫 Browse button ${eventType} prevented`);
+                }
+            }, true);
+        });
 
         // File input change
         fileInput.addEventListener('change', (e) => {
@@ -138,8 +135,14 @@ export class CustodyUploadManager {
             }
         });
 
-        // Dropzone click - เฉพาะเมื่อไม่ได้คลิกบริเวณ browse button
+        // Dropzone click - เช็คทั้ง flag และ position
         dropzone.addEventListener('click', (e) => {
+            // ถ้า browse button เพิ่งถูกกด ให้ skip
+            if (this.browseButtonClicked) {
+                console.log('🚫 Browse button just clicked, ignoring dropzone');
+                return;
+            }
+
             // เช็คอย่างละเอียดว่าคลิกบริเวณ browse button หรือไม่
             const browseArea = browseBtn.getBoundingClientRect();
             const clickX = e.clientX;
@@ -444,4 +447,4 @@ window.addEventListener('load', () => {
     setTimeout(initializeUpload, 1000);
 });
 
-console.log('✅ Custody Upload Module Loaded - Final Version');
+console.log('✅ Custody Upload Module Loaded - Final Version with Complete Event Blocking');
