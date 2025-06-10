@@ -528,7 +528,34 @@ class HrCustody(models.Model):
 
         self.message_post(body=message_body, message_type='notification')
 
-    # Image action methods
+    # ✅ FIXED: Add missing image action methods
+    def action_view_all_images(self):
+        """Action to view all images for this custody"""
+        self.ensure_one()
+        return {
+            'name': _('📸 All Images - %s') % self.name,
+            'type': 'ir.actions.act_window',
+            'res_model': 'custody.image',
+            'view_mode': 'kanban,list,form',
+            'domain': [('custody_id', '=', self.id)],
+            'context': {'default_custody_id': self.id}
+        }
+
+    def action_view_image_comparison(self):
+        """Action to view before/after image comparison"""
+        self.ensure_one()
+        return {
+            'name': _('📸 Image Comparison - %s') % self.name,
+            'type': 'ir.actions.act_window',
+            'res_model': 'custody.image',
+            'view_mode': 'kanban,list',
+            'domain': [('custody_id', '=', self.id)],
+            'context': {
+                'group_by': 'image_type',
+                'default_custody_id': self.id,
+            }
+        }
+
     def action_take_before_photos(self):
         """Action to open before photos wizard"""
         self.ensure_one()
