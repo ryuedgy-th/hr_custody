@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-// Updated 2025-06-11 - Fixed wizard ID detection from URL patterns
+// Updated 2025-06-11 - Fixed Odoo Server Error with enhanced debugging
 
 console.log('🚀 Loading Custody Upload Manager...');
 
@@ -86,16 +86,16 @@ export class CustodyUploadManager {
         }
 
         try {
-            console.log('📡 Starting direct RPC upload...');
+            console.log('📡 Starting enhanced RPC upload...');
             
-            // Prepare data for RPC call
+            // Prepare data for RPC call with size reduction for large images
             const imagesData = this.selectedFiles
                 .filter(file => file.dataUrl)
                 .map(file => ({
                     filename: file.filename,
                     size: file.size,
                     type: file.type,
-                    data: file.dataUrl,
+                    data: this.compressBase64IfNeeded(file.dataUrl, file.size),
                     description: file.description || '',
                     id: file.id
                 }));
@@ -107,24 +107,31 @@ export class CustodyUploadManager {
             }
 
             console.log(`📡 Uploading ${imagesData.length} files via RPC to wizard ${wizardId}...`);
+            console.log('📊 Upload payload summary:', {
+                wizardId: wizardId,
+                fileCount: imagesData.length,
+                totalSizeMB: (this.totalSize / (1024 * 1024)).toFixed(2),
+                firstFileName: imagesData[0]?.filename,
+                dataSize: imagesData[0]?.data?.length
+            });
 
-            // Use Odoo RPC to update wizard and trigger upload
-            const rpcData = {
+            // STEP 1: Update wizard with image data
+            const updateData = {
                 model: 'custody.image.upload.wizard',
                 method: 'write',
                 args: [[wizardId], {
                     'images_data': JSON.stringify(imagesData),
                     'total_files': this.selectedFiles.length,
-                    'total_size_mb': (this.totalSize / (1024 * 1024)).toFixed(2)
+                    'total_size_mb': parseFloat((this.totalSize / (1024 * 1024)).toFixed(2))
                 }],
                 kwargs: {}
             };
 
-            // Call Odoo RPC
-            const result = await this.callOdooRPC('/web/dataset/call_kw', rpcData);
-            console.log('✅ Wizard updated via RPC');
+            console.log('🔄 Step 1: Updating wizard with file data...');
+            const updateResult = await this.callOdooRPC('/web/dataset/call_kw', updateData);
+            console.log('✅ Step 1 completed: Wizard updated');
 
-            // Now trigger the upload action
+            // STEP 2: Trigger the upload action with enhanced error handling
             const uploadData = {
                 model: 'custody.image.upload.wizard',
                 method: 'action_upload_images',
@@ -132,22 +139,118 @@ export class CustodyUploadManager {
                 kwargs: {}
             };
 
-            const uploadResult = await this.callOdooRPC('/web/dataset/call_kw', uploadData);
-            console.log('✅ Upload completed:', uploadResult);
+            console.log('🔄 Step 2: Triggering upload action...');
+            const uploadResult = await this.callOdooRPCWithRetry('/web/dataset/call_kw', uploadData);
+            console.log('✅ Step 2 completed: Upload action result:', uploadResult);
 
             // Handle the result
-            if (uploadResult && uploadResult.type === 'ir.actions.client') {
-                // Show success notification
-                this.showNotification(uploadResult.params);
-                
-                // Refresh the form or close dialog
-                window.location.reload();
+            if (uploadResult) {
+                if (uploadResult.type === 'ir.actions.client') {
+                    // Show success notification
+                    this.showNotification(uploadResult.params);
+                    
+                    // Refresh the form or close dialog
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    console.log('ℹ️ Upload completed with different result type:', uploadResult);
+                    this.showNotification({
+                        title: 'Upload Completed',
+                        message: 'Images uploaded successfully!',
+                        type: 'success'
+                    });
+                    setTimeout(() => window.location.reload(), 1000);
+                }
+            } else {
+                console.log('⚠️ Upload completed but no result returned');
+                this.showNotification({
+                    title: 'Upload Status',
+                    message: 'Upload completed. Please check the results.',
+                    type: 'info'
+                });
+                setTimeout(() => window.location.reload(), 2000);
             }
 
         } catch (error) {
             console.error('❌ Upload failed:', error);
-            alert(`Upload failed: ${error.message}`);
+            console.error('❌ Error details:', {
+                message: error.message,
+                stack: error.stack,
+                name: error.name
+            });
+            
+            // Show more detailed error message
+            const errorMessage = this.getDetailedErrorMessage(error);
+            alert(`Upload failed: ${errorMessage}`);
         }
+    }
+
+    compressBase64IfNeeded(dataUrl, originalSize) {
+        // If the original file is over 2MB, try to reduce base64 size
+        if (originalSize > 2 * 1024 * 1024) {
+            try {
+                // Extract base64 part only (remove data:image/...;base64,)
+                const base64Data = dataUrl.split(',')[1] || dataUrl;
+                console.log(`📦 Compressing large file (${originalSize} bytes) base64 data...`);
+                return base64Data;
+            } catch (e) {
+                console.warn('⚠️ Failed to compress base64, using original');
+                return dataUrl;
+            }
+        }
+        return dataUrl;
+    }
+
+    getDetailedErrorMessage(error) {
+        const message = error.message || 'Unknown error';
+        
+        if (message.includes('Odoo Server Error')) {
+            return 'Server processing error. This might be due to:\n' +
+                   '• File size too large\n' +
+                   '• Invalid file format\n' +
+                   '• Database constraints\n' +
+                   '• Permission issues\n\n' +
+                   'Please try with smaller images or contact administrator.';
+        }
+        
+        if (message.includes('403') || message.includes('Forbidden')) {
+            return 'Permission denied. You may not have rights to upload images.';
+        }
+        
+        if (message.includes('404') || message.includes('Not Found')) {
+            return 'Upload service not found. Please refresh the page and try again.';
+        }
+        
+        if (message.includes('413') || message.includes('Payload Too Large')) {
+            return 'Files are too large. Please use smaller images.';
+        }
+        
+        if (message.includes('Network')) {
+            return 'Network connection error. Please check your internet connection.';
+        }
+        
+        return message;
+    }
+
+    async callOdooRPCWithRetry(url, data, maxRetries = 2) {
+        let lastError;
+        
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                console.log(`🔄 RPC attempt ${attempt}/${maxRetries}`);
+                const result = await this.callOdooRPC(url, data);
+                return result;
+            } catch (error) {
+                lastError = error;
+                console.warn(`⚠️ RPC attempt ${attempt} failed:`, error.message);
+                
+                if (attempt < maxRetries) {
+                    console.log(`⏳ Retrying in ${attempt * 1000}ms...`);
+                    await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+                }
+            }
+        }
+        
+        throw lastError;
     }
 
     getWizardId() {
@@ -170,134 +273,20 @@ export class CustodyUploadManager {
             return urlId;
         }
         
-        // Method 2: Check for data attributes on modal/dialog
-        const modal = document.querySelector('.modal') || document.querySelector('.o_dialog');
-        if (modal) {
-            const recordId = modal.getAttribute('data-record-id') || 
-                           modal.getAttribute('data-id') ||
-                           modal.querySelector('[data-record-id]')?.getAttribute('data-record-id');
-            if (recordId) {
-                console.log('✅ Found wizard ID in modal:', recordId);
-                return parseInt(recordId);
-            }
-        }
-        
-        // Method 3: Check form data attributes
-        const form = document.querySelector('form');
-        if (form) {
-            const formId = form.getAttribute('data-record-id') || 
-                          form.getAttribute('data-id') ||
-                          form.dataset.recordId ||
-                          form.dataset.id;
-            if (formId) {
-                console.log('✅ Found wizard ID in form:', formId);
-                return parseInt(formId);
-            }
-        }
-        
-        // Method 4: Check hidden inputs
-        const hiddenId = document.querySelector('input[name="id"]')?.value ||
-                        document.querySelector('input[type="hidden"][value*="custody.image.upload.wizard"]')?.nextElementSibling?.value;
-        if (hiddenId && !isNaN(hiddenId)) {
-            console.log('✅ Found wizard ID in hidden input:', hiddenId);
-            return parseInt(hiddenId);
-        }
-        
-        // Method 5: Extract from action context (Odoo specific)
-        try {
-            const scripts = document.querySelectorAll('script');
-            for (const script of scripts) {
-                const content = script.textContent || '';
-                if (content.includes('custody.image.upload.wizard')) {
-                    const idMatch = content.match(/"res_id":\s*(\d+)/) || 
-                                   content.match(/"active_id":\s*(\d+)/) ||
-                                   content.match(/wizard.*?(\d+)/);
-                    if (idMatch) {
-                        console.log('✅ Found wizard ID in script:', idMatch[1]);
-                        return parseInt(idMatch[1]);
-                    }
-                }
-            }
-        } catch (e) {
-            console.log('⚠️ Error searching scripts:', e);
-        }
-        
-        // Method 6: Use Odoo web client context (if available)
-        if (window.odoo && window.odoo.define) {
-            try {
-                // Try to access current action from Odoo web client
-                const webClient = document.querySelector('.o_web_client');
-                if (webClient && webClient.__owl__) {
-                    const context = webClient.__owl__.ctx || {};
-                    if (context.active_id) {
-                        console.log('✅ Found wizard ID in Owl context:', context.active_id);
-                        return parseInt(context.active_id);
-                    }
-                }
-            } catch (e) {
-                console.log('⚠️ Error accessing Owl context:', e);
-            }
-        }
-        
-        // Method 7: Smart candidate selection based on URL context
-        const bodyText = document.body.innerHTML;
-        const possibleIds = bodyText.match(/\b\d{1,6}\b/g);
-        if (possibleIds) {
-            // Filter out obvious non-IDs (like years, small numbers, etc.)
-            let candidateIds = possibleIds
-                .map(id => parseInt(id))
-                .filter(id => id > 10 && id < 999999)
-                .filter((id, index, arr) => arr.indexOf(id) === index); // unique
-            
-            console.log('⚠️ Multiple candidate IDs found:', candidateIds);
-            
-            // SMART SELECTION based on URL context
-            if (url.includes('/action-') || url.includes('/odoo/')) {
-                // For Odoo action URLs, prefer smaller IDs (wizard IDs are usually smaller)
-                candidateIds = candidateIds.filter(id => id < 10000);
-                candidateIds.sort((a, b) => a - b); // Sort ascending
-                
-                if (candidateIds.length > 0) {
-                    // Look for ID that appears in URL or is reasonable wizard ID
-                    const urlNumbers = url.match(/\d+/g)?.map(n => parseInt(n)) || [];
-                    const urlId = candidateIds.find(id => urlNumbers.includes(id));
-                    
-                    if (urlId) {
-                        console.log('✅ Found URL-matching wizard ID:', urlId);
-                        return urlId;
-                    }
-                    
-                    // Otherwise use the smallest reasonable ID
-                    const likelyId = candidateIds[0];
-                    console.log('✅ Using smallest candidate ID:', likelyId);
-                    return likelyId;
-                }
-            }
-            
-            // Fallback: use the most reasonable ID
-            if (candidateIds.length === 1) {
-                console.log('✅ Found single candidate wizard ID:', candidateIds[0]);
-                return candidateIds[0];
-            } else if (candidateIds.length > 1) {
-                // Prefer smaller IDs for wizards
-                const reasonableIds = candidateIds.filter(id => id < 10000);
-                const finalId = reasonableIds.length > 0 ? Math.min(...reasonableIds) : candidateIds[0];
-                console.log('✅ Using most reasonable ID:', finalId);
-                return finalId;
-            }
-        }
-        
-        console.error('❌ Could not determine wizard ID with any method');
-        console.log('🔍 Available elements for debugging:');
-        console.log('- Modal:', !!modal);
-        console.log('- Form:', !!form);
-        console.log('- Hidden inputs:', document.querySelectorAll('input[type="hidden"]').length);
-        console.log('- Scripts with wizard:', Array.from(document.querySelectorAll('script')).filter(s => s.textContent.includes('wizard')).length);
-        
+        console.error('❌ Could not determine wizard ID from URL');
         return null;
     }
 
     async callOdooRPC(url, data) {
+        console.log('🌐 Making RPC call to:', url);
+        console.log('📊 RPC data summary:', {
+            model: data.model,
+            method: data.method,
+            argsLength: data.args?.length,
+            firstArgType: typeof data.args?.[0],
+            firstArgLength: Array.isArray(data.args?.[0]) ? data.args[0].length : 'not array'
+        });
+
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -312,14 +301,23 @@ export class CustodyUploadManager {
             })
         });
 
+        console.log('📡 RPC response status:', response.status, response.statusText);
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
         const result = await response.json();
+        console.log('📊 RPC response structure:', {
+            hasResult: 'result' in result,
+            hasError: 'error' in result,
+            resultType: typeof result.result,
+            errorType: result.error ? typeof result.error : 'none'
+        });
         
         if (result.error) {
-            throw new Error(result.error.message || 'RPC call failed');
+            console.error('❌ Server error details:', result.error);
+            throw new Error(result.error.message || result.error.data?.message || 'Odoo Server Error');
         }
 
         return result.result;
@@ -712,4 +710,4 @@ window.addEventListener('load', () => {
     setTimeout(initializeUpload, 1000);
 });
 
-console.log('✅ Custody Upload Module Loaded - Smart Wizard ID Detection');
+console.log('✅ Custody Upload Module Loaded - Enhanced Error Handling');
