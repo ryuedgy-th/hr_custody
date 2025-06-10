@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-// Updated 2025-06-11 - Add DOM inspection for debugging
+// Updated 2025-06-11 - Fix Odoo field widgets handling
 
 console.log('🚀 Loading Custody Upload Manager...');
 
@@ -21,46 +21,6 @@ export class CustodyUploadManager {
         console.log('📋 Upload Manager Created');
     }
 
-    // Debug function to inspect DOM
-    debugDOMStructure() {
-        console.log('🔍 DEBUG: Inspecting DOM structure...');
-        
-        // ดู form elements ทั้งหมด
-        const allInputs = document.querySelectorAll('input');
-        const allTextareas = document.querySelectorAll('textarea');
-        const allFields = document.querySelectorAll('[name*="total_files"], [name*="total_size"], [name*="images_data"]');
-        
-        console.log('📋 All inputs:', allInputs.length);
-        allInputs.forEach((input, i) => {
-            if (input.name) {
-                console.log(`  Input ${i}: name="${input.name}", type="${input.type}", class="${input.className}"`);
-            }
-        });
-        
-        console.log('📋 All textareas:', allTextareas.length);
-        allTextareas.forEach((textarea, i) => {
-            if (textarea.name) {
-                console.log(`  Textarea ${i}: name="${textarea.name}", class="${textarea.className}"`);
-            }
-        });
-        
-        console.log('📋 Fields with target names:', allFields.length);
-        allFields.forEach((field, i) => {
-            console.log(`  Field ${i}:`, field.outerHTML.substring(0, 100) + '...');
-        });
-        
-        // ดู Odoo field widgets
-        const odooFields = document.querySelectorAll('.o_field_widget, [data-field-name], .o_field');
-        console.log('📋 Odoo field widgets:', odooFields.length);
-        odooFields.forEach((field, i) => {
-            const name = field.getAttribute('name') || field.getAttribute('data-field-name') || field.dataset.fieldName;
-            if (name && (name.includes('total_files') || name.includes('total_size') || name.includes('images_data'))) {
-                console.log(`  Odoo Field ${i}: name="${name}", class="${field.className}"`);
-                console.log(`    HTML:`, field.outerHTML.substring(0, 150) + '...');
-            }
-        });
-    }
-
     init() {
         if (this.initialized) {
             console.log('⚠️ Manager already initialized');
@@ -69,9 +29,6 @@ export class CustodyUploadManager {
 
         console.log('🔍 Looking for upload elements...');
         
-        // เรียก debug function
-        setTimeout(() => this.debugDOMStructure(), 1000);
-        
         const elements = {
             uploadZoneById: document.querySelector('#custody_multiple_upload_zone'),
             uploadZoneByClass: document.querySelector('.custody-upload-zone'),
@@ -79,16 +36,7 @@ export class CustodyUploadManager {
             fileInput: document.getElementById('file_input'),
             browseBtn: document.getElementById('browse_files_btn'),
             previewContainer: document.getElementById('selected_files_preview'),
-            filesList: document.getElementById('files_list'),
-            // ปรับ selector สำหรับ invisible fields ใน Odoo
-            imagesDataField: document.querySelector('textarea[name="images_data"]') || 
-                           document.querySelector('input[name="images_data"]') ||
-                           document.querySelector('field[name="images_data"] textarea') ||
-                           document.querySelector('field[name="images_data"] input'),
-            totalFilesField: document.querySelector('input[name="total_files"]') ||
-                           document.querySelector('field[name="total_files"] input'),
-            totalSizeField: document.querySelector('input[name="total_size_mb"]') ||
-                          document.querySelector('field[name="total_size_mb"] input')
+            filesList: document.getElementById('files_list')
         };
 
         console.log('🔍 Available elements:', elements);
@@ -376,80 +324,107 @@ export class CustodyUploadManager {
     }
 
     updateDisplay() {
-        // ใช้ alternative approach: ตั้งค่าใน global variables แทน
-        console.log('💾 Storing data in global variables for form submission...');
+        console.log('💾 Updating Odoo field widgets...');
         
-        // เก็บข้อมูลใน window object เพื่อให้ Odoo access ได้
-        window.custodyUploadData = {
-            totalFiles: this.selectedFiles.length,
-            totalSizeMB: (this.totalSize / (1024 * 1024)).toFixed(2),
-            filesData: this.selectedFiles
-                .filter(file => file.dataUrl)
-                .map(file => ({
-                    filename: file.filename,
-                    size: file.size,
-                    type: file.type,
-                    data: file.dataUrl,
-                    description: file.description || '',
-                    id: file.id
-                }))
-        };
+        // อัพเดท Odoo field widgets
+        this.updateOdooField('total_files', this.selectedFiles.length);
+        this.updateOdooField('total_size_mb', (this.totalSize / (1024 * 1024)).toFixed(2));
         
-        console.log('📊 Global data updated:', {
-            files: window.custodyUploadData.totalFiles,
-            totalSizeMB: window.custodyUploadData.totalSizeMB,
-            dataLength: window.custodyUploadData.filesData.length
+        // เก็บข้อมูลไฟล์สำหรับการ upload
+        this.updateFormData();
+        
+        console.log('📊 Display updated:', {
+            files: this.selectedFiles.length,
+            totalSizeMB: (this.totalSize / (1024 * 1024)).toFixed(2)
         });
-        
-        // พยายาม inject ข้อมูลลงใน form field ถ้าเจอ
-        this.injectFormData();
     }
 
-    injectFormData() {
-        // ลองหา form และ inject ข้อมูลโดยตรง
-        const form = document.querySelector('form');
-        if (form) {
-            console.log('📝 Found form, attempting to inject data...');
-            
-            // ลองสร้าง hidden fields
-            const fieldsToCreate = [
-                { name: 'total_files', value: this.selectedFiles.length },
-                { name: 'total_size_mb', value: (this.totalSize / (1024 * 1024)).toFixed(2) },
-                { name: 'images_data', value: JSON.stringify(window.custodyUploadData.filesData) }
-            ];
-            
-            fieldsToCreate.forEach(fieldInfo => {
-                // ลบ field เก่าถ้ามี
-                const existingField = form.querySelector(`input[name="${fieldInfo.name}"], textarea[name="${fieldInfo.name}"]`);
-                if (existingField) {
-                    existingField.value = fieldInfo.value;
-                    this.triggerOdooFieldUpdate(existingField);
-                    console.log(`✅ Updated existing field: ${fieldInfo.name} = ${fieldInfo.value}`);
-                } else {
-                    // สร้าง hidden field ใหม่
-                    const hiddenField = document.createElement('input');
-                    hiddenField.type = 'hidden';
-                    hiddenField.name = fieldInfo.name;
-                    hiddenField.value = fieldInfo.value;
-                    form.appendChild(hiddenField);
-                    console.log(`✅ Created hidden field: ${fieldInfo.name} = ${fieldInfo.value}`);
-                }
-            });
+    updateOdooField(fieldName, value) {
+        // หา Odoo field widget
+        const fieldWidget = document.querySelector(`div[name="${fieldName}"]`);
+        if (fieldWidget) {
+            // อัพเดท span ข้างใน
+            const span = fieldWidget.querySelector('span');
+            if (span) {
+                span.textContent = value;
+                console.log(`✅ Updated Odoo field ${fieldName}: ${value}`);
+                
+                // สร้าง change event เพื่อแจ้งให้ Odoo รู้ว่า field เปลี่ยน
+                const changeEvent = new CustomEvent('odoo-field-changed', {
+                    detail: { fieldName, value },
+                    bubbles: true
+                });
+                fieldWidget.dispatchEvent(changeEvent);
+            } else {
+                console.warn(`⚠️ Span not found in field widget: ${fieldName}`);
+            }
+        } else {
+            console.warn(`⚠️ Odoo field widget not found: ${fieldName}`);
         }
     }
 
-    triggerOdooFieldUpdate(field) {
-        // Trigger Odoo field update events
-        const events = ['change', 'input', 'blur'];
-        events.forEach(eventType => {
-            const event = new Event(eventType, { bubbles: true, cancelable: true });
-            field.dispatchEvent(event);
+    updateFormData() {
+        console.log('💾 Preparing images data for upload...');
+        
+        const imagesData = this.selectedFiles
+            .filter(file => file.dataUrl)
+            .map(file => ({
+                filename: file.filename,
+                size: file.size,
+                type: file.type,
+                data: file.dataUrl,
+                description: file.description || '',
+                id: file.id
+            }));
+        
+        // เก็บใน global variable สำหรับ Python access
+        window.custodyUploadData = {
+            totalFiles: this.selectedFiles.length,
+            totalSizeMB: (this.totalSize / (1024 * 1024)).toFixed(2),
+            imagesData: JSON.stringify(imagesData)
+        };
+        
+        // พยายามสร้าง/อัพเดท hidden field สำหรับ images_data
+        this.ensureImagesDataField(window.custodyUploadData.imagesData);
+        
+        console.log('💾 Form data updated:', {
+            files: window.custodyUploadData.totalFiles,
+            totalSizeMB: window.custodyUploadData.totalSizeMB,
+            dataSize: window.custodyUploadData.imagesData.length + ' chars'
         });
     }
 
-    updateFormData() {
-        // อัพเดท global data
-        this.updateDisplay();
+    ensureImagesDataField(jsonData) {
+        // หา form
+        const form = document.querySelector('form');
+        if (!form) {
+            console.warn('⚠️ Form not found');
+            return;
+        }
+        
+        // หา hidden field ที่มีอยู่แล้ว
+        let hiddenField = form.querySelector('input[name="images_data"]') || 
+                         form.querySelector('textarea[name="images_data"]');
+        
+        if (!hiddenField) {
+            // สร้าง hidden field ใหม่
+            hiddenField = document.createElement('textarea');
+            hiddenField.name = 'images_data';
+            hiddenField.style.display = 'none';
+            form.appendChild(hiddenField);
+            console.log('✅ Created hidden images_data field');
+        }
+        
+        // อัพเดทค่า
+        hiddenField.value = jsonData;
+        
+        // Trigger events สำหรับ Odoo
+        ['change', 'input'].forEach(eventType => {
+            const event = new Event(eventType, { bubbles: true, cancelable: true });
+            hiddenField.dispatchEvent(event);
+        });
+        
+        console.log('✅ Updated images_data field with', jsonData.length, 'characters');
     }
 
     removeFile(fileId) {
@@ -517,4 +492,4 @@ window.addEventListener('load', () => {
     setTimeout(initializeUpload, 1000);
 });
 
-console.log('✅ Custody Upload Module Loaded - With DOM Debug & Form Injection');
+console.log('✅ Custody Upload Module Loaded - Fixed Odoo Field Widgets');
