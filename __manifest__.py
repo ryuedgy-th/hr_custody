@@ -1,6 +1,6 @@
 {
     'name': 'Open HRMS Custody',
-    'version': '18.0.1.1.0',  # ⭐ NEW: Increment version for Phase 4 - Hierarchical Categories
+    'version': '18.0.1.1.1',  # ⭐ NEW: Increment version for migration fix
     'category': 'Human Resources',
     'summary': """Manage the company properties with hierarchical categories and image documentation""",
     'description': """
