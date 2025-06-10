@@ -22,12 +22,14 @@ class PropertyCategory(models.Model):
     _order = 'complete_name'
     _rec_name = 'complete_name'
     _parent_store = True  # Enables efficient tree operations
+    _inherit = ['mail.thread', 'mail.activity.mixin']  # Enable chatter
 
     name = fields.Char(
         string='Category Name',
         required=True,
         translate=True,
-        help='Name of the property category'
+        help='Name of the property category',
+        tracking=True
     )
 
     complete_name = fields.Char(
@@ -43,7 +45,8 @@ class PropertyCategory(models.Model):
         string='Parent Category',
         index=True,
         ondelete='cascade',
-        help='Parent category in the hierarchy'
+        help='Parent category in the hierarchy',
+        tracking=True
     )
 
     child_ids = fields.One2many(
@@ -70,7 +73,8 @@ class PropertyCategory(models.Model):
     description = fields.Text(
         string='Description',
         translate=True,
-        help='Detailed description of this category'
+        help='Detailed description of this category',
+        tracking=True
     )
 
     image = fields.Image(
@@ -82,7 +86,8 @@ class PropertyCategory(models.Model):
     active = fields.Boolean(
         string='Active',
         default=True,
-        help='If unchecked, this category will be hidden from selection'
+        help='If unchecked, this category will be hidden from selection',
+        tracking=True
     )
 
     color = fields.Integer(
@@ -103,13 +108,15 @@ class PropertyCategory(models.Model):
         'category_id',
         'user_id',
         string='Default Approvers',
-        help='Default approvers for properties in this category (inherited by properties)'
+        help='Default approvers for properties in this category (inherited by properties)',
+        tracking=True
     )
 
     responsible_department_id = fields.Many2one(
         'hr.department',
         string='Responsible Department',
-        help='Default department responsible for properties in this category'
+        help='Default department responsible for properties in this category',
+        tracking=True
     )
 
     # Category Statistics (computed fields)
