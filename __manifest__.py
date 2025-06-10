@@ -56,7 +56,7 @@
     'assets': {
         'web.assets_backend': [
             'hr_custody/static/src/css/custody_image_upload.css',
-            # 'hr_custody/static/src/js/custody_image_upload.js',  # ชั่วคราวปิดไว้ก่อน
+            'hr_custody/static/src/js/custody_image_upload.js',  # เปิดกลับ
         ],
     },
     'demo': ['data/demo_data.xml'],
