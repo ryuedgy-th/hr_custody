@@ -17,7 +17,8 @@
                 <field name="property_id"/>
 
                 <templates>
-                    <t t-name="kanban-box">
+                    <!-- ✅ FIXED: เปลี่ยนจาก kanban-box เป็น card -->
+                    <t t-name="card">
                         <div class="oe_kanban_card oe_kanban_global_click">
                             <div class="oe_kanban_content">
                                 <!-- Image Display -->
@@ -46,10 +47,12 @@
                                         <field name="custody_id"/> - <field name="employee_id"/>
                                     </div>
                                     <div class="text-muted small">
-                                        <i class="fa fa-calendar"></i> <field name="taken_date"/>
+                                        <!-- ✅ FIXED: เพิ่ม title attribute สำหรับ calendar icon -->
+                                        <i class="fa fa-calendar" title="Date"></i> <field name="taken_date"/>
                                     </div>
                                     <div class="text-muted small">
-                                        <i class="fa fa-user"></i> <field name="taken_by_id"/>
+                                        <!-- ✅ FIXED: เพิ่ม title attribute สำหรับ user icon -->
+                                        <i class="fa fa-user" title="Taken by"></i> <field name="taken_by_id"/>
                                     </div>
                                 </div>
                             </div>
@@ -276,7 +279,8 @@
                                     <field name="description"/>
                                     <field name="taken_date"/>
                                     <templates>
-                                        <t t-name="kanban-box">
+                                        <!-- ✅ FIXED: เปลี่ยนจาก kanban-box เป็น card -->
+                                        <t t-name="card">
                                             <div class="oe_kanban_card">
                                                 <div class="text-center">
                                                     <field name="image" widget="image" style="max-height: 100px;"/>
@@ -297,7 +301,8 @@
                                     <field name="description"/>
                                     <field name="taken_date"/>
                                     <templates>
-                                        <t t-name="kanban-box">
+                                        <!-- ✅ FIXED: เปลี่ยนจาก kanban-box เป็น card -->
+                                        <t t-name="card">
                                             <div class="oe_kanban_card">
                                                 <div class="text-center">
                                                     <field name="image" widget="image" style="max-height: 100px;"/>
