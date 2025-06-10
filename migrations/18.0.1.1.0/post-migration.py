@@ -75,22 +75,4 @@ def migrate(cr, version):
             )
         """)
     
-    # Add effective_approver_ids many2many table if it doesn't exist
-    cr.execute("""
-        SELECT EXISTS (
-            SELECT FROM information_schema.tables 
-            WHERE table_schema = 'public' 
-            AND table_name = 'custody_property_effective_approver_rel'
-        )
-    """)
-    
-    if not cr.fetchone()[0]:
-        cr.execute("""
-            CREATE TABLE custody_property_effective_approver_rel (
-                custody_property_id INTEGER NOT NULL REFERENCES custody_property(id) ON DELETE CASCADE,
-                res_users_id INTEGER NOT NULL REFERENCES res_users(id) ON DELETE CASCADE,
-                PRIMARY KEY (custody_property_id, res_users_id)
-            )
-        """)
-    
     print("✅ Phase 4 Migration completed: Hierarchical categories infrastructure created")
