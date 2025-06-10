@@ -5,7 +5,7 @@
         <field name="name">property.category.list</field>
         <field name="model">property.category</field>
         <field name="arch" type="xml">
-            <tree string="Property Categories" 
+            <list string="Property Categories" 
                   decoration-muted="not active"
                   decoration-bf="is_parent">
                 <field name="active" column_invisible="1"/>
@@ -16,7 +16,7 @@
                 <field name="active_custody_count" string="Active Custodies"/>
                 <field name="responsible_department_id"/>
                 <field name="sequence" optional="hide"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -25,7 +25,7 @@
         <field name="name">property.category.hierarchy</field>
         <field name="model">property.category</field>
         <field name="arch" type="xml">
-            <tree string="Category Hierarchy" 
+            <list string="Category Hierarchy" 
                   decoration-muted="not active"
                   decoration-bf="is_parent"
                   create="false" 
@@ -38,7 +38,7 @@
                 <field name="total_property_count" string="Total Properties"/>
                 <field name="active_custody_count" string="Active Custodies"/>
                 <field name="level" string="Level" optional="hide"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -114,10 +114,10 @@
                         
                         <page string="Default Approvers" name="approvers">
                             <field name="approver_ids" widget="many2many_tags">
-                                <tree>
+                                <list>
                                     <field name="name"/>
                                     <field name="email"/>
-                                </tree>
+                                </list>
                             </field>
                             <div class="text-muted mt-2">
                                 <i class="fa fa-info-circle"/> 
@@ -128,25 +128,25 @@
 
                         <page string="Child Categories" name="children" invisible="not child_ids">
                             <field name="child_ids" readonly="1">
-                                <tree>
+                                <list>
                                     <field name="name"/>
                                     <field name="property_count" string="Properties"/>
                                     <field name="total_property_count" string="Total Properties"/>
                                     <field name="responsible_department_id"/>
                                     <field name="active"/>
-                                </tree>
+                                </list>
                             </field>
                         </page>
 
                         <page string="Properties" name="properties" invisible="property_count == 0">
-                            <field name="property_ids" readonly="1" context="{'tree_view_ref': 'hr_custody.custody_property_view_tree'}">
-                                <tree>
+                            <field name="property_ids" readonly="1" context="{'list_view_ref': 'hr_custody.custody_property_view_tree'}">
+                                <list>
                                     <field name="name"/>
                                     <field name="property_code"/>
                                     <field name="property_status"/>
                                     <field name="current_borrower_id"/>
                                     <field name="responsible_person"/>
-                                </tree>
+                                </list>
                             </field>
                         </page>
                     </notebook>
@@ -245,7 +245,7 @@
     <record id="property_category_action" model="ir.actions.act_window">
         <field name="name">Property Categories</field>
         <field name="res_model">property.category</field>
-        <field name="view_mode">tree,kanban,form</field>
+        <field name="view_mode">list,kanban,form</field>
         <field name="view_id" ref="property_category_tree_view"/>
         <field name="search_view_id" ref="property_category_search_view"/>
         <field name="context">{
@@ -273,7 +273,7 @@
     <record id="property_category_hierarchy_action" model="ir.actions.act_window">
         <field name="name">Category Hierarchy</field>
         <field name="res_model">property.category</field>
-        <field name="view_mode">tree</field>
+        <field name="view_mode">list</field>
         <field name="view_id" ref="property_category_hierarchy_view"/>
         <field name="search_view_id" ref="property_category_search_view"/>
         <field name="context">{
