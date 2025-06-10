@@ -3,6 +3,9 @@ from odoo.exceptions import ValidationError, UserError
 import base64
 import imghdr
 import io
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 class CustodyImageUploadWizard(models.TransientModel):
@@ -196,13 +199,26 @@ class CustodyImageUploadWizard(models.TransientModel):
         """Process and upload multiple images"""
         self.ensure_one()
         
+        # DEBUG: Log all current field values
+        _logger.info(f"🔍 UPLOAD DEBUG - Wizard ID: {self.id}")
+        _logger.info(f"🔍 total_files: {self.total_files}")
+        _logger.info(f"🔍 total_size_mb: {self.total_size_mb}")
+        _logger.info(f"🔍 images_data type: {type(self.images_data)}")
+        _logger.info(f"🔍 images_data length: {len(self.images_data or '')}")
+        _logger.info(f"🔍 images_data preview: {(self.images_data or '')[:100]}...")
+        _logger.info(f"🔍 can_upload: {self.can_upload}")
+        _logger.info(f"🔍 custody_state: {self.custody_id.state}")
+        _logger.info(f"🔍 image_type: {self.image_type}")
+        
         if not self.can_upload:
+            _logger.error(f"❌ Upload not allowed: {self.image_type} images when custody is {self.custody_id.state}")
             raise UserError(
                 _('Cannot upload %s images when custody is in state "%s"') 
                 % (self.image_type, self.custody_id.state)
             )
         
         if not self.images_data:
+            _logger.error("❌ No images_data found!")
             raise UserError(_('No images selected for upload'))
         
         try:
@@ -211,9 +227,12 @@ class CustodyImageUploadWizard(models.TransientModel):
             
             # Parse images data (expecting JSON format from JavaScript)
             import json
+            _logger.info(f"🔍 Attempting to parse JSON data...")
             images_list = json.loads(self.images_data)
+            _logger.info(f"🔍 Parsed {len(images_list)} images from JSON")
             
             if not images_list:
+                _logger.error("❌ Empty images list after JSON parsing!")
                 raise UserError(_('No valid images found to upload'))
             
             total_images = len(images_list)
@@ -236,6 +255,8 @@ class CustodyImageUploadWizard(models.TransientModel):
                     file_data = image_info.get('data', '')
                     description = image_info.get('description', '') or self.bulk_description or ''
                     
+                    _logger.info(f"🔍 Processing image {idx+1}: {filename}")
+                    
                     # Validate image
                     self._validate_image_file(file_data, filename)
                     
@@ -252,6 +273,7 @@ class CustodyImageUploadWizard(models.TransientModel):
                     
                     image_record = self.env['custody.image'].create(image_vals)
                     created_images.append(image_record)
+                    _logger.info(f"✅ Created image record {image_record.id} for {filename}")
                     
                     # Update progress
                     progress = ((idx + 1) / total_images) * 100
@@ -259,13 +281,16 @@ class CustodyImageUploadWizard(models.TransientModel):
                     
                 except Exception as e:
                     # Log error but continue with other images
-                    self.error_message = f'Error processing {filename}: {str(e)}'
+                    error_msg = f'Error processing {filename}: {str(e)}'
+                    _logger.error(f"❌ {error_msg}")
+                    self.error_message = error_msg
                     continue
             
             # Update final status
             if created_images:
                 self.upload_status = 'done'
                 self.progress_percentage = 100.0
+                _logger.info(f"✅ Successfully uploaded {len(created_images)} images")
                 
                 # Show success message
                 return {
@@ -280,11 +305,13 @@ class CustodyImageUploadWizard(models.TransientModel):
                 }
             else:
                 self.upload_status = 'error'
+                _logger.error("❌ No images were successfully uploaded")
                 raise UserError(_('No images were successfully uploaded. Check error messages.'))
         
         except Exception as e:
             self.upload_status = 'error'
             self.error_message = str(e)
+            _logger.error(f"❌ Upload failed: {str(e)}")
             raise UserError(_('Upload failed: %s') % str(e))
     
     def action_reset_wizard(self):
