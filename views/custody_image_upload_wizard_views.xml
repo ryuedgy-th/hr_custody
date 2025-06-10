@@ -37,9 +37,9 @@
                     <!-- Alert for upload restrictions -->
                     <div class="alert alert-warning" role="alert" invisible="can_upload">
                         <strong>⚠️ Upload Restricted</strong><br/>
-                        <span t-if="image_type == 'before'">Before images can only be uploaded when custody is waiting for approval or later.</span>
-                        <span t-if="image_type == 'after'">After images can only be uploaded when custody is approved or being returned.</span>
-                        <span t-if="image_type == 'damage'">Damage images can only be uploaded when custody is approved or being returned.</span>
+                        <div invisible="image_type != 'before'">Before images can only be uploaded when custody is waiting for approval or later.</div>
+                        <div invisible="image_type != 'after'">After images can only be uploaded when custody is approved or being returned.</div>
+                        <div invisible="image_type != 'damage'">Damage images can only be uploaded when custody is approved or being returned.</div>
                     </div>
 
                     <!-- Progress Bar -->
@@ -51,7 +51,7 @@
                         <div class="progress">
                             <div class="progress-bar progress-bar-striped progress-bar-animated" 
                                  role="progressbar" 
-                                 t-attf-style="width: #{record.progress_percentage.raw_value}%">
+                                 style="width: 0%">
                             </div>
                         </div>
                     </div>
