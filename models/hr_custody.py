@@ -491,6 +491,15 @@ class HrCustody(models.Model):
             }
         }
 
+    # ✅ FIXED: Add missing set_to_draft method
+    def set_to_draft(self):
+        """Set the current record to the 'draft' state."""
+        self.state = 'draft'
+        self.message_post(
+            body=_('Custody request set back to draft'),
+            message_type='notification'
+        )
+
     def set_to_return(self):
         """Process equipment return"""
         if self.requires_after_images and not self.has_after_images:
