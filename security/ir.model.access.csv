@@ -28,3 +28,6 @@ access_custody_after_wizard_hr_user,custody.after.wizard.hr.user,model_custody_a
 access_custody_after_wizard_hr_manager,custody.after.wizard.hr.manager,model_custody_after_wizard,hr.group_hr_manager,1,1,1,1
 access_custody_after_wizard_line_hr_user,custody.after.wizard.line.hr.user,model_custody_after_wizard_line,hr.group_hr_user,1,1,1,1
 access_custody_after_wizard_line_hr_manager,custody.after.wizard.line.hr.manager,model_custody_after_wizard_line,hr.group_hr_manager,1,1,1,1
+access_custody_image_upload_wizard_hr_user,custody.image.upload.wizard.hr.user,model_custody_image_upload_wizard,hr.group_hr_user,1,1,1,1
+access_custody_image_upload_wizard_hr_manager,custody.image.upload.wizard.hr.manager,model_custody_image_upload_wizard,hr.group_hr_manager,1,1,1,1
+access_custody_image_upload_wizard_employee,custody.image.upload.wizard.employee,model_custody_image_upload_wizard,base.group_user,1,1,1,0
