@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-// Updated 2025-06-11 - Enhanced wizard ID detection
+// Updated 2025-06-11 - Fixed wizard ID detection from URL patterns
 
 console.log('🚀 Loading Custody Upload Manager...');
 
@@ -153,14 +153,21 @@ export class CustodyUploadManager {
     getWizardId() {
         console.log('🔍 Searching for wizard ID...');
         
-        // Method 1: Check URL parameters
+        // Method 1: Check URL parameters - ENHANCED for Odoo patterns
         const url = window.location.href;
         console.log('🔍 Current URL:', url);
         
-        let match = url.match(/id=(\d+)/);
+        // Check for Odoo action URL patterns (most reliable)
+        let match = url.match(/\/action-\d+\/(\d+)/) ||  // /action-564/22
+                   url.match(/id=(\d+)/) ||               // ?id=22
+                   url.match(/res_id=(\d+)/) ||           // ?res_id=22
+                   url.match(/\/(\d+)$/) ||               // ends with /22
+                   url.match(/\/(\d+)(?:\/|$|\?)/);       // /22/ or /22? or /22$
+                   
         if (match) {
-            console.log('✅ Found wizard ID in URL:', match[1]);
-            return parseInt(match[1]);
+            const urlId = parseInt(match[1]);
+            console.log('✅ Found wizard ID in URL pattern:', urlId);
+            return urlId;
         }
         
         // Method 2: Check for data attributes on modal/dialog
@@ -232,25 +239,51 @@ export class CustodyUploadManager {
             }
         }
         
-        // Method 7: Try to find any number that looks like a record ID
+        // Method 7: Smart candidate selection based on URL context
         const bodyText = document.body.innerHTML;
         const possibleIds = bodyText.match(/\b\d{1,6}\b/g);
         if (possibleIds) {
             // Filter out obvious non-IDs (like years, small numbers, etc.)
-            const candidateIds = possibleIds
+            let candidateIds = possibleIds
                 .map(id => parseInt(id))
                 .filter(id => id > 10 && id < 999999)
                 .filter((id, index, arr) => arr.indexOf(id) === index); // unique
+            
+            console.log('⚠️ Multiple candidate IDs found:', candidateIds);
+            
+            // SMART SELECTION based on URL context
+            if (url.includes('/action-') || url.includes('/odoo/')) {
+                // For Odoo action URLs, prefer smaller IDs (wizard IDs are usually smaller)
+                candidateIds = candidateIds.filter(id => id < 10000);
+                candidateIds.sort((a, b) => a - b); // Sort ascending
                 
+                if (candidateIds.length > 0) {
+                    // Look for ID that appears in URL or is reasonable wizard ID
+                    const urlNumbers = url.match(/\d+/g)?.map(n => parseInt(n)) || [];
+                    const urlId = candidateIds.find(id => urlNumbers.includes(id));
+                    
+                    if (urlId) {
+                        console.log('✅ Found URL-matching wizard ID:', urlId);
+                        return urlId;
+                    }
+                    
+                    // Otherwise use the smallest reasonable ID
+                    const likelyId = candidateIds[0];
+                    console.log('✅ Using smallest candidate ID:', likelyId);
+                    return likelyId;
+                }
+            }
+            
+            // Fallback: use the most reasonable ID
             if (candidateIds.length === 1) {
-                console.log('✅ Found candidate wizard ID:', candidateIds[0]);
+                console.log('✅ Found single candidate wizard ID:', candidateIds[0]);
                 return candidateIds[0];
             } else if (candidateIds.length > 1) {
-                console.log('⚠️ Multiple candidate IDs found:', candidateIds);
-                // Return the most likely one (usually the largest reasonable ID)
-                const likelyId = candidateIds.sort((a, b) => b - a)[0];
-                console.log('✅ Using most likely ID:', likelyId);
-                return likelyId;
+                // Prefer smaller IDs for wizards
+                const reasonableIds = candidateIds.filter(id => id < 10000);
+                const finalId = reasonableIds.length > 0 ? Math.min(...reasonableIds) : candidateIds[0];
+                console.log('✅ Using most reasonable ID:', finalId);
+                return finalId;
             }
         }
         
@@ -679,4 +712,4 @@ window.addEventListener('load', () => {
     setTimeout(initializeUpload, 1000);
 });
 
-console.log('✅ Custody Upload Module Loaded - Enhanced Wizard ID Detection');
+console.log('✅ Custody Upload Module Loaded - Smart Wizard ID Detection');
