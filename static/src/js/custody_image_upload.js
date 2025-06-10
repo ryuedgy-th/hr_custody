@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-// Updated 2025-06-11 - Use direct RPC instead of form fields
+// Updated 2025-06-11 - Enhanced wizard ID detection
 
 console.log('🚀 Loading Custody Upload Manager...');
 
@@ -151,26 +151,116 @@ export class CustodyUploadManager {
     }
 
     getWizardId() {
-        // Try to find wizard ID from various sources
+        console.log('🔍 Searching for wizard ID...');
+        
+        // Method 1: Check URL parameters
         const url = window.location.href;
-        const match = url.match(/id=(\d+)/);
+        console.log('🔍 Current URL:', url);
+        
+        let match = url.match(/id=(\d+)/);
         if (match) {
+            console.log('✅ Found wizard ID in URL:', match[1]);
             return parseInt(match[1]);
         }
-
-        // Try to find from form data
-        const formData = document.querySelector('form')?.getAttribute('data-record-id');
-        if (formData) {
-            return parseInt(formData);
+        
+        // Method 2: Check for data attributes on modal/dialog
+        const modal = document.querySelector('.modal') || document.querySelector('.o_dialog');
+        if (modal) {
+            const recordId = modal.getAttribute('data-record-id') || 
+                           modal.getAttribute('data-id') ||
+                           modal.querySelector('[data-record-id]')?.getAttribute('data-record-id');
+            if (recordId) {
+                console.log('✅ Found wizard ID in modal:', recordId);
+                return parseInt(recordId);
+            }
         }
-
-        // Try to find from hidden inputs
-        const hiddenId = document.querySelector('input[name="id"]')?.value;
-        if (hiddenId) {
+        
+        // Method 3: Check form data attributes
+        const form = document.querySelector('form');
+        if (form) {
+            const formId = form.getAttribute('data-record-id') || 
+                          form.getAttribute('data-id') ||
+                          form.dataset.recordId ||
+                          form.dataset.id;
+            if (formId) {
+                console.log('✅ Found wizard ID in form:', formId);
+                return parseInt(formId);
+            }
+        }
+        
+        // Method 4: Check hidden inputs
+        const hiddenId = document.querySelector('input[name="id"]')?.value ||
+                        document.querySelector('input[type="hidden"][value*="custody.image.upload.wizard"]')?.nextElementSibling?.value;
+        if (hiddenId && !isNaN(hiddenId)) {
+            console.log('✅ Found wizard ID in hidden input:', hiddenId);
             return parseInt(hiddenId);
         }
-
-        console.warn('⚠️ Could not determine wizard ID');
+        
+        // Method 5: Extract from action context (Odoo specific)
+        try {
+            const scripts = document.querySelectorAll('script');
+            for (const script of scripts) {
+                const content = script.textContent || '';
+                if (content.includes('custody.image.upload.wizard')) {
+                    const idMatch = content.match(/"res_id":\s*(\d+)/) || 
+                                   content.match(/"active_id":\s*(\d+)/) ||
+                                   content.match(/wizard.*?(\d+)/);
+                    if (idMatch) {
+                        console.log('✅ Found wizard ID in script:', idMatch[1]);
+                        return parseInt(idMatch[1]);
+                    }
+                }
+            }
+        } catch (e) {
+            console.log('⚠️ Error searching scripts:', e);
+        }
+        
+        // Method 6: Use Odoo web client context (if available)
+        if (window.odoo && window.odoo.define) {
+            try {
+                // Try to access current action from Odoo web client
+                const webClient = document.querySelector('.o_web_client');
+                if (webClient && webClient.__owl__) {
+                    const context = webClient.__owl__.ctx || {};
+                    if (context.active_id) {
+                        console.log('✅ Found wizard ID in Owl context:', context.active_id);
+                        return parseInt(context.active_id);
+                    }
+                }
+            } catch (e) {
+                console.log('⚠️ Error accessing Owl context:', e);
+            }
+        }
+        
+        // Method 7: Try to find any number that looks like a record ID
+        const bodyText = document.body.innerHTML;
+        const possibleIds = bodyText.match(/\b\d{1,6}\b/g);
+        if (possibleIds) {
+            // Filter out obvious non-IDs (like years, small numbers, etc.)
+            const candidateIds = possibleIds
+                .map(id => parseInt(id))
+                .filter(id => id > 10 && id < 999999)
+                .filter((id, index, arr) => arr.indexOf(id) === index); // unique
+                
+            if (candidateIds.length === 1) {
+                console.log('✅ Found candidate wizard ID:', candidateIds[0]);
+                return candidateIds[0];
+            } else if (candidateIds.length > 1) {
+                console.log('⚠️ Multiple candidate IDs found:', candidateIds);
+                // Return the most likely one (usually the largest reasonable ID)
+                const likelyId = candidateIds.sort((a, b) => b - a)[0];
+                console.log('✅ Using most likely ID:', likelyId);
+                return likelyId;
+            }
+        }
+        
+        console.error('❌ Could not determine wizard ID with any method');
+        console.log('🔍 Available elements for debugging:');
+        console.log('- Modal:', !!modal);
+        console.log('- Form:', !!form);
+        console.log('- Hidden inputs:', document.querySelectorAll('input[type="hidden"]').length);
+        console.log('- Scripts with wizard:', Array.from(document.querySelectorAll('script')).filter(s => s.textContent.includes('wizard')).length);
+        
         return null;
     }
 
@@ -589,4 +679,4 @@ window.addEventListener('load', () => {
     setTimeout(initializeUpload, 1000);
 });
 
-console.log('✅ Custody Upload Module Loaded - Direct RPC Upload');
+console.log('✅ Custody Upload Module Loaded - Enhanced Wizard ID Detection');
