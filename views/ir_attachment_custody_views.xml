@@ -141,20 +141,13 @@
         </field>
     </record>
 
-    <!-- 📸 Custody Photos List View with Bulk Actions - FIXED FOR ODOO 18 -->
+    <!-- 📸 Custody Photos List View - SIMPLIFIED (NO BULK ACTIONS) -->
     <record id="ir_attachment_custody_view_tree" model="ir.ui.view">
         <field name="name">ir.attachment.custody.list</field>
         <field name="model">ir.attachment</field>
         <field name="arch" type="xml">
-            <list create="false" delete="true" edit="false" multi_edit="1">
-                <header>
-                    <button string="🏷️ Bulk Categorize" 
-                            name="%(hr_custody.custody_photo_bulk_categorize_wizard_action)d" 
-                            type="action" 
-                            class="btn-primary"
-                            context="{'default_attachment_ids': active_ids}"
-                            groups="hr.group_hr_user,hr.group_hr_manager"/>
-                </header>
+            <list create="false" delete="true" edit="false">
+                <!-- ❌ REMOVED: Bulk categorize button causes access rights issues -->
                 
                 <field name="name"/>
                 <field name="custody_photo_type" string="Photo Type"/>
