@@ -6,4 +6,5 @@ from . import custody_before_wizard
 from . import custody_after_wizard
 from . import custody_image_upload_wizard
 from . import custody_photo_wizards
-from . import hr_custody_photo_tests  # 🧪 NEW: Photo testing wizard
+# ❌ REMOVED: Testing wizard causes access rights issues
+# from . import hr_custody_photo_tests
