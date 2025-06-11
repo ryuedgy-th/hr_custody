@@ -1,7 +1,6 @@
 /** @odoo-module **/
 
-console.log('📦 Loading Custody Upload Module - Simplified Version...');
-
+// Production-ready version with minimal debugging
 class CustodyUploadManager {
     constructor() {
         this.selectedFiles = [];
@@ -9,11 +8,24 @@ class CustodyUploadManager {
         this.maxFileSize = 5 * 1024 * 1024; // 5MB per file
         this.maxTotalSize = 100 * 1024 * 1024; // 100MB total
         this.allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
-        console.log('📋 Upload Manager initialized');
+        
+        // Debug mode สามารถ toggle ได้
+        this.debugMode = false; // เปลี่ยนเป็น true เมื่อต้องการ debug
+    }
+
+    log(message, data = null) {
+        if (this.debugMode) {
+            console.log(message, data || '');
+        }
+    }
+
+    error(message, data = null) {
+        // Error logs ควรเก็บไว้เสมอ
+        console.error(message, data || '');
     }
 
     init() {
-        console.log('🚀 Initializing upload functionality...');
+        this.log('🚀 Initializing upload functionality...');
         this.setupEventListeners();
         this.updateDisplay();
     }
@@ -24,7 +36,7 @@ class CustodyUploadManager {
         const browseBtn = document.querySelector('#browse_files_btn');
 
         if (!uploadZone || !fileInput) {
-            console.warn('⚠️ Upload elements not found');
+            this.error('⚠️ Upload elements not found');
             return;
         }
 
@@ -63,11 +75,11 @@ class CustodyUploadManager {
             e.target.value = '';
         });
 
-        console.log('✅ Event listeners setup complete');
+        this.log('✅ Event listeners setup complete');
     }
 
     handleFiles(files) {
-        console.log('📂 Processing', files.length, 'files...');
+        this.log('📂 Processing files', { count: files.length });
 
         for (const file of files) {
             if (this.validateFile(file)) {
@@ -77,7 +89,7 @@ class CustodyUploadManager {
 
         this.renderPreviews();
         this.updateDisplay();
-        this.updateOdooFields(); // เพิ่มการอัพเดท Odoo fields
+        this.updateOdooFields();
     }
 
     validateFile(file) {
@@ -121,7 +133,7 @@ class CustodyUploadManager {
         this.totalSize += file.size;
         this.generatePreview(fileData);
 
-        console.log('✅ File added:', file.name);
+        this.log('✅ File added', { filename: file.name, size: file.size });
     }
 
     generatePreview(fileData) {
@@ -133,20 +145,20 @@ class CustodyUploadManager {
         };
 
         reader.onerror = () => {
-            console.error('❌ Error reading file:', fileData.filename);
+            this.error('❌ Error reading file', fileData.filename);
         };
 
         reader.readAsDataURL(fileData.file);
     }
 
     renderPreviews() {
-        console.log('🖼️ Rendering previews for', this.selectedFiles.length, 'files');
+        this.log('🖼️ Rendering previews', { count: this.selectedFiles.length });
 
         const previewContainer = document.getElementById('selected_files_preview');
         const filesList = document.getElementById('files_list');
 
         if (!previewContainer || !filesList) {
-            console.warn('⚠️ Preview containers not found');
+            this.error('⚠️ Preview containers not found');
             return;
         }
 
@@ -179,19 +191,14 @@ class CustodyUploadManager {
                 filesList.appendChild(fileItem);
             }
         });
-
-        console.log('✅ Previews rendered');
     }
 
     updateDisplay() {
-        // อัพเดท display counters
+        // Essential display updates only
         const totalFiles = this.selectedFiles.length;
         const totalSizeMB = (this.totalSize / (1024 * 1024)).toFixed(2);
         
-        console.log('📊 Display updated:', {
-            files: totalFiles,
-            totalSizeMB: totalSizeMB
-        });
+        this.log('📊 Display updated', { files: totalFiles, totalSizeMB: totalSizeMB });
     }
 
     updateOdooFields() {
@@ -199,7 +206,7 @@ class CustodyUploadManager {
         this.updateOdooField('total_files', this.selectedFiles.length);
         this.updateOdooField('total_size_mb', (this.totalSize / (1024 * 1024)).toFixed(2));
         
-        // 🎯 สำคัญ: อัพเดท images_data field สำหรับ Odoo wizard
+        // สำคัญ: อัพเดท images_data field สำหรับ Odoo wizard
         this.updateImagesDataField();
     }
 
@@ -207,7 +214,7 @@ class CustodyUploadManager {
         const fieldWidget = document.querySelector(`div[name="${fieldName}"] span`);
         if (fieldWidget) {
             fieldWidget.textContent = value;
-            console.log(`✅ Updated Odoo field ${fieldName}: ${value}`);
+            this.log(`✅ Updated Odoo field ${fieldName}`, value);
         }
     }
 
@@ -217,12 +224,12 @@ class CustodyUploadManager {
         if (imagesDataField) {
             const imagesData = JSON.stringify(this.getFilesData());
             imagesDataField.value = imagesData;
-            console.log('📋 Updated images_data field with', this.selectedFiles.length, 'files');
+            this.log('📋 Updated images_data field', { fileCount: this.selectedFiles.length });
         }
     }
 
     removeFile(fileId) {
-        console.log('🗑️ Removing file:', fileId);
+        this.log('🗑️ Removing file', fileId);
         
         const fileIndex = this.selectedFiles.findIndex(f => f.id == fileId);
         if (fileIndex !== -1) {
@@ -231,7 +238,6 @@ class CustodyUploadManager {
             this.renderPreviews();
             this.updateDisplay();
             this.updateOdooFields();
-            console.log('✅ File removed. Remaining:', this.selectedFiles.length);
         }
     }
 
@@ -240,7 +246,7 @@ class CustodyUploadManager {
         if (file) {
             file.description = description;
             this.updateImagesDataField(); // อัพเดทข้อมูลเมื่อมีการเปลี่ยน description
-            console.log('📝 Updated description for:', file.filename);
+            this.log('📝 Updated description', { filename: file.filename });
         }
     }
 
@@ -253,7 +259,8 @@ class CustodyUploadManager {
     }
 
     showError(message) {
-        console.error('❌ Error:', message);
+        // User-facing errors ควรเก็บไว้
+        this.error('❌ Validation Error:', message);
         
         let errorContainer = document.getElementById('upload_errors');
         if (!errorContainer) {
@@ -291,7 +298,7 @@ class CustodyUploadManager {
             return false;
         }
 
-        console.log('🚀 Starting upload for', this.selectedFiles.length, 'files');
+        this.log('🚀 Starting upload', { fileCount: this.selectedFiles.length });
         
         // อัพเดทข้อมูลครั้งสุดท้าย
         this.updateImagesDataField();
@@ -299,28 +306,46 @@ class CustodyUploadManager {
         // ให้ Odoo wizard จัดการต่อ
         return true;
     }
+
+    // 🔧 Debug Helper Methods (สำหรับ development)
+    enableDebug() {
+        this.debugMode = true;
+        console.log('🐛 Debug mode enabled');
+    }
+
+    disableDebug() {
+        this.debugMode = false;
+        console.log('🚫 Debug mode disabled');
+    }
+
+    getDebugInfo() {
+        return {
+            selectedFiles: this.selectedFiles.length,
+            totalSize: this.formatFileSize(this.totalSize),
+            debugMode: this.debugMode,
+            version: '1.0.0-production'
+        };
+    }
 }
 
 // Initialize function
 function initializeUpload() {
-    console.log('🔍 Checking for upload zone...');
-
     try {
         const uploadZone = document.querySelector('#custody_multiple_upload_zone') || 
                           document.querySelector('.custody-upload-zone');
 
         if (uploadZone) {
-            console.log('✅ Upload zone found!');
-            
             if (!window.custodyUploadManager) {
                 const manager = new CustodyUploadManager();
                 window.custodyUploadManager = manager;
                 manager.init();
-            } else {
-                console.log('ℹ️ Manager already exists');
+                
+                // 🔧 Debug helpers สำหรับ console
+                window.enableCustodyDebug = () => manager.enableDebug();
+                window.disableCustodyDebug = () => manager.disableDebug();
+                window.getCustodyDebugInfo = () => manager.getDebugInfo();
             }
         } else {
-            console.log('⏳ Upload zone not found, retrying in 1000ms...');
             setTimeout(initializeUpload, 1000);
         }
     } catch (error) {
@@ -340,7 +365,7 @@ window.addEventListener('load', () => {
     setTimeout(initializeUpload, 1000);
 });
 
-// Additional safety for Odoo environment
 setTimeout(initializeUpload, 2000);
 
-console.log('✅ Custody Upload Module Loaded - Simplified for Odoo Integration');
+// Production info
+console.log('✅ Custody Upload Module Loaded - Production Version 1.0.0');
