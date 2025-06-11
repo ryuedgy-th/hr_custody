@@ -47,13 +47,6 @@ class CustodyImageUploadWizard(models.TransientModel):
         help='Total size of all selected files'
     )
     
-    # ✨ NEW: Chunk Information
-    chunk_info = fields.Char(
-        string='Chunk Info',
-        readonly=True,
-        help='Information about current chunk being processed'
-    )
-    
     # Configuration
     auto_sequence = fields.Boolean(
         string='Auto Sequence',
@@ -87,12 +80,6 @@ class CustodyImageUploadWizard(models.TransientModel):
         string='Upload Status',
         default='draft',
         readonly=True
-    )
-    
-    progress_percentage = fields.Float(
-        string='Progress %',
-        readonly=True,
-        help='Upload progress percentage'
     )
     
     error_message = fields.Text(
@@ -143,30 +130,8 @@ class CustodyImageUploadWizard(models.TransientModel):
             else:
                 wizard.can_upload = False
     
-    @api.constrains('total_files')
-    def _check_file_limit(self):
-        """Validate file count limits"""
-        max_files = 20  # Maximum files per upload
-        for wizard in self:
-            if wizard.total_files > max_files:
-                raise ValidationError(
-                    _('Maximum %d files allowed per upload. You selected %d files.') 
-                    % (max_files, wizard.total_files)
-                )
-    
-    @api.constrains('total_size_mb')
-    def _check_total_size(self):
-        """Validate total file size"""
-        max_total_mb = 100  # Maximum total size in MB
-        for wizard in self:
-            if wizard.total_size_mb > max_total_mb:
-                raise ValidationError(
-                    _('Total file size exceeds %d MB limit. Current total: %.2f MB') 
-                    % (max_total_mb, wizard.total_size_mb)
-                )
-    
     def _validate_image_file(self, file_data, filename):
-        """Validate individual image file with enhanced error handling"""
+        """Validate individual image file"""
         try:
             # Handle different base64 formats
             if not file_data:
@@ -179,11 +144,10 @@ class CustodyImageUploadWizard(models.TransientModel):
             if not file_data:
                 raise ValidationError(_('File "%s" has invalid base64 data') % filename)
             
-            # Decode base64 data with proper error handling
+            # Decode base64 data
             try:
                 binary_data = base64.b64decode(file_data, validate=True)
-            except Exception as decode_error:
-                _logger.error(f"Base64 decode error for {filename}: {decode_error}")
+            except Exception:
                 raise ValidationError(_('File "%s" has corrupted base64 data') % filename)
             
             if len(binary_data) == 0:
@@ -193,96 +157,59 @@ class CustodyImageUploadWizard(models.TransientModel):
             max_size_bytes = 5 * 1024 * 1024
             if len(binary_data) > max_size_bytes:
                 raise ValidationError(
-                    _('File "%s" exceeds 5MB limit (%.2f MB). Please compress the image.') 
+                    _('File "%s" exceeds 5MB limit (%.2f MB)') 
                     % (filename, len(binary_data) / (1024 * 1024))
                 )
             
-            # Validate image format with better error handling
+            # Validate image format
             try:
                 img_format = imghdr.what(io.BytesIO(binary_data))
-            except Exception as img_error:
-                _logger.error(f"Image format detection error for {filename}: {img_error}")
+            except Exception:
                 raise ValidationError(_('File "%s" cannot be processed as an image') % filename)
             
             if not img_format:
-                raise ValidationError(
-                    _('File "%s" is not a valid image format') % filename
-                )
+                raise ValidationError(_('File "%s" is not a valid image format') % filename)
             
-            # Check if format is web-compatible
-            allowed_formats = ['jpeg', 'png', 'gif', 'webp', 'bmp']
-            if img_format not in allowed_formats:
-                raise ValidationError(
-                    _('File "%s" format "%s" is not supported. Allowed: %s') 
-                    % (filename, img_format, ', '.join(allowed_formats))
-                )
-            
-            _logger.info(f"✅ Validated {filename}: {img_format} format, {len(binary_data)} bytes")
             return binary_data
             
         except ValidationError:
             raise
         except Exception as e:
-            _logger.error(f"Unexpected validation error for {filename}: {e}")
-            raise ValidationError(
-                _('Error validating file "%s": %s') % (filename, str(e))
-            )
+            raise ValidationError(_('Error validating file "%s": %s') % (filename, str(e)))
     
     def action_upload_images(self):
-        """Process and upload multiple images with enhanced error handling and chunked support"""
+        """Process and upload multiple images"""
         self.ensure_one()
         
         try:
-            # ✨ NEW: Check for chunk information
-            chunk_info = self.chunk_info or 'Single batch upload'
-            
-            # Enhanced DEBUG logging
-            _logger.info("="*50)
             _logger.info(f"🔍 UPLOAD START - Wizard ID: {self.id}")
-            _logger.info(f"🔍 custody_id: {self.custody_id.id}")
-            _logger.info(f"🔍 custody_state: {self.custody_id.state}")
-            _logger.info(f"🔍 image_type: {self.image_type}")
-            _logger.info(f"🔍 total_files: {self.total_files}")
-            _logger.info(f"🔍 total_size_mb: {self.total_size_mb}")
-            _logger.info(f"🔍 chunk_info: {chunk_info}")
-            _logger.info(f"🔍 can_upload: {self.can_upload}")
             _logger.info(f"🔍 images_data length: {len(self.images_data or '')}")
-            if self.images_data:
-                _logger.info(f"🔍 images_data preview: {self.images_data[:200]}...")
-            _logger.info("="*50)
             
             # Validate upload permissions
             if not self.can_upload:
                 error_msg = f'Cannot upload {self.image_type} images when custody is in state "{self.custody_id.state}"'
-                _logger.error(f"❌ {error_msg}")
                 raise UserError(_(error_msg))
             
             # Validate images data
             if not self.images_data:
                 _logger.error("❌ No images_data found!")
-                raise UserError(_('No images selected for upload'))
+                raise UserError(_('No images selected for upload. Please select images and try again.'))
             
             # Update status
             self.write({
                 'upload_status': 'uploading',
-                'progress_percentage': 0.0,
                 'error_message': False
             })
             
-            # Parse JSON data with error handling
+            # Parse JSON data
             try:
-                _logger.info("🔍 Parsing JSON data...")
                 images_list = json.loads(self.images_data)
-                _logger.info(f"🔍 Successfully parsed {len(images_list)} images from JSON")
-            except json.JSONDecodeError as json_error:
-                _logger.error(f"❌ JSON parsing error: {json_error}")
+                _logger.info(f"✅ Parsed {len(images_list)} images from JSON")
+            except json.JSONDecodeError as e:
+                _logger.error(f"❌ JSON parsing error: {e}")
                 raise UserError(_('Invalid image data format. Please try again.'))
-            except Exception as parse_error:
-                _logger.error(f"❌ Unexpected parsing error: {parse_error}")
-                raise UserError(_('Error processing image data: %s') % str(parse_error))
             
             if not images_list:
-                _logger.error("❌ Empty images list after JSON parsing!")
                 raise UserError(_('No valid images found to upload'))
             
             total_images = len(images_list)
@@ -299,21 +226,19 @@ class CustodyImageUploadWizard(models.TransientModel):
             else:
                 next_sequence = 10
             
-            _logger.info(f"🔍 Starting to process {total_images} images...")
-            
-            # Process each image with detailed error handling
+            # Process each image
             for idx, image_info in enumerate(images_list):
                 try:
                     filename = image_info.get('filename', f'image_{idx+1}')
                     file_data = image_info.get('data', '')
                     description = image_info.get('description', '') or self.bulk_description or ''
                     
-                    _logger.info(f"🔍 Processing image {idx+1}/{total_images}: {filename}")
+                    _logger.info(f"Processing image {idx+1}/{total_images}: {filename}")
                     
                     # Validate and get binary data
                     binary_data = self._validate_image_file(file_data, filename)
                     
-                    # Prepare image record data
+                    # Create image record
                     image_vals = {
                         'custody_id': self.custody_id.id,
                         'image_type': self.image_type,
@@ -321,52 +246,35 @@ class CustodyImageUploadWizard(models.TransientModel):
                         'description': description or f'{filename} #{idx+1}',
                         'sequence': next_sequence + idx if self.auto_sequence else 10,
                         'location_notes': self.location_notes,
-                        'notes': f'Uploaded via chunked upload wizard ({chunk_info})',
+                        'notes': f'Uploaded via multiple upload wizard',
                     }
                     
-                    # Create custody image record
-                    _logger.info(f"🔍 Creating image record for {filename}...")
                     image_record = self.env['custody.image'].create(image_vals)
                     created_images.append(image_record)
-                    _logger.info(f"✅ Created image record {image_record.id} for {filename}")
-                    
-                    # Update progress
-                    progress = ((idx + 1) / total_images) * 100
-                    if idx % 5 == 0 or idx == total_images - 1:  # Update every 5 files or last file
-                        self.write({'progress_percentage': progress})
+                    _logger.info(f"✅ Created image record {image_record.id}")
                     
                 except ValidationError as ve:
-                    # Handle validation errors gracefully
                     error_msg = str(ve)
                     _logger.warning(f"⚠️ Validation error for {filename}: {error_msg}")
                     failed_images.append({'filename': filename, 'error': error_msg})
                     continue
                     
                 except Exception as e:
-                    # Handle unexpected errors
-                    error_msg = f'Unexpected error processing {filename}: {str(e)}'
+                    error_msg = f'Error processing {filename}: {str(e)}'
                     _logger.error(f"❌ {error_msg}")
                     failed_images.append({'filename': filename, 'error': str(e)})
                     continue
             
-            # Update final status and return results
+            # Update final status
             if created_images:
                 self.write({
                     'upload_status': 'done',
-                    'progress_percentage': 100.0,
                     'error_message': f'Successfully uploaded {len(created_images)} images. Failed: {len(failed_images)}' if failed_images else False
                 })
                 
-                _logger.info(f"✅ Upload completed: {len(created_images)} successful, {len(failed_images)} failed")
-                
-                # Prepare success message
                 success_msg = _('Successfully uploaded %d images') % len(created_images)
                 if failed_images:
                     success_msg += _(' (%d failed)') % len(failed_images)
-                
-                # ✨ NEW: Enhanced message for chunked uploads
-                if 'chunk' in chunk_info.lower():
-                    success_msg += f' - {chunk_info}'
                 
                 return {
                     'type': 'ir.actions.client',
@@ -389,21 +297,18 @@ class CustodyImageUploadWizard(models.TransientModel):
                     'error_message': f'All uploads failed. Details: {error_details}'
                 })
                 
-                _logger.error("❌ All image uploads failed")
                 raise UserError(_('No images were successfully uploaded. Check the errors and try again.'))
         
         except UserError:
-            # Re-raise UserError as-is
             raise
         except Exception as e:
-            # Handle any unexpected errors
             error_msg = str(e)
             self.write({
                 'upload_status': 'error',
                 'error_message': error_msg
             })
             _logger.error(f"❌ Unexpected upload error: {error_msg}")
-            raise UserError(_('Upload failed due to an unexpected error: %s') % error_msg)
+            raise UserError(_('Upload failed: %s') % error_msg)
     
     def action_reset_wizard(self):
         """Reset wizard to initial state"""
@@ -412,21 +317,14 @@ class CustodyImageUploadWizard(models.TransientModel):
             'images_data': False,
             'total_files': 0,
             'total_size_mb': 0.0,
-            'chunk_info': False,
             'upload_status': 'draft',
-            'progress_percentage': 0.0,
             'error_message': False,
         })
-        
-        return {
-            'type': 'ir.actions.do_nothing'
-        }
+        return {'type': 'ir.actions.do_nothing'}
     
     def action_close_wizard(self):
-        """Close wizard and return to custody form"""
-        return {
-            'type': 'ir.actions.act_window_close'
-        }
+        """Close wizard"""
+        return {'type': 'ir.actions.act_window_close'}
     
     def action_view_uploaded_images(self):
         """View uploaded images"""
