@@ -144,6 +144,79 @@ class HrCustody(models.Model):
         help='Notes about the return condition and process'
     )
 
+    # ===== 📸 PHOTO MANAGEMENT SYSTEM =====
+    # Inspired by hr_expense attachment system
+    
+    # All attachments (photos and documents)
+    attachment_ids = fields.Many2many(
+        'ir.attachment',
+        'hr_custody_attachment_rel',
+        'custody_id',
+        'attachment_id',
+        string='All Attachments',
+        help='All photos and documents related to this custody'
+    )
+    
+    # Handover photos (taken when property is handed over)
+    handover_photo_ids = fields.Many2many(
+        'ir.attachment',
+        'hr_custody_handover_photo_rel',
+        'custody_id',
+        'attachment_id',
+        string='Handover Photos',
+        domain=[('res_model', '=', 'hr.custody'), ('custody_photo_type', 'in', ['handover_overall', 'handover_detail', 'handover_serial'])],
+        help='Photos taken during property handover to document initial condition'
+    )
+    
+    # Return photos (taken when property is returned)
+    return_photo_ids = fields.Many2many(
+        'ir.attachment',
+        'hr_custody_return_photo_rel',
+        'custody_id', 
+        'attachment_id',
+        string='Return Photos',
+        domain=[('res_model', '=', 'hr.custody'), ('custody_photo_type', 'in', ['return_overall', 'return_detail', 'return_damage'])],
+        help='Photos taken during property return to document final condition'
+    )
+    
+    # Computed fields for photo counts
+    handover_photo_count = fields.Integer(
+        string='Handover Photos Count',
+        compute='_compute_photo_counts',
+        help='Number of handover photos'
+    )
+    
+    return_photo_count = fields.Integer(
+        string='Return Photos Count', 
+        compute='_compute_photo_counts',
+        help='Number of return photos'
+    )
+    
+    total_photo_count = fields.Integer(
+        string='Total Photos',
+        compute='_compute_photo_counts',
+        help='Total number of photos'
+    )
+    
+    # Photo status indicators
+    has_handover_photos = fields.Boolean(
+        string='Has Handover Photos',
+        compute='_compute_photo_status',
+        help='True if handover photos are uploaded'
+    )
+    
+    has_return_photos = fields.Boolean(
+        string='Has Return Photos',
+        compute='_compute_photo_status', 
+        help='True if return photos are uploaded'
+    )
+    
+    photos_complete = fields.Boolean(
+        string='Photos Complete',
+        compute='_compute_photo_status',
+        help='True if both handover and return photos are available'
+    )
+
     # ✅ FIXED: Computed fields with store=True for search compatibility
     is_overdue = fields.Boolean(
         string='Is Overdue',
@@ -211,7 +284,126 @@ class HrCustody(models.Model):
         compute='_compute_is_read_only'
     )
 
-    # Computed Fields
+    # ===== 📸 PHOTO COMPUTED METHODS =====
+    
+    @api.depends('handover_photo_ids', 'return_photo_ids', 'attachment_ids')
+    def _compute_photo_counts(self):
+        """Compute photo counts for dashboard display"""
+        for record in self:
+            record.handover_photo_count = len(record.handover_photo_ids)
+            record.return_photo_count = len(record.return_photo_ids)
+            # Count only photo attachments (filter by mimetype)
+            photo_attachments = record.attachment_ids.filtered(
+                lambda att: att.mimetype and att.mimetype.startswith('image/')
+            )
+            record.total_photo_count = len(photo_attachments)
+    
+    @api.depends('handover_photo_ids', 'return_photo_ids', 'state')
+    def _compute_photo_status(self):
+        """Compute photo status indicators"""
+        for record in self:
+            record.has_handover_photos = bool(record.handover_photo_ids)
+            record.has_return_photos = bool(record.return_photo_ids)
+            
+            # Photos are complete if:
+            # - Handover photos exist (for approved+ states)
+            # - Return photos exist (for returned state)
+            if record.state == 'returned':
+                record.photos_complete = record.has_handover_photos and record.has_return_photos
+            elif record.state in ['approved']:
+                record.photos_complete = record.has_handover_photos
+            else:
+                record.photos_complete = False
+
+    # ===== 📸 PHOTO MANAGEMENT METHODS =====
+    
+    def action_view_handover_photos(self):
+        """Open handover photos in gallery view"""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Handover Photos - %s') % self.name,
+            'res_model': 'ir.attachment',
+            'view_mode': 'kanban,list,form',
+            'domain': [('id', 'in', self.handover_photo_ids.ids)],
+            'context': {
+                'default_res_model': 'hr.custody',
+                'default_res_id': self.id,
+                'default_custody_photo_type': 'handover_overall',
+            },
+            'target': 'current'
+        }
+    
+    def action_view_return_photos(self):
+        """Open return photos in gallery view"""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Return Photos - %s') % self.name,
+            'res_model': 'ir.attachment',
+            'view_mode': 'kanban,list,form',
+            'domain': [('id', 'in', self.return_photo_ids.ids)],
+            'context': {
+                'default_res_model': 'hr.custody',
+                'default_res_id': self.id,
+                'default_custody_photo_type': 'return_overall',
+            },
+            'target': 'current'
+        }
+    
+    def action_compare_photos(self):
+        """Open photo comparison view"""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Photo Comparison - %s') % self.name,
+            'res_model': 'hr.custody',
+            'view_mode': 'form',
+            'res_id': self.id,
+            'views': [(False, 'form')],
+            'target': 'new',
+            'context': {
+                'default_view_mode': 'photo_comparison',
+                'form_view_ref': 'hr_custody.hr_custody_photo_comparison_view_form'
+            }
+        }
+    
+    def get_photos_by_type(self, photo_type):
+        """Get photos filtered by type"""
+        self.ensure_one()
+        return self.attachment_ids.filtered(
+            lambda att: att.custody_photo_type == photo_type
+        )
+    
+    def get_handover_photos_summary(self):
+        """Get summary of handover photos by type"""
+        self.ensure_one()
+        summary = {}
+        handover_types = ['handover_overall', 'handover_detail', 'handover_serial']
+        for photo_type in handover_types:
+            photos = self.get_photos_by_type(photo_type)
+            summary[photo_type] = {
+                'count': len(photos),
+                'photos': photos,
+                'latest': photos.sorted('create_date', reverse=True)[:1] if photos else False
+            }
+        return summary
+    
+    def get_return_photos_summary(self):
+        """Get summary of return photos by type"""
+        self.ensure_one()
+        summary = {}
+        return_types = ['return_overall', 'return_detail', 'return_damage']
+        for photo_type in return_types:
+            photos = self.get_photos_by_type(photo_type)
+            summary[photo_type] = {
+                'count': len(photos),
+                'photos': photos,
+                'latest': photos.sorted('create_date', reverse=True)[:1] if photos else False
+            }
+        return summary
+
+    # Computed Fields (existing)
     @api.depends('return_type', 'return_date', 'expected_return_period', 'state', 'actual_return_date')
     def _compute_return_status_display(self):
         """Compute return status display in readable format"""
