@@ -44,12 +44,12 @@
         </field>
     </record>
 
-    <!-- 📸 Custody Photo Gallery View - SIMPLIFIED FOR ODOO 18 -->
+    <!-- 📸 Custody Photo Gallery View - WITH LIGHTBOX FUNCTIONALITY -->
     <record id="ir_attachment_custody_view_kanban" model="ir.ui.view">
         <field name="name">ir.attachment.custody.kanban</field>
         <field name="model">ir.attachment</field>
         <field name="arch" type="xml">
-            <kanban class="o_attachment_kanban" create="false">
+            <kanban class="o_attachment_kanban o_custody_photo_gallery" create="false" js_class="attachment_kanban">
                 <field name="id"/>
                 <field name="name"/>
                 <field name="mimetype"/>
@@ -63,27 +63,57 @@
                 <field name="photo_size_mb"/>
                 <field name="quality_score"/>
                 <field name="is_high_quality"/>
+                <field name="datas"/>
+                <field name="checksum"/>
                 <templates>
                     <t t-name="kanban-box">
-                        <div class="o_attachment_wrap">
-                            <div class="o_image_box">
-                                <div class="o_attachment_image">
-                                    <t t-if="record.type.value == 'url'">
-                                        <img t-att-src="record.url.value" 
-                                             width="100" height="100" 
-                                             alt="Document" class="o_image"/>
+                        <div class="o_attachment_wrap oe_kanban_card">
+                            <!-- 📸 Main Photo Display with Lightbox -->
+                            <div class="o_image_box" style="position: relative; cursor: pointer;">
+                                <t t-if="record.mimetype.value and record.mimetype.value.startswith('image/')">
+                                    <!-- Real Image Display -->
+                                    <img class="o_image o_attachment_image" 
+                                         t-att-src="'/web/image/' + record.id.value + '?unique=' + record.checksum.value" 
+                                         style="width: 200px; height: 150px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
+                                         t-att-alt="record.name.value"
+                                         t-att-title="record.name.value"
+                                         data-toggle="lightbox"
+                                         t-att-data-src="'/web/image/' + record.id.value"
+                                         onclick="openPhotoLightbox(this)"/>
+                                    
+                                    <!-- Photo Overlay Info -->
+                                    <div class="o_image_overlay" style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.7)); color: white; padding: 8px; border-radius: 0 0 8px 8px;">
+                                        <div style="font-size: 12px; font-weight: bold;" t-esc="record.name.value"/>
+                                    </div>
+                                    
+                                    <!-- Quality Badge -->
+                                    <t t-if="record.is_high_quality.value">
+                                        <span class="badge badge-success" style="position: absolute; top: 8px; right: 8px;">
+                                            ✅ HQ
+                                        </span>
                                     </t>
                                     <t t-else="">
-                                        <img t-att-src="'/web/image/' + record.id.value + '/120x120'" 
-                                             width="100" height="100" 
-                                             alt="Document" class="o_image"/>
+                                        <span class="badge badge-warning" style="position: absolute; top: 8px; right: 8px;">
+                                            ⚠️ STD
+                                        </span>
                                     </t>
-                                </div>
+                                </t>
+                                <t t-else="">
+                                    <!-- Non-Image File Display -->
+                                    <div class="o_attachment_image" style="width: 200px; height: 150px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border: 2px dashed #dee2e6; border-radius: 8px;">
+                                        <div class="text-center text-muted">
+                                            <i class="fa fa-file fa-3x mb-2"/>
+                                            <br/>
+                                            <small t-esc="record.name.value"/>
+                                        </div>
+                                    </div>
+                                </t>
                             </div>
                             
-                            <div class="o_attachment_info">
+                            <!-- 📋 Photo Information -->
+                            <div class="o_attachment_info" style="padding: 12px;">
                                 <!-- Photo Type Badge -->
-                                <div class="mt4 mb8">
+                                <div class="mb-2">
                                     <t t-if="record.custody_photo_type.value == 'handover_overall'">
                                         <span class="badge badge-primary">📸 Handover Overall</span>
                                     </t>
@@ -107,31 +137,37 @@
                                     </t>
                                 </div>
                                 
-                                <!-- File Name -->
-                                <div class="o_attachment_name">
-                                    <field name="name"/>
-                                </div>
-                                
                                 <!-- Photo Details -->
-                                <div class="o_attachment_details text-muted">
+                                <div class="o_attachment_details text-muted small">
                                     <t t-if="record.custody_timestamp.value">
                                         <div>📅 <field name="custody_timestamp" widget="datetime"/></div>
                                     </t>
-                                    <div>💾 <field name="photo_size_mb"/> MB</div>
-                                    <t t-if="record.is_high_quality.value">
-                                        <div>✅ <span class="text-success">High Quality</span></div>
-                                    </t>
-                                    <t t-else="">
-                                        <div>⚠️ <span class="text-warning">Standard Quality</span></div>
+                                    <div>💾 <t t-esc="record.photo_size_mb.value"/> MB</div>
+                                    <t t-if="record.quality_score.value">
+                                        <div>🎯 Quality: <t t-esc="Math.round(record.quality_score.value)"/>%</div>
                                     </t>
                                 </div>
                                 
                                 <!-- Notes -->
                                 <t t-if="record.custody_notes.value">
-                                    <div class="o_attachment_notes mt8 p-2 bg-light rounded">
-                                        <small><field name="custody_notes"/></small>
+                                    <div class="o_attachment_notes mt-2 p-2" style="background: #f8f9fa; border-radius: 4px; font-size: 12px;">
+                                        <t t-esc="record.custody_notes.value"/>
                                     </div>
                                 </t>
+                                
+                                <!-- Action Buttons -->
+                                <div class="mt-2">
+                                    <button class="btn btn-sm btn-outline-primary" 
+                                            type="button" 
+                                            t-att-onclick="'openPhotoLightbox(document.querySelector(\\'img[data-src=\\\\\\'/web/image/' + record.id.value + '\\\\\\']\\'))'">
+                                        🔍 View Full Size
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary ml-1" 
+                                            type="button"
+                                            t-att-onclick="'window.open(\\'/web/content/' + record.id.value + '?download=true\\', \\'_blank\\')'">
+                                        📥 Download
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </t>
@@ -140,14 +176,181 @@
         </field>
     </record>
 
+    <!-- 📸 Custom CSS and JavaScript for Photo Gallery -->
+    <template id="custody_photo_gallery_assets" name="Custody Photo Gallery Assets">
+        <xpath expr="." position="inside">
+            <style>
+                /* Photo Gallery Styles */
+                .o_custody_photo_gallery .oe_kanban_card {
+                    margin: 10px;
+                    padding: 0;
+                    border-radius: 12px;
+                    overflow: hidden;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                    transition: all 0.3s ease;
+                    background: white;
+                }
+                
+                .o_custody_photo_gallery .oe_kanban_card:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+                }
+                
+                .o_custody_photo_gallery .o_image_overlay {
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                }
+                
+                .o_custody_photo_gallery .oe_kanban_card:hover .o_image_overlay {
+                    opacity: 1;
+                }
+                
+                /* Lightbox Styles */
+                .photo-lightbox-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.9);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 9999;
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                }
+                
+                .photo-lightbox-overlay.show {
+                    opacity: 1;
+                }
+                
+                .photo-lightbox-content {
+                    max-width: 90%;
+                    max-height: 90%;
+                    position: relative;
+                }
+                
+                .photo-lightbox-image {
+                    max-width: 100%;
+                    max-height: 100%;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 20px rgba(255,255,255,0.1);
+                }
+                
+                .photo-lightbox-close {
+                    position: absolute;
+                    top: -40px;
+                    right: 0;
+                    color: white;
+                    font-size: 24px;
+                    cursor: pointer;
+                    background: rgba(0,0,0,0.5);
+                    border-radius: 50%;
+                    width: 35px;
+                    height: 35px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: background 0.3s ease;
+                }
+                
+                .photo-lightbox-close:hover {
+                    background: rgba(0,0,0,0.8);
+                }
+                
+                .photo-lightbox-info {
+                    position: absolute;
+                    bottom: -60px;
+                    left: 0;
+                    right: 0;
+                    color: white;
+                    text-align: center;
+                    background: rgba(0,0,0,0.5);
+                    padding: 10px;
+                    border-radius: 4px;
+                }
+            </style>
+            
+            <script type="text/javascript">
+                // Lightbox Functionality
+                function openPhotoLightbox(imgElement) {
+                    if (!imgElement || !imgElement.getAttribute('data-src')) return;
+                    
+                    // Create lightbox overlay
+                    const overlay = document.createElement('div');
+                    overlay.className = 'photo-lightbox-overlay';
+                    overlay.onclick = function(e) {
+                        if (e.target === overlay) closeLightbox();
+                    };
+                    
+                    // Create lightbox content
+                    const content = document.createElement('div');
+                    content.className = 'photo-lightbox-content';
+                    
+                    // Create full-size image
+                    const fullImage = document.createElement('img');
+                    fullImage.className = 'photo-lightbox-image';
+                    fullImage.src = imgElement.getAttribute('data-src');
+                    fullImage.alt = imgElement.alt || 'Photo';
+                    
+                    // Create close button
+                    const closeBtn = document.createElement('div');
+                    closeBtn.className = 'photo-lightbox-close';
+                    closeBtn.innerHTML = '×';
+                    closeBtn.onclick = closeLightbox;
+                    
+                    // Create info panel
+                    const info = document.createElement('div');
+                    info.className = 'photo-lightbox-info';
+                    info.innerHTML = imgElement.alt || 'Custody Photo';
+                    
+                    // Assemble lightbox
+                    content.appendChild(fullImage);
+                    content.appendChild(closeBtn);
+                    content.appendChild(info);
+                    overlay.appendChild(content);
+                    
+                    // Add to page
+                    document.body.appendChild(overlay);
+                    
+                    // Show with animation
+                    setTimeout(() => overlay.classList.add('show'), 10);
+                    
+                    // Handle keyboard
+                    document.addEventListener('keydown', handleLightboxKeydown);
+                    
+                    function closeLightbox() {
+                        overlay.classList.remove('show');
+                        setTimeout(() => {
+                            if (overlay.parentNode) {
+                                overlay.parentNode.removeChild(overlay);
+                            }
+                            document.removeEventListener('keydown', handleLightboxKeydown);
+                        }, 300);
+                    }
+                    
+                    function handleLightboxKeydown(e) {
+                        if (e.key === 'Escape') {
+                            closeLightbox();
+                        }
+                    }
+                }
+                
+                // Initialize when DOM is ready
+                document.addEventListener('DOMContentLoaded', function() {
+                    console.log('📸 Custody Photo Gallery loaded with lightbox functionality');
+                });
+            </script>
+        </xpath>
+    </template>
+
     <!-- 📸 Custody Photos List View - SIMPLIFIED (NO BULK ACTIONS) -->
     <record id="ir_attachment_custody_view_tree" model="ir.ui.view">
         <field name="name">ir.attachment.custody.list</field>
         <field name="model">ir.attachment</field>
         <field name="arch" type="xml">
             <list create="false" delete="true" edit="false">
-                <!-- ❌ REMOVED: Bulk categorize button causes access rights issues -->
-                
                 <field name="name"/>
                 <field name="custody_photo_type" string="Photo Type"/>
                 <field name="custody_timestamp" string="Timestamp"/>
@@ -162,7 +365,7 @@
         </field>
     </record>
 
-    <!-- 📸 Custody Photos Search View - FIXED XML ESCAPING -->
+    <!-- 📸 Custody Photos Search View -->
     <record id="ir_attachment_custody_view_search" model="ir.ui.view">
         <field name="name">ir.attachment.custody.search</field>
         <field name="model">ir.attachment</field>
@@ -193,7 +396,7 @@
                         
                 <separator/>
                 
-                <!-- ✅ FIXED: Size Filters with proper XML escaping -->
+                <!-- Size Filters -->
                 <filter string="📦 Large Files" name="large_files"
                         domain="[('photo_size_mb', '&gt;', 2)]"/>
                 <filter string="📄 Small Files" name="small_files"
@@ -244,6 +447,9 @@
                 • <strong>📸 Handover Photos</strong> - Taken when property is handed over<br/>
                 • <strong>📦 Return Photos</strong> - Taken when property is returned<br/>
                 • <strong>🔧 Maintenance Photos</strong> - During maintenance or repairs
+            </p>
+            <p class="text-muted">
+                <small>💡 Click on any photo to view in full size. Use the "🔍 View Full Size" button or click directly on the image.</small>
             </p>
         </field>
     </record>
