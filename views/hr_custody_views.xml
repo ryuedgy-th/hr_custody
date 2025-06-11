@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Hr Custody form view -->
+    <!-- Hr Custody form view with Photo Management System -->
     <record id="hr_custody_view_form" model="ir.ui.view">
         <field name="name">hr.custody.form</field>
         <field name="model">hr.custody</field>
@@ -65,6 +65,75 @@
                         by <field name="returned_by_id" readonly="1" nolabel="1"/>
                     </div>
 
+                    <!-- 📸 NEW: Photo Status Banner -->
+                    <div class="alert alert-info" role="alert" invisible="state not in ['approved', 'returned']">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong>📸 Handover Photos:</strong>
+                                <field name="handover_photo_count" nolabel="1"/> photos
+                                <span class="badge badge-success" invisible="not has_handover_photos">✓</span>
+                                <span class="badge badge-warning" invisible="has_handover_photos">⚠</span>
+                            </div>
+                            <div class="col-md-4" invisible="state != 'returned'">
+                                <strong>📦 Return Photos:</strong>
+                                <field name="return_photo_count" nolabel="1"/> photos
+                                <span class="badge badge-success" invisible="not has_return_photos">✓</span>
+                                <span class="badge badge-warning" invisible="has_return_photos">⚠</span>
+                            </div>
+                            <div class="col-md-4" invisible="state != 'returned'">
+                                <strong>📊 Status:</strong>
+                                <span class="badge badge-success" invisible="not photos_complete">Complete</span>
+                                <span class="badge badge-warning" invisible="photos_complete">Incomplete</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Title and Smart Buttons -->
+                    <div class="oe_button_box" name="button_box">
+                        <!-- 📸 Photo Action Buttons -->
+                        <button name="action_view_handover_photos" 
+                                type="object" 
+                                class="oe_stat_button" 
+                                icon="fa-camera"
+                                invisible="state not in ['approved', 'returned']"
+                                groups="hr.group_hr_user,hr.group_hr_manager">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="handover_photo_count" widget="integer"/>
+                                </span>
+                                <span class="o_stat_text">Handover Photos</span>
+                            </div>
+                        </button>
+
+                        <button name="action_view_return_photos" 
+                                type="object" 
+                                class="oe_stat_button" 
+                                icon="fa-archive"
+                                invisible="state != 'returned'"
+                                groups="hr.group_hr_user,hr.group_hr_manager">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="return_photo_count" widget="integer"/>
+                                </span>
+                                <span class="o_stat_text">Return Photos</span>
+                            </div>
+                        </button>
+
+                        <button name="action_compare_photos" 
+                                type="object" 
+                                class="oe_stat_button" 
+                                icon="fa-exchange"
+                                invisible="state != 'returned' or not has_handover_photos or not has_return_photos"
+                                groups="hr.group_hr_user,hr.group_hr_manager">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="total_photo_count" widget="integer"/>
+                                </span>
+                                <span class="o_stat_text">Compare Photos</span>
+                            </div>
+                        </button>
+                    </div>
+
                     <h1>
                         <field name="name" readonly="1" nolabel="1"/>
                     </h1>
@@ -105,17 +174,136 @@
                         </group>
                     </group>
 
-                    <!-- ⭐ Hidden fields for permissions and overdue status -->
+                    <!-- ⭐ Hidden fields for permissions and computed values -->
                     <field name="property_approver_ids" invisible="1"/>
                     <field name="is_overdue" invisible="1"/>
                     <field name="days_overdue" invisible="1"/>
+                    <field name="has_handover_photos" invisible="1"/>
+                    <field name="has_return_photos" invisible="1"/>
+                    <field name="photos_complete" invisible="1"/>
 
                     <notebook>
                         <page string="Notes">
                             <field name="notes"/>
                         </page>
 
-                        <!-- ⭐ NEW: Approval Information Tab -->
+                        <!-- 📸 NEW: Handover Photos Tab -->
+                        <page string="📸 Handover Photos" 
+                              invisible="state not in ['approved', 'returned']">
+                            <group>
+                                <div class="alert alert-info" role="alert">
+                                    <strong>📸 Handover Photo Guidelines:</strong><br/>
+                                    • Take overall photos showing the complete item<br/>
+                                    • Capture detailed photos of important features<br/>
+                                    • Include serial number or identification tags<br/>
+                                    • Ensure good lighting and clarity<br/>
+                                    • Maximum 5MB per photo
+                                </div>
+                            </group>
+                            
+                            <!-- Photo Upload Area -->
+                            <field name="handover_photo_ids" 
+                                   widget="many2many_binary"
+                                   string="Upload Handover Photos"
+                                   options="{
+                                       'accepted_file_extensions': 'image/*',
+                                       'max_upload_size': 5242880
+                                   }"
+                                   context="{
+                                       'default_res_model': 'hr.custody',
+                                       'default_res_id': id,
+                                       'default_custody_photo_type': 'handover_overall'
+                                   }"
+                                   attrs="{'readonly': [('state', '=', 'returned')]}"
+                                   groups="hr.group_hr_user,hr.group_hr_manager"/>
+
+                            <!-- Photo Gallery View -->
+                            <field name="handover_photo_ids" 
+                                   widget="image_gallery" 
+                                   readonly="1"
+                                   string="Handover Photo Gallery"
+                                   invisible="not handover_photo_ids"/>
+                        </page>
+
+                        <!-- 📦 NEW: Return Photos Tab -->
+                        <page string="📦 Return Photos" 
+                              invisible="state != 'returned'">
+                            <group>
+                                <div class="alert alert-info" role="alert">
+                                    <strong>📦 Return Photo Guidelines:</strong><br/>
+                                    • Document the condition when returned<br/>
+                                    • Show any damage or wear<br/>
+                                    • Compare with handover condition<br/>
+                                    • Include any missing accessories<br/>
+                                    • Take photos from same angles as handover
+                                </div>
+                            </group>
+                            
+                            <!-- Photo Upload Area -->
+                            <field name="return_photo_ids" 
+                                   widget="many2many_binary"
+                                   string="Upload Return Photos"
+                                   options="{
+                                       'accepted_file_extensions': 'image/*',
+                                       'max_upload_size': 5242880
+                                   }"
+                                   context="{
+                                       'default_res_model': 'hr.custody',
+                                       'default_res_id': id,
+                                       'default_custody_photo_type': 'return_overall'
+                                   }"
+                                   groups="hr.group_hr_user,hr.group_hr_manager"/>
+
+                            <!-- Photo Gallery View -->
+                            <field name="return_photo_ids" 
+                                   widget="image_gallery" 
+                                   readonly="1"
+                                   string="Return Photo Gallery"
+                                   invisible="not return_photo_ids"/>
+                        </page>
+
+                        <!-- 🔍 NEW: Photo Comparison Tab -->
+                        <page string="🔍 Photo Comparison" 
+                              invisible="state != 'returned' or not has_handover_photos or not has_return_photos">
+                            <div class="alert alert-success" role="alert">
+                                <strong>🔍 Photo Comparison:</strong> Compare handover vs return condition
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h4>📸 Handover Photos</h4>
+                                    <div class="o_field_widget">
+                                        <field name="handover_photo_ids" 
+                                               widget="image_gallery" 
+                                               readonly="1"
+                                               nolabel="1"/>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h4>📦 Return Photos</h4>
+                                    <div class="o_field_widget">
+                                        <field name="return_photo_ids"
+                                               widget="image_gallery" 
+                                               readonly="1"
+                                               nolabel="1"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Photo Analysis Summary -->
+                            <group string="📊 Photo Summary" invisible="not photos_complete">
+                                <group>
+                                    <field name="handover_photo_count" string="Handover Photos" readonly="1"/>
+                                    <field name="return_photo_count" string="Return Photos" readonly="1"/>
+                                </group>
+                                <group>
+                                    <field name="total_photo_count" string="Total Photos" readonly="1"/>
+                                    <field name="photos_complete" string="Documentation Complete" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- ⭐ Approval Information Tab -->
                         <page string="Approval Info" invisible="state == 'draft'">
                             <group>
                                 <group string="Available Approvers">
@@ -142,7 +330,47 @@
         </field>
     </record>
 
-    <!-- Hr Custody list view -->
+    <!-- 📸 NEW: Photo Comparison Popup View -->
+    <record id="hr_custody_photo_comparison_view_form" model="ir.ui.view">
+        <field name="name">hr.custody.photo.comparison.form</field>
+        <field name="model">hr.custody</field>
+        <field name="arch" type="xml">
+            <form string="Photo Comparison" create="false" edit="false">
+                <sheet>
+                    <h2>🔍 Photo Comparison: <field name="name" nolabel="1" readonly="1"/></h2>
+                    <group>
+                        <group>
+                            <field name="employee_id" readonly="1"/>
+                            <field name="custody_property_id" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="approved_date" readonly="1"/>
+                            <field name="actual_return_date" readonly="1"/>
+                        </group>
+                    </group>
+                    
+                    <div class="row mt16">
+                        <div class="col-md-6">
+                            <h3>📸 Handover Condition</h3>
+                            <field name="handover_photo_ids" 
+                                   widget="image_gallery" 
+                                   readonly="1" 
+                                   nolabel="1"/>
+                        </div>
+                        <div class="col-md-6">
+                            <h3>📦 Return Condition</h3>
+                            <field name="return_photo_ids"
+                                   widget="image_gallery" 
+                                   readonly="1" 
+                                   nolabel="1"/>
+                        </div>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Hr Custody list view with photo indicators -->
     <record id="hr_custody_view_tree" model="ir.ui.view">
         <field name="name">hr.custody.list</field>
         <field name="model">hr.custody</field>
@@ -163,9 +391,16 @@
                 <field name="actual_return_date" string="Actual Return"/>
                 <field name="return_status_display"/>
 
-                <!-- ⭐ Overdue indicator -->
+                <!-- 📸 NEW: Photo Status Columns -->
+                <field name="handover_photo_count" string="📸 Handover"/>
+                <field name="return_photo_count" string="📦 Return"/> 
+                <field name="photos_complete" string="📊 Complete"/>
+
+                <!-- ⭐ Hidden fields for decorations -->
                 <field name="is_overdue" invisible="1"/>
                 <field name="days_overdue" invisible="1"/>
+                <field name="has_handover_photos" invisible="1"/>
+                <field name="has_return_photos" invisible="1"/>
 
                 <field name="state" widget="badge"
                        decoration-success="state == 'approved'"
@@ -176,7 +411,7 @@
         </field>
     </record>
 
-    <!-- ✨ ENHANCED: Smart Filters Search View -->
+    <!-- ✨ ENHANCED: Smart Filters Search View with Photo Filters -->
     <record id="hr_custody_view_search" model="ir.ui.view">
         <field name="name">hr.custody.search</field>
         <field name="model">hr.custody</field>
@@ -217,6 +452,25 @@
                 <filter string="🕐 Due This Week" name="due_this_week"
                         domain="[('return_date', '&lt;=', (context_today() + datetime.timedelta(days=7)).strftime('%Y-%m-%d')), ('return_date', '&gt;=', context_today().strftime('%Y-%m-%d')), ('state', '=', 'approved')]"
                         help="Items due for return within 7 days"/>
+
+                <separator/>
+
+                <!-- 📸 NEW: Photo Status Filters -->
+                <filter string="📸 Has Handover Photos" name="has_handover_photos"
+                        domain="[('has_handover_photos', '=', True)]"
+                        help="Items with handover photos"/>
+
+                <filter string="📦 Has Return Photos" name="has_return_photos"
+                        domain="[('has_return_photos', '=', True)]"
+                        help="Items with return photos"/>
+
+                <filter string="📊 Complete Documentation" name="photos_complete"
+                        domain="[('photos_complete', '=', True)]"
+                        help="Items with complete photo documentation"/>
+
+                <filter string="⚠️ Missing Photos" name="missing_photos"
+                        domain="[('state', 'in', ['approved', 'returned']), ('photos_complete', '=', False)]"
+                        help="Items missing photo documentation"/>
 
                 <separator/>
 
@@ -262,6 +516,8 @@
                             context="{'group_by':'approved_by_id'}"/>
                     <filter string="⚠️ Return Status" name="group_return_status"
                             context="{'group_by':'is_overdue'}"/>
+                    <filter string="📸 Photo Status" name="group_photo_status"
+                            context="{'group_by':'photos_complete'}"/>
                     <filter string="📅 Request Date" name="group_request_date"
                             context="{'group_by':'date_request'}"/>
                     <filter string="🔄 Return Type" name="group_return_type"
@@ -289,15 +545,11 @@
                 • <strong>🔔 Waiting My Approval</strong> - See requests needing your approval<br/>
                 • <strong>📋 My Requests</strong> - View your own requests<br/>
                 • <strong>⚠️ Overdue Items</strong> - Critical items past return date<br/>
-                • <strong>🕐 Due This Week</strong> - Items due soon
+                • <strong>🕐 Due This Week</strong> - Items due soon<br/>
+                • <strong>📸 Photo Status</strong> - Track photo documentation
             </p>
         </field>
     </record>
-
-    <!-- ⚠️ REMOVED: Duplicate Overdue Action (now integrated as filter) -->
-
-    <!-- ===== UNIFIED MENU STRUCTURE ===== -->
-    <!-- Note: Main menu structure is defined in hr_custody_menu_structure.xml -->
 
     <!-- 🎯 SINGLE UNIFIED MENU with Smart Filters -->
     <menuitem action="hr_custody_action"
