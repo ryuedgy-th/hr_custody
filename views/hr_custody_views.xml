@@ -65,69 +65,6 @@
                         by <field name="returned_by_id" readonly="1" nolabel="1"/>
                     </div>
 
-                    <div class="oe_button_box" name="button_box">
-                        <!-- Before Images Button -->
-                        <button class="oe_stat_button"
-                                type="object"
-                                name="action_view_all_images"
-                                icon="fa-camera"
-                                invisible="before_image_count == 0 and after_image_count == 0">
-                            <div class="o_field_widget o_stat_info">
-                                <span class="o_stat_value">
-                                    <field name="before_image_count"/> / <field name="after_image_count"/>
-                                </span>
-                                <span class="o_stat_text">Before / After</span>
-                            </div>
-                        </button>
-
-                        <!-- Image Comparison Button -->
-                        <button class="oe_stat_button"
-                                type="object"
-                                name="action_view_image_comparison"
-                                icon="fa-files-o"
-                                invisible="before_image_count == 0 and after_image_count == 0">
-                            <div class="o_field_widget o_stat_info">
-                                <span class="o_stat_value">📸</span>
-                                <span class="o_stat_text">Compare Images</span>
-                            </div>
-                        </button>
-                    </div>
-
-                    <!-- Image Action Buttons -->
-                    <div class="oe_button_box" name="button_box_images">
-                        <!-- Single Photo Buttons -->
-                        <button string="📸 Take Before Photos"
-                                type="object"
-                                name="action_take_before_photos"
-                                class="btn-info"
-                                invisible="not can_take_before_photos"/>
-
-                        <button string="📸 Take After Photos &amp; Return"
-                                type="object"
-                                name="action_take_after_photos"
-                                class="btn-warning"
-                                invisible="not can_take_after_photos"/>
-                        
-                        <!-- NEW: Multiple Image Upload Buttons -->
-                        <button string="📁 Upload Multiple Before Images"
-                                type="object"
-                                name="action_upload_before_images"
-                                class="btn-primary"
-                                invisible="not can_take_before_photos"/>
-
-                        <button string="📁 Upload Multiple After Images"
-                                type="object"
-                                name="action_upload_after_images"
-                                class="btn-success"
-                                invisible="not can_take_after_photos"/>
-
-                        <button string="📁 Upload Damage Images"
-                                type="object"
-                                name="action_upload_damage_images"
-                                class="btn-danger"
-                                invisible="state not in ['approved', 'returned']"/>
-                    </div>
-
                     <h1>
                         <field name="name" readonly="1" nolabel="1"/>
                     </h1>
@@ -170,13 +107,6 @@
 
                     <!-- ⭐ Hidden fields for permissions and overdue status -->
                     <field name="property_approver_ids" invisible="1"/>
-                    <field name="can_take_before_photos" invisible="1"/>
-                    <field name="can_take_after_photos" invisible="1"/>
-                    <field name="has_before_images" invisible="1"/>
-                    <field name="has_after_images" invisible="1"/>
-                    <field name="before_image_ids" invisible="1"/>
-                    <field name="after_image_ids" invisible="1"/>
-                    <field name="damage_image_ids" invisible="1"/>
                     <field name="is_overdue" invisible="1"/>
                     <field name="days_overdue" invisible="1"/>
 
@@ -203,56 +133,6 @@
                                 </group>
                                 <group>
                                     <field name="return_notes" readonly="1"/>
-                                </group>
-                            </group>
-                        </page>
-
-                        <!-- ✅ FIXED: Photo Documentation Tab - แก้ kanban template -->
-                        <page string="📸 Photo Documentation" name="images"
-                              invisible="before_image_count == 0 and after_image_count == 0">
-                            <group>
-                                <group string="Before Images" invisible="before_image_count == 0">
-                                    <field name="before_image_ids" nolabel="1" readonly="1">
-                                        <kanban>
-                                            <field name="image"/>
-                                            <field name="description"/>
-                                            <field name="taken_date"/>
-                                            <templates>
-                                                <!-- ✅ FIXED: เปลี่ยนจาก kanban-box เป็น card -->
-                                                <t t-name="card">
-                                                    <div class="oe_kanban_card">
-                                                        <div class="text-center">
-                                                            <field name="image" widget="image" style="max-height: 100px;"/>
-                                                            <div><field name="description"/></div>
-                                                            <div class="text-muted small"><field name="taken_date"/></div>
-                                                        </div>
-                                                    </div>
-                                                </t>
-                                            </templates>
-                                        </kanban>
-                                    </field>
-                                </group>
-
-                                <group string="After Images" invisible="after_image_count == 0">
-                                    <field name="after_image_ids" nolabel="1" readonly="1">
-                                        <kanban>
-                                            <field name="image"/>
-                                            <field name="description"/>
-                                            <field name="taken_date"/>
-                                            <templates>
-                                                <!-- ✅ FIXED: เปลี่ยนจาก kanban-box เป็น card -->
-                                                <t t-name="card">
-                                                    <div class="oe_kanban_card">
-                                                        <div class="text-center">
-                                                            <field name="image" widget="image" style="max-height: 100px;"/>
-                                                            <div><field name="description"/></div>
-                                                            <div class="text-muted small"><field name="taken_date"/></div>
-                                                        </div>
-                                                    </div>
-                                                </t>
-                                            </templates>
-                                        </kanban>
-                                    </field>
                                 </group>
                             </group>
                         </page>
@@ -464,12 +344,4 @@
               name="Properties"
               sequence="5"
               groups="hr.group_hr_manager"/>
-
-    <!-- Add Image History Menu -->
-    <menuitem id="custody_image_menu"
-              name="📸 Image History"
-              parent="hr_custody_menu_management"
-              action="custody_image_action"
-              sequence="10"
-              groups="hr.group_hr_user"/>
 </odoo>
