@@ -47,6 +47,13 @@ class CustodyImageUploadWizard(models.TransientModel):
         help='Total size of all selected files'
     )
     
+    # ✨ NEW: Chunk Information
+    chunk_info = fields.Char(
+        string='Chunk Info',
+        readonly=True,
+        help='Information about current chunk being processed'
+    )
+    
     # Configuration
     auto_sequence = fields.Boolean(
         string='Auto Sequence',
@@ -222,10 +229,13 @@ class CustodyImageUploadWizard(models.TransientModel):
             )
     
     def action_upload_images(self):
-        """Process and upload multiple images with enhanced error handling"""
+        """Process and upload multiple images with enhanced error handling and chunked support"""
         self.ensure_one()
         
         try:
+            # ✨ NEW: Check for chunk information
+            chunk_info = self.chunk_info or 'Single batch upload'
+            
             # Enhanced DEBUG logging
             _logger.info("="*50)
             _logger.info(f"🔍 UPLOAD START - Wizard ID: {self.id}")
@@ -234,6 +244,7 @@ class CustodyImageUploadWizard(models.TransientModel):
             _logger.info(f"🔍 image_type: {self.image_type}")
             _logger.info(f"🔍 total_files: {self.total_files}")
             _logger.info(f"🔍 total_size_mb: {self.total_size_mb}")
+            _logger.info(f"🔍 chunk_info: {chunk_info}")
             _logger.info(f"🔍 can_upload: {self.can_upload}")
             _logger.info(f"🔍 images_data length: {len(self.images_data or '')}")
             if self.images_data:
@@ -310,7 +321,7 @@ class CustodyImageUploadWizard(models.TransientModel):
                         'description': description or f'{filename} #{idx+1}',
                         'sequence': next_sequence + idx if self.auto_sequence else 10,
                         'location_notes': self.location_notes,
-                        'notes': f'Uploaded via batch upload wizard ({total_images} files)',
+                        'notes': f'Uploaded via chunked upload wizard ({chunk_info})',
                     }
                     
                     # Create custody image record
@@ -352,6 +363,10 @@ class CustodyImageUploadWizard(models.TransientModel):
                 success_msg = _('Successfully uploaded %d images') % len(created_images)
                 if failed_images:
                     success_msg += _(' (%d failed)') % len(failed_images)
+                
+                # ✨ NEW: Enhanced message for chunked uploads
+                if 'chunk' in chunk_info.lower():
+                    success_msg += f' - {chunk_info}'
                 
                 return {
                     'type': 'ir.actions.client',
@@ -397,6 +412,7 @@ class CustodyImageUploadWizard(models.TransientModel):
             'images_data': False,
             'total_files': 0,
             'total_size_mb': 0.0,
+            'chunk_info': False,
             'upload_status': 'draft',
             'progress_percentage': 0.0,
             'error_message': False,
