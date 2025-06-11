@@ -145,35 +145,29 @@ class HrCustody(models.Model):
     )
 
     # ===== 📸 PHOTO MANAGEMENT SYSTEM =====
-    # Inspired by hr_expense attachment system
+    # 🔧 FIXED: Simplified attachment approach using computed fields
     
-    # All attachments (photos and documents)
-    attachment_ids = fields.Many2many(
+    # All attachments linked to this record
+    attachment_ids = fields.One2many(
         'ir.attachment',
-        'hr_custody_attachment_rel',
-        'custody_id',
-        'attachment_id',
+        'res_id',
         string='All Attachments',
+        domain=[('res_model', '=', 'hr.custody')],
         help='All photos and documents related to this custody'
     )
     
-    # Handover photos (taken when property is handed over)
-    handover_photo_ids = fields.Many2many(
+    # 🔧 FIXED: Computed fields that filter attachments by photo type
+    handover_photo_ids = fields.One2many(
         'ir.attachment',
-        'hr_custody_handover_photo_rel',
-        'custody_id',
-        'attachment_id',
+        'res_id',
         string='Handover Photos',
         domain=[('res_model', '=', 'hr.custody'), ('custody_photo_type', 'in', ['handover_overall', 'handover_detail', 'handover_serial'])],
         help='Photos taken during property handover to document initial condition'
     )
     
-    # Return photos (taken when property is returned)
-    return_photo_ids = fields.Many2many(
+    return_photo_ids = fields.One2many(
         'ir.attachment',
-        'hr_custody_return_photo_rel',
-        'custody_id', 
-        'attachment_id',
+        'res_id',
         string='Return Photos',
         domain=[('res_model', '=', 'hr.custody'), ('custody_photo_type', 'in', ['return_overall', 'return_detail', 'return_damage'])],
         help='Photos taken during property return to document final condition'
@@ -183,18 +177,21 @@ class HrCustody(models.Model):
     handover_photo_count = fields.Integer(
         string='Handover Photos Count',
         compute='_compute_photo_counts',
+        store=True,
         help='Number of handover photos'
     )
     
     return_photo_count = fields.Integer(
         string='Return Photos Count', 
         compute='_compute_photo_counts',
+        store=True,
         help='Number of return photos'
     )
     
     total_photo_count = fields.Integer(
         string='Total Photos',
         compute='_compute_photo_counts',
+        store=True,
         help='Total number of photos'
     )
     
@@ -289,24 +286,43 @@ class HrCustody(models.Model):
 
     # ===== 📸 PHOTO COMPUTED METHODS =====
     
-    @api.depends('handover_photo_ids', 'return_photo_ids', 'attachment_ids')
+    @api.depends('attachment_ids', 'attachment_ids.custody_photo_type')
     def _compute_photo_counts(self):
-        """Compute photo counts for dashboard display"""
+        """🔧 FIXED: Compute photo counts based on actual attachments"""
         for record in self:
-            record.handover_photo_count = len(record.handover_photo_ids)
-            record.return_photo_count = len(record.return_photo_ids)
-            # Count only photo attachments (filter by mimetype)
+            # Count handover photos
+            handover_attachments = record.attachment_ids.filtered(
+                lambda att: att.custody_photo_type in ['handover_overall', 'handover_detail', 'handover_serial']
+            )
+            record.handover_photo_count = len(handover_attachments)
+            
+            # Count return photos  
+            return_attachments = record.attachment_ids.filtered(
+                lambda att: att.custody_photo_type in ['return_overall', 'return_detail', 'return_damage']
+            )
+            record.return_photo_count = len(return_attachments)
+            
+            # Count all photo attachments (filter by mimetype)
             photo_attachments = record.attachment_ids.filtered(
                 lambda att: att.mimetype and att.mimetype.startswith('image/')
             )
             record.total_photo_count = len(photo_attachments)
     
-    @api.depends('handover_photo_ids', 'return_photo_ids', 'state')
+    @api.depends('attachment_ids', 'attachment_ids.custody_photo_type', 'state')
     def _compute_photo_status(self):
-        """Compute photo status indicators"""
+        """🔧 FIXED: Compute photo status based on actual attachments"""
         for record in self:
-            record.has_handover_photos = bool(record.handover_photo_ids)
-            record.has_return_photos = bool(record.return_photo_ids)
+            # Check for handover photos
+            handover_photos = record.attachment_ids.filtered(
+                lambda att: att.custody_photo_type in ['handover_overall', 'handover_detail', 'handover_serial']
+            )
+            record.has_handover_photos = bool(handover_photos)
+            
+            # Check for return photos
+            return_photos = record.attachment_ids.filtered(
+                lambda att: att.custody_photo_type in ['return_overall', 'return_detail', 'return_damage']
+            )
+            record.has_return_photos = bool(return_photos)
             
             # Photos are complete if:
             # - Handover photos exist (for approved+ states)
@@ -323,12 +339,15 @@ class HrCustody(models.Model):
     def action_view_handover_photos(self):
         """Open handover photos in gallery view"""
         self.ensure_one()
+        handover_photos = self.attachment_ids.filtered(
+            lambda att: att.custody_photo_type in ['handover_overall', 'handover_detail', 'handover_serial']
+        )
         return {
             'type': 'ir.actions.act_window',
             'name': _('Handover Photos - %s') % self.name,
             'res_model': 'ir.attachment',
             'view_mode': 'kanban,list,form',
-            'domain': [('id', 'in', self.handover_photo_ids.ids)],
+            'domain': [('id', 'in', handover_photos.ids)],
             'context': {
                 'default_res_model': 'hr.custody',
                 'default_res_id': self.id,
@@ -340,12 +359,15 @@ class HrCustody(models.Model):
     def action_view_return_photos(self):
         """Open return photos in gallery view"""
         self.ensure_one()
+        return_photos = self.attachment_ids.filtered(
+            lambda att: att.custody_photo_type in ['return_overall', 'return_detail', 'return_damage']
+        )
         return {
             'type': 'ir.actions.act_window',
             'name': _('Return Photos - %s') % self.name,
             'res_model': 'ir.attachment',
             'view_mode': 'kanban,list,form',
-            'domain': [('id', 'in', self.return_photo_ids.ids)],
+            'domain': [('id', 'in', return_photos.ids)],
             'context': {
                 'default_res_model': 'hr.custody',
                 'default_res_id': self.id,
@@ -405,6 +427,48 @@ class HrCustody(models.Model):
                 'latest': photos.sorted('create_date', reverse=True)[:1] if photos else False
             }
         return summary
+
+    # 🔧 NEW: Method to ensure photo type is set correctly
+    @api.model
+    def create(self, vals):
+        """🔧 FIXED: Override create to handle attachment sync"""
+        record = super(HrCustody, self).create(vals)
+        
+        # Generate sequence if needed
+        if not record.name or record.name == 'New':
+            record.name = self.env['ir.sequence'].next_by_code('hr.custody') or 'New'
+            
+        return record
+
+    def write(self, vals):
+        """🔧 FIXED: Override write to handle attachment sync and state changes"""
+        result = super(HrCustody, self).write(vals)
+        
+        # Handle attachment updates
+        if 'attachment_ids' in vals:
+            # Ensure photo type is set for new attachments
+            for record in self:
+                for attachment in record.attachment_ids:
+                    if not attachment.custody_photo_type and attachment.mimetype and attachment.mimetype.startswith('image/'):
+                        # Auto-assign photo type based on state
+                        if record.state in ['approved', 'returned']:
+                            attachment.custody_photo_type = 'handover_overall'
+                        elif record.state == 'returned':
+                            attachment.custody_photo_type = 'return_overall'
+        
+        # Handle computed field updates  
+        if any(field in vals for field in ['return_date', 'return_type', 'state', 'actual_return_date', 'attachment_ids']):
+            self._compute_overdue_status()
+            self._compute_photo_counts()
+            self._compute_photo_status()
+            
+        # Handle state change notifications
+        if 'state' in vals:
+            for record in self:
+                record.message_post(
+                    body=_('Custody state changed to %s') % dict(record._fields['state'].selection)[record.state]
+                )
+        return result
 
     # Computed Fields (existing)
     @api.depends('return_type', 'return_date', 'expected_return_period', 'state', 'actual_return_date')
@@ -504,18 +568,6 @@ class HrCustody(models.Model):
             if not vals.get('name'):
                 vals['name'] = self.env['ir.sequence'].next_by_code('hr.custody') or 'New'
         return super(HrCustody, self).create(vals_list)
-
-    def write(self, vals):
-        """Override write method to handle state changes"""
-        result = super(HrCustody, self).write(vals)
-        if any(field in vals for field in ['return_date', 'return_type', 'state', 'actual_return_date']):
-            self._compute_overdue_status()
-        if 'state' in vals:
-            for record in self:
-                record.message_post(
-                    body=_('Custody state changed to %s') % dict(record._fields['state'].selection)[record.state]
-                )
-        return result
 
     def unlink(self):
         """Override unlink to prevent deletion of approved records"""
