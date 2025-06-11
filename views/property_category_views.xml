@@ -118,11 +118,8 @@
         <field name="act_window_id" ref="property_category_action"/>
     </record>
 
-    <!-- Configuration submenu for categories -->
-    <menuitem id="hr_custody_menu_config"
-              parent="hr_custody_main_menu"
-              name="Configuration"
-              sequence="20"/>
+    <!-- ===== MENU ITEMS ===== -->
+    <!-- Note: Main menu structure is defined in hr_custody_menu_structure.xml -->
 
     <!-- Menu Items -->
     <menuitem id="property_category_menu" 
