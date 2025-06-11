@@ -11,7 +11,8 @@
                             name="action_upload_images" 
                             type="object" 
                             class="btn-primary"
-                            invisible="upload_status != 'draft'"/>
+                            invisible="upload_status != 'draft'"
+                            onclick="return window.custodyUploadManager ? window.custodyUploadManager.startUpload() : true;"/>
                     
                     <button string="🔄 Reset" 
                             name="action_reset_wizard" 
@@ -118,9 +119,11 @@
                             <ol>
                                 <li>Select image type above</li>
                                 <li>Drop files or click "Browse Files"</li>
+                                <li>Wait for all images to load (see previews)</li>
                                 <li>Configure options (optional)</li>
                                 <li>Click "Start Upload"</li>
                             </ol>
+                            <p><em>Note: Please wait for all images to finish loading before clicking Start Upload.</em></p>
                         </div>
                     </group>
                 </sheet>
