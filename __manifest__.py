@@ -1,15 +1,16 @@
 {
     'name': 'Advanced HR Custody Management',
-    'version': '18.0.1.3.0',  # 🚀 MAJOR RELEASE: Complete UX redesign and feature enhancement
+    'version': '18.0.1.4.0',  # 🚀 MAJOR RELEASE: Photo Management System Added
     'category': 'Human Resources',
-    'summary': """Modern enterprise-grade custody management with smart workflows and hierarchical categories""",
+    'summary': """Modern enterprise-grade custody management with photo documentation and smart workflows""",
     'description': """
         🚀 Advanced HR Custody Management - Odoo 18.0
 
         A comprehensive solution for managing company assets and property custody with 
-        advanced approval workflows, real-time tracking, and modern UX design.
+        advanced approval workflows, photo documentation, real-time tracking, and modern UX design.
 
         ✨ KEY FEATURES:
+        • 📸 Complete Photo Management System (inspired by hr_expense)
         • Smart Workflow Management with unified interface
         • Hierarchical Property Categories with inheritance
         • Advanced Multi-Level Approval System
@@ -17,12 +18,22 @@
         • Modern responsive UX with smart filters
         • Real-time notifications and analytics
 
+        📸 PHOTO MANAGEMENT SYSTEM:
+        • 📸 Handover Photos - Document initial condition
+        • 📦 Return Photos - Document final condition  
+        • 🔍 Photo Comparison - Side-by-side view
+        • 📊 Quality Analysis - Automatic quality scoring
+        • 🏷️ Photo Categorization - By type and purpose
+        • 📱 Mobile Upload - Camera integration
+        • 🎨 Gallery View - Beautiful photo browsing
+
         🎯 SMART FILTERS & WORKFLOW:
         • 🔔 Waiting My Approval (priority view)
         • 📋 My Requests
         • ✅ Approved by Me  
         • ⚠️ Overdue Items
         • 🕐 Due This Week
+        • 📸 Photo Status filters
         • 📊 Comprehensive status and date filters
 
         🏗️ ENTERPRISE FEATURES:
@@ -32,6 +43,7 @@
         • Complete audit trail and approval history
         • Mobile-responsive design
         • Multi-company support
+        • Complete photo documentation workflow
 
         Based on the original Open HRMS Custody module by Cybrosys Techno Solutions,
         extensively redesigned and enhanced for modern enterprise requirements.
@@ -66,6 +78,9 @@
         # 3. Main views that reference the above actions
         'views/hr_custody_views.xml',          # References: custody_property_action, hr_custody_menu_management
         'views/hr_employee_views.xml',
+        
+        # 📸 4. NEW: Photo Management Views
+        'views/ir_attachment_custody_views.xml', # Photo management system
         
         # Reports last
         'reports/report_custody_views.xml',
