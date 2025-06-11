@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-// Production-ready version with fixed Odoo integration
+// Production-ready version with enhanced field detection
 class CustodyUploadManager {
     constructor() {
         this.selectedFiles = [];
@@ -142,7 +142,8 @@ class CustodyUploadManager {
         reader.onload = (e) => {
             fileData.dataUrl = e.target.result;
             this.renderPreviews();
-            this.updateOdooFields(); // 🔧 อัพเดททุกครั้งที่มี preview ใหม่
+            // เรียก updateOdooFields ใน setTimeout เพื่อให้ DOM update เสร็จก่อน
+            setTimeout(() => this.updateOdooFields(), 100);
         };
 
         reader.onerror = () => {
@@ -219,9 +220,43 @@ class CustodyUploadManager {
         }
     }
 
+    findImagesDataField() {
+        // ลองหา images_data field ด้วย selector หลายแบบ
+        const selectors = [
+            'input[name="images_data"]',
+            'field[name="images_data"] input',
+            'div[name="images_data"] input',
+            '.o_field_widget[name="images_data"] input',
+            '[data-field-name="images_data"] input',
+            'input[data-field="images_data"]'
+        ];
+
+        for (const selector of selectors) {
+            const field = document.querySelector(selector);
+            if (field) {
+                this.log(`✅ Found images_data field with selector: ${selector}`);
+                return field;
+            }
+        }
+
+        // ลองหาโดยการ iterate ผ่าน input fields
+        const allInputs = document.querySelectorAll('input[type="text"], input[type="hidden"], input:not([type])');
+        for (const input of allInputs) {
+            if (input.name === 'images_data' || 
+                input.getAttribute('data-field') === 'images_data' ||
+                input.getAttribute('data-field-name') === 'images_data') {
+                this.log('✅ Found images_data field by iteration');
+                return input;
+            }
+        }
+
+        return null;
+    }
+
     updateImagesDataField() {
-        // 🔧 แก้ไข format ให้ตรงกับที่ Python wizard ต้องการ
-        const imagesDataField = document.querySelector('input[name="images_data"]');
+        // 🔧 ปรับปรุงการหา images_data field
+        const imagesDataField = this.findImagesDataField();
+        
         if (imagesDataField) {
             const imagesData = this.selectedFiles
                 .filter(file => file.dataUrl) // เฉพาะไฟล์ที่มี dataUrl แล้ว
@@ -236,10 +271,31 @@ class CustodyUploadManager {
             imagesDataField.value = JSON.stringify(imagesData);
             this.log('📋 Updated images_data field', { 
                 fileCount: imagesData.length,
-                dataPreview: imagesDataField.value.substring(0, 100) + '...'
+                fieldFound: true,
+                dataLength: imagesDataField.value.length
             });
         } else {
-            this.error('❌ images_data field not found');
+            this.error('❌ images_data field not found - tried all selectors');
+            
+            // 🔧 Fallback: เก็บข้อมูลใน window object
+            if (!window.custodyUploadData) {
+                window.custodyUploadData = {};
+            }
+            
+            const imagesData = this.selectedFiles
+                .filter(file => file.dataUrl)
+                .map(file => ({
+                    filename: file.filename,
+                    size: file.size,
+                    type: file.type,
+                    description: file.description || '',
+                    data: file.dataUrl
+                }));
+            
+            window.custodyUploadData.images_data = JSON.stringify(imagesData);
+            this.log('📋 Stored images_data in window object as fallback', { 
+                fileCount: imagesData.length 
+            });
         }
     }
 
@@ -333,11 +389,20 @@ class CustodyUploadManager {
         // อัพเดทข้อมูลครั้งสุดท้าย
         this.updateImagesDataField();
         
-        // ตรวจสอบว่าข้อมูลถูกส่งแล้ว
-        const imagesDataField = document.querySelector('input[name="images_data"]');
-        if (!imagesDataField || !imagesDataField.value) {
+        // ตรวจสอบว่าข้อมูลถูกเก็บแล้ว (ใน field หรือ window object)
+        const imagesDataField = this.findImagesDataField();
+        const hasFieldData = imagesDataField && imagesDataField.value;
+        const hasFallbackData = window.custodyUploadData && window.custodyUploadData.images_data;
+        
+        if (!hasFieldData && !hasFallbackData) {
             this.showError('Failed to prepare upload data. Please try again.');
             return false;
+        }
+
+        // 🔧 ถ้าใช้ fallback data ให้ copy ไปยัง field (ถ้าเจอ)
+        if (!hasFieldData && hasFallbackData && imagesDataField) {
+            imagesDataField.value = window.custodyUploadData.images_data;
+            this.log('✅ Copied fallback data to field');
         }
 
         // ให้ Odoo wizard จัดการต่อ
@@ -356,14 +421,16 @@ class CustodyUploadManager {
     }
 
     getDebugInfo() {
-        const imagesDataField = document.querySelector('input[name="images_data"]');
+        const imagesDataField = this.findImagesDataField();
         return {
             selectedFiles: this.selectedFiles.length,
             readyFiles: this.selectedFiles.filter(f => f.dataUrl).length,
             totalSize: this.formatFileSize(this.totalSize),
             debugMode: this.debugMode,
+            fieldFound: !!imagesDataField,
             imagesDataLength: imagesDataField ? imagesDataField.value.length : 0,
-            version: '1.1.0-production'
+            fallbackDataExists: !!(window.custodyUploadData && window.custodyUploadData.images_data),
+            version: '1.2.0-production'
         };
     }
 }
@@ -408,4 +475,4 @@ window.addEventListener('load', () => {
 setTimeout(initializeUpload, 2000);
 
 // Production info
-console.log('✅ Custody Upload Module Loaded - Production Version 1.1.0 (Fixed Integration)');
+console.log('✅ Custody Upload Module Loaded - Production Version 1.2.0 (Enhanced Field Detection)');
