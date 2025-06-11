@@ -203,8 +203,8 @@
                 
                 <!-- Size Filters -->
                 <filter string="📦 Large Files (>2MB)" name="large_files"
-                        domain="[('photo_size_mb', '>', 2)]"/>
-                <filter string="📄 Small Files (<1MB)" name="small_files"
+                        domain="[('photo_size_mb', '&gt;', 2)]"/>
+                <filter string="📄 Small Files (&lt;1MB)" name="small_files"
                         domain="[('photo_size_mb', '&lt;', 1)]"/>
                 
                 <separator/>
