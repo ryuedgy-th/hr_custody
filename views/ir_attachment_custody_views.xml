@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 📸 Enhanced ir.attachment view for custody photo management -->
+    <record id="ir_attachment_custody_view_form" model="ir.ui.view">
+        <field name="name">ir.attachment.custody.form</field>
+        <field name="model">ir.attachment</field>
+        <field name="inherit_id" ref="base.view_attachment_form"/>
+        <field name="arch" type="xml">
+            <field name="res_name" position="after">
+                <!-- Custody-specific fields -->
+                <field name="custody_photo_type" 
+                       invisible="res_model != 'hr.custody'"
+                       required="res_model == 'hr.custody' and mimetype and mimetype.startswith('image/')"/>
+                <field name="custody_timestamp" 
+                       invisible="res_model != 'hr.custody'"/>
+                <field name="custody_location" 
+                       invisible="res_model != 'hr.custody'"/>
+            </field>
+            
+            <field name="description" position="after">
+                <field name="custody_notes" 
+                       invisible="res_model != 'hr.custody'"
+                       placeholder="Add notes about this photo..."/>
+            </field>
+            
+            <notebook position="inside">
+                <!-- Custody Information Tab -->
+                <page string="🏢 Custody Info" invisible="res_model != 'hr.custody'">
+                    <group>
+                        <group string="Related Custody">
+                            <field name="custody_id" readonly="1"/>
+                            <field name="custody_property_id" readonly="1"/>
+                            <field name="custody_employee_id" readonly="1"/>
+                        </group>
+                        <group string="Photo Quality">
+                            <field name="photo_width" readonly="1"/>
+                            <field name="photo_height" readonly="1"/>
+                            <field name="photo_size_mb" readonly="1"/>
+                            <field name="quality_score" readonly="1" widget="progressbar"/>
+                            <field name="is_high_quality" readonly="1"/>
+                        </group>
+                    </group>
+                </page>
+            </notebook>
+        </field>
+    </record>
+
+    <!-- 📸 Custody Photo Gallery View -->
+    <record id="ir_attachment_custody_view_kanban" model="ir.ui.view">
+        <field name="name">ir.attachment.custody.kanban</field>
+        <field name="model">ir.attachment</field>
+        <field name="arch" type="xml">
+            <kanban class="o_attachment_kanban" create="false">
+                <field name="id"/>
+                <field name="name"/>
+                <field name="mimetype"/>
+                <field name="type"/>
+                <field name="url"/>
+                <field name="res_model"/>
+                <field name="res_id"/>
+                <field name="custody_photo_type"/>
+                <field name="custody_timestamp"/>
+                <field name="custody_notes"/>
+                <field name="photo_size_mb"/>
+                <field name="quality_score"/>
+                <field name="is_high_quality"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="o_attachment_wrap">
+                            <div class="o_image_box">
+                                <div class="o_attachment_image" 
+                                     t-attf-data-mimetype="{{record.mimetype.value}}"
+                                     t-attf-title="{{record.name.value}}">
+                                    <t t-if="record.type.value == 'url'">
+                                        <img t-attf-src="{{record.url.value}}" 
+                                             width="100" height="100" 
+                                             alt="Document" class="o_image"/>
+                                    </t>
+                                    <t t-else="">
+                                        <img t-attf-src="'/web/image/{{record.id.value}}/120x120'" 
+                                             width="100" height="100" 
+                                             alt="Document" class="o_image"/>
+                                    </t>
+                                </div>
+                            </div>
+                            
+                            <div class="o_attachment_info">
+                                <!-- Photo Type Badge -->
+                                <div class="mt4 mb8">
+                                    <t t-if="record.custody_photo_type.value == 'handover_overall'">
+                                        <span class="badge badge-primary">📸 Handover Overall</span>
+                                    </t>
+                                    <t t-elif="record.custody_photo_type.value == 'handover_detail'">
+                                        <span class="badge badge-info">🔍 Handover Detail</span>
+                                    </t>
+                                    <t t-elif="record.custody_photo_type.value == 'handover_serial'">
+                                        <span class="badge badge-secondary">🏷️ Serial Number</span>
+                                    </t>
+                                    <t t-elif="record.custody_photo_type.value == 'return_overall'">
+                                        <span class="badge badge-success">📦 Return Overall</span>
+                                    </t>
+                                    <t t-elif="record.custody_photo_type.value == 'return_detail'">
+                                        <span class="badge badge-warning">🔍 Return Detail</span>
+                                    </t>
+                                    <t t-elif="record.custody_photo_type.value == 'return_damage'">
+                                        <span class="badge badge-danger">⚠️ Damage Report</span>
+                                    </t>
+                                    <t t-else="">
+                                        <span class="badge badge-light">📄 Document</span>
+                                    </t>
+                                </div>
+                                
+                                <!-- File Name -->
+                                <div class="o_attachment_name">
+                                    <field name="name"/>
+                                </div>
+                                
+                                <!-- Photo Details -->
+                                <div class="o_attachment_details text-muted">
+                                    <t t-if="record.custody_timestamp.value">
+                                        <div>📅 <field name="custody_timestamp" widget="datetime"/></div>
+                                    </t>
+                                    <div>💾 <field name="photo_size_mb"/> MB</div>
+                                    <t t-if="record.is_high_quality.value">
+                                        <div>✅ <span class="text-success">High Quality</span></div>
+                                    </t>
+                                    <t t-else="">
+                                        <div>⚠️ <span class="text-warning">Standard Quality</span></div>
+                                    </t>
+                                </div>
+                                
+                                <!-- Notes -->
+                                <t t-if="record.custody_notes.value">
+                                    <div class="o_attachment_notes mt8 p-2 bg-light rounded">
+                                        <small><field name="custody_notes"/></small>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- 📸 Custody Photos List View -->
+    <record id="ir_attachment_custody_view_tree" model="ir.ui.view">
+        <field name="name">ir.attachment.custody.tree</field>
+        <field name="model">ir.attachment</field>
+        <field name="arch" type="xml">
+            <tree create="false" delete="true" edit="false">
+                <field name="name"/>
+                <field name="custody_photo_type" string="Photo Type"/>
+                <field name="custody_timestamp" string="Timestamp"/>
+                <field name="photo_size_mb" string="Size (MB)"/>
+                <field name="quality_score" string="Quality %"/>
+                <field name="is_high_quality" string="High Quality"/>
+                <field name="custody_employee_id" string="Employee"/>
+                <field name="custody_property_id" string="Property"/>
+                <field name="custody_location" string="Location"/>
+                <field name="custody_notes" string="Notes"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- 📸 Custody Photos Search View -->
+    <record id="ir_attachment_custody_view_search" model="ir.ui.view">
+        <field name="name">ir.attachment.custody.search</field>
+        <field name="model">ir.attachment</field>
+        <field name="arch" type="xml">
+            <search string="Custody Photos">
+                <field name="name"/>
+                <field name="custody_employee_id"/>
+                <field name="custody_property_id"/>
+                <field name="custody_photo_type"/>
+                <field name="custody_location"/>
+                <field name="custody_notes"/>
+                
+                <!-- Photo Type Filters -->
+                <filter string="📸 Handover Photos" name="handover_photos"
+                        domain="[('custody_photo_type', 'in', ['handover_overall', 'handover_detail', 'handover_serial'])]"/>
+                <filter string="📦 Return Photos" name="return_photos"
+                        domain="[('custody_photo_type', 'in', ['return_overall', 'return_detail', 'return_damage'])]"/>
+                <filter string="🔧 Maintenance Photos" name="maintenance_photos"
+                        domain="[('custody_photo_type', '=', 'maintenance')]"/>
+                
+                <separator/>
+                
+                <!-- Quality Filters -->
+                <filter string="✅ High Quality" name="high_quality"
+                        domain="[('is_high_quality', '=', True)]"/>
+                <filter string="⚠️ Standard Quality" name="standard_quality"
+                        domain="[('is_high_quality', '=', False)]"/>
+                        
+                <separator/>
+                
+                <!-- Size Filters -->
+                <filter string="📦 Large Files (>2MB)" name="large_files"
+                        domain="[('photo_size_mb', '>', 2)]"/>
+                <filter string="📄 Small Files (<1MB)" name="small_files"
+                        domain="[('photo_size_mb', '&lt;', 1)]"/>
+                
+                <separator/>
+                
+                <!-- Date Filters -->
+                <filter string="📅 Today" name="today"
+                        domain="[('custody_timestamp', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="📅 This Week" name="this_week"
+                        domain="[('custody_timestamp', '&gt;=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <filter string="📅 This Month" name="this_month"
+                        domain="[('custody_timestamp', '&gt;=', (context_today().replace(day=1)).strftime('%Y-%m-%d'))]"/>
+                
+                <!-- Group By -->
+                <group expand="0" string="Group By">
+                    <filter string="📊 Photo Type" name="group_photo_type"
+                            context="{'group_by': 'custody_photo_type'}"/>
+                    <filter string="👤 Employee" name="group_employee"
+                            context="{'group_by': 'custody_employee_id'}"/>
+                    <filter string="🏢 Property" name="group_property"
+                            context="{'group_by': 'custody_property_id'}"/>
+                    <filter string="📅 Date" name="group_date"
+                            context="{'group_by': 'custody_timestamp:day'}"/>
+                    <filter string="🎯 Quality" name="group_quality"
+                            context="{'group_by': 'is_high_quality'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- 📸 Custody Photos Action -->
+    <record id="ir_attachment_custody_action" model="ir.actions.act_window">
+        <field name="name">📸 Custody Photos</field>
+        <field name="res_model">ir.attachment</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="domain">[('res_model', '=', 'hr.custody'), ('mimetype', 'like', 'image%')]</field>
+        <field name="search_view_id" ref="ir_attachment_custody_view_search"/>
+        <field name="context">{
+            'default_res_model': 'hr.custody',
+            'search_default_handover_photos': 1,
+        }</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                📸 No custody photos found.
+            </p>
+            <p>
+                Photos are automatically organized by type:
+                • <strong>📸 Handover Photos</strong> - Taken when property is handed over<br/>
+                • <strong>📦 Return Photos</strong> - Taken when property is returned<br/>
+                • <strong>🔧 Maintenance Photos</strong> - During maintenance or repairs
+            </p>
+        </field>
+    </record>
+
+    <!-- 📸 Add to menu -->
+    <menuitem action="ir_attachment_custody_action"
+              id="hr_custody_photos_menu"
+              parent="hr_custody_menu_management"
+              name="📸 Photo Gallery"
+              sequence="3"
+              groups="hr.group_hr_user,hr.group_hr_manager"/>
+
+</odoo>
