@@ -17,3 +17,8 @@ access_property_return_reason_hr_manager,property.return.reason.hr.manager,model
 access_report_custody_employee,report.custody.employee,model_report_custody,base.group_user,1,0,0,0
 access_report_custody_hr_user,report.custody.hr.user,model_report_custody,hr.group_hr_user,1,0,0,0
 access_report_custody_hr_manager,report.custody.hr.manager,model_report_custody,hr.group_hr_manager,1,0,0,0
+access_custody_photo_notes_wizard_user,custody.photo.notes.wizard.user,model_custody_photo_notes_wizard,hr.group_hr_user,1,1,1,1
+access_custody_photo_notes_wizard_manager,custody.photo.notes.wizard.manager,model_custody_photo_notes_wizard,hr.group_hr_manager,1,1,1,1
+access_custody_photo_bulk_categorize_wizard_user,custody.photo.bulk.categorize.wizard.user,model_custody_photo_bulk_categorize_wizard,hr.group_hr_user,1,1,1,1
+access_custody_photo_bulk_categorize_wizard_manager,custody.photo.bulk.categorize.wizard.manager,model_custody_photo_bulk_categorize_wizard,hr.group_hr_manager,1,1,1,1
+access_custody_photo_quality_analysis_wizard_manager,custody.photo.quality.analysis.wizard.manager,model_custody_photo_quality_analysis_wizard,hr.group_hr_manager,1,1,1,1
