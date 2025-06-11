@@ -11,19 +11,19 @@
                             name="action_upload_images" 
                             type="object" 
                             class="btn-primary"
-                            attrs="{'invisible': [('upload_status', '!=', 'draft')]}"/>
+                            invisible="upload_status != 'draft'"/>
                     
                     <button string="🔄 Reset" 
                             name="action_reset_wizard" 
                             type="object" 
                             class="btn-secondary"
-                            attrs="{'invisible': [('upload_status', '==', 'uploading')]}"/>
+                            invisible="upload_status == 'uploading'"/>
                     
                     <button string="👁️ View Images" 
                             name="action_view_uploaded_images" 
                             type="object" 
                             class="btn-success"
-                            attrs="{'invisible': [('upload_status', '!=', 'done')]}"/>
+                            invisible="upload_status != 'done'"/>
                     
                     <button string="❌ Close" 
                             name="action_close_wizard" 
@@ -35,13 +35,13 @@
 
                 <sheet>
                     <!-- Error Message -->
-                    <div class="alert alert-danger" role="alert" attrs="{'invisible': [('upload_status', '!=', 'error')]}">
+                    <div class="alert alert-danger" role="alert" invisible="upload_status != 'error'">
                         <strong>❌ Upload Failed</strong><br/>
                         <field name="error_message" readonly="1"/>
                     </div>
 
                     <!-- Success Message -->
-                    <div class="alert alert-success" role="alert" attrs="{'invisible': [('upload_status', '!=', 'done')]}">
+                    <div class="alert alert-success" role="alert" invisible="upload_status != 'done'">
                         <strong>✅ Upload Complete!</strong><br/>
                         All images have been successfully uploaded.
                     </div>
@@ -61,7 +61,7 @@
                     </group>
 
                     <!-- File Upload Zone -->
-                    <group string="📁 File Selection" attrs="{'invisible': [('upload_status', 'in', ['uploading', 'done'])]}">
+                    <group string="📁 File Selection" invisible="upload_status in ['uploading', 'done']">
                         <div class="o_form_field">
                             <div id="custody_multiple_upload_zone" class="custody-upload-zone">
                                 <div class="upload-dropzone">
@@ -101,7 +101,7 @@
                     </group>
 
                     <!-- Upload Configuration -->
-                    <group string="⚙️ Upload Configuration" attrs="{'invisible': [('upload_status', 'in', ['uploading', 'done'])]}">
+                    <group string="⚙️ Upload Configuration" invisible="upload_status in ['uploading', 'done']">
                         <group>
                             <field name="auto_sequence"/>
                             <field name="location_notes" placeholder="e.g., IT Room, Teacher Office"/>
@@ -112,7 +112,7 @@
                     </group>
 
                     <!-- Instructions -->
-                    <group string="📖 Instructions" attrs="{'invisible': [('upload_status', '!=', 'draft')]}">
+                    <group string="📖 Instructions" invisible="upload_status != 'draft'">
                         <div class="text-muted">
                             <p><strong>How to use:</strong></p>
                             <ol>
@@ -124,22 +124,6 @@
                         </div>
                     </group>
                 </sheet>
-
-                <!-- JavaScript Hook -->
-                <script type="text/javascript">
-                    // Hook สำหรับเชื่อมต่อ Start Upload button
-                    $(document).ready(function() {
-                        // Override form submission เพื่อตรวจสอบไฟล์ก่อน
-                        $('button[name="action_upload_images"]').click(function(e) {
-                            if (window.custodyUploadManager) {
-                                if (!window.custodyUploadManager.startUpload()) {
-                                    e.preventDefault();
-                                    return false;
-                                }
-                            }
-                        });
-                    });
-                </script>
             </form>
         </field>
     </record>
