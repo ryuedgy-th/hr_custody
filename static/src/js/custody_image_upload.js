@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-// Production-ready version with minimal debugging
+// Production-ready version with fixed Odoo integration
 class CustodyUploadManager {
     constructor() {
         this.selectedFiles = [];
@@ -142,6 +142,7 @@ class CustodyUploadManager {
         reader.onload = (e) => {
             fileData.dataUrl = e.target.result;
             this.renderPreviews();
+            this.updateOdooFields(); // 🔧 อัพเดททุกครั้งที่มี preview ใหม่
         };
 
         reader.onerror = () => {
@@ -206,7 +207,7 @@ class CustodyUploadManager {
         this.updateOdooField('total_files', this.selectedFiles.length);
         this.updateOdooField('total_size_mb', (this.totalSize / (1024 * 1024)).toFixed(2));
         
-        // สำคัญ: อัพเดท images_data field สำหรับ Odoo wizard
+        // 🎯 สำคัญ: อัพเดท images_data field สำหรับ Odoo wizard
         this.updateImagesDataField();
     }
 
@@ -219,12 +220,26 @@ class CustodyUploadManager {
     }
 
     updateImagesDataField() {
-        // เพิ่มข้อมูลไฟล์ลงใน hidden field สำหรับ Odoo
+        // 🔧 แก้ไข format ให้ตรงกับที่ Python wizard ต้องการ
         const imagesDataField = document.querySelector('input[name="images_data"]');
         if (imagesDataField) {
-            const imagesData = JSON.stringify(this.getFilesData());
-            imagesDataField.value = imagesData;
-            this.log('📋 Updated images_data field', { fileCount: this.selectedFiles.length });
+            const imagesData = this.selectedFiles
+                .filter(file => file.dataUrl) // เฉพาะไฟล์ที่มี dataUrl แล้ว
+                .map(file => ({
+                    filename: file.filename,
+                    size: file.size,
+                    type: file.type,
+                    description: file.description || '',
+                    data: file.dataUrl // ใช้ dataUrl ที่มี format 'data:image/jpeg;base64,xxx'
+                }));
+            
+            imagesDataField.value = JSON.stringify(imagesData);
+            this.log('📋 Updated images_data field', { 
+                fileCount: imagesData.length,
+                dataPreview: imagesDataField.value.substring(0, 100) + '...'
+            });
+        } else {
+            this.error('❌ images_data field not found');
         }
     }
 
@@ -293,16 +308,38 @@ class CustodyUploadManager {
 
     // ฟังก์ชันสำหรับ Start Upload button
     startUpload() {
+        const readyFiles = this.selectedFiles.filter(file => file.dataUrl);
+        
         if (this.selectedFiles.length === 0) {
             this.showError('No images selected for upload');
             return false;
         }
 
-        this.log('🚀 Starting upload', { fileCount: this.selectedFiles.length });
+        if (readyFiles.length === 0) {
+            this.showError('Images are still being processed. Please wait...');
+            return false;
+        }
+
+        if (readyFiles.length !== this.selectedFiles.length) {
+            this.showError(`${this.selectedFiles.length - readyFiles.length} images are still being processed. Please wait...`);
+            return false;
+        }
+
+        this.log('🚀 Starting upload', { 
+            selectedFiles: this.selectedFiles.length,
+            readyFiles: readyFiles.length 
+        });
         
         // อัพเดทข้อมูลครั้งสุดท้าย
         this.updateImagesDataField();
         
+        // ตรวจสอบว่าข้อมูลถูกส่งแล้ว
+        const imagesDataField = document.querySelector('input[name="images_data"]');
+        if (!imagesDataField || !imagesDataField.value) {
+            this.showError('Failed to prepare upload data. Please try again.');
+            return false;
+        }
+
         // ให้ Odoo wizard จัดการต่อ
         return true;
     }
@@ -319,11 +356,14 @@ class CustodyUploadManager {
     }
 
     getDebugInfo() {
+        const imagesDataField = document.querySelector('input[name="images_data"]');
         return {
             selectedFiles: this.selectedFiles.length,
+            readyFiles: this.selectedFiles.filter(f => f.dataUrl).length,
             totalSize: this.formatFileSize(this.totalSize),
             debugMode: this.debugMode,
-            version: '1.0.0-production'
+            imagesDataLength: imagesDataField ? imagesDataField.value.length : 0,
+            version: '1.1.0-production'
         };
     }
 }
@@ -368,4 +408,4 @@ window.addEventListener('load', () => {
 setTimeout(initializeUpload, 2000);
 
 // Production info
-console.log('✅ Custody Upload Module Loaded - Production Version 1.0.0');
+console.log('✅ Custody Upload Module Loaded - Production Version 1.1.0 (Fixed Integration)');
