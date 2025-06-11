@@ -207,30 +207,6 @@
         <field name="context">{}</field>
     </record>
 
-    <!-- 📸 Enhanced ir.attachment List View with Bulk Actions -->
-    <record id="ir_attachment_custody_enhanced_view_tree" model="ir.ui.view">
-        <field name="name">ir.attachment.custody.enhanced.tree</field>
-        <field name="model">ir.attachment</field>
-        <field name="inherit_id" ref="ir_attachment_custody_view_tree"/>
-        <field name="arch" type="xml">
-            <tree position="attributes">
-                <attribute name="multi_edit">1</attribute>
-            </tree>
-            
-            <!-- Add bulk action buttons -->
-            <tree position="inside">
-                <header>
-                    <button string="🏷️ Bulk Categorize" 
-                            name="%(custody_photo_bulk_categorize_wizard_action)d" 
-                            type="action" 
-                            class="btn-primary"
-                            context="{'default_attachment_ids': active_ids}"
-                            groups="hr.group_hr_user,hr.group_hr_manager"/>
-                </header>
-            </tree>
-        </field>
-    </record>
-
     <!-- 📊 Add Quality Analysis to Photo Gallery Menu -->
     <menuitem id="custody_photo_quality_analysis_menu"
               action="custody_photo_quality_analysis_wizard_action"
