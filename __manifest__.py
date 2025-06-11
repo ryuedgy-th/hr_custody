@@ -1,6 +1,6 @@
 {
     'name': 'Open HRMS Custody',
-    'version': '18.0.1.2.3',  # 🔧 HOTFIX: Fixed menuitem loading dependency order
+    'version': '18.0.1.2.4',  # 🔧 CRITICAL FIX: Fixed external ID dependency loading order
     'category': 'Human Resources',
     'summary': """Manage the company properties with hierarchical categories""",
     'description': """
@@ -37,14 +37,18 @@
         'wizard/property_return_reason_views.xml',
         'wizard/property_return_date_views.xml',
 
-        # 🔧 CRITICAL FIX: Main menus MUST be created first
-        # Based on Odoo 18.0 docs: "Data files are executed sequentially, 
-        # operations can only refer to the result of operations defined previously"
-        'views/hr_custody_views.xml',        # Creates hr_custody_main_menu FIRST
+        # 🔧 CRITICAL FIX: Views MUST be loaded in correct dependency order
+        # Based on Odoo 18.0 docs: "Data files are sequentially loaded following their order, 
+        # if data A refers to data B, you must make sure that B is loaded before A"
+        
+        # 1. Base views and actions (no external dependencies)
         'views/custody_property_views.xml',  # Creates custody_property_action
-        'views/property_category_views.xml', # References hr_custody_main_menu (now exists)
+        'views/property_category_views.xml', # Creates property category actions
+        
+        # 2. Main menu and views that reference the above actions
+        'views/hr_custody_views.xml',        # References custody_property_action (now exists)
         'views/hr_employee_views.xml',
-
+        
         # Reports last
         'reports/report_custody_views.xml',
     ],
