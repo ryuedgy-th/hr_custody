@@ -58,16 +58,16 @@
         </field>
     </record>
 
-    <!-- Photo Testing Results View -->
+    <!-- Photo Testing Results View - FIXED BUTTON NAMES -->
     <record id="hr_custody_photo_tests_results_view" model="ir.ui.view">
         <field name="name">hr.custody.photo.tests.results.form</field>
         <field name="model">hr.custody.photo.tests</field>
         <field name="arch" type="xml">
             <form string="📊 Photo Test Results">
                 <header>
-                    <button string="🔄 Run Again" name="action_run_tests" type="object" class="btn-primary"/>
-                    <button string="📋 Copy Results" onclick="navigator.clipboard.writeText(document.querySelector('.o_field_html').innerText)" 
-                            type="button" class="btn-secondary"/>
+                    <button name="action_run_tests" string="🔄 Run Again" type="object" class="btn-primary"/>
+                    <!-- ✅ FIXED: Removed problematic onclick button, replaced with proper action -->
+                    <button name="action_copy_results" string="📋 View Results" type="object" class="btn-secondary"/>
                 </header>
                 
                 <sheet>
@@ -123,7 +123,7 @@
         </field>
     </record>
 
-    <!-- Photo Performance Dashboard -->
+    <!-- Photo Performance Dashboard - SIMPLIFIED -->
     <record id="hr_custody_photo_performance_dashboard_view" model="ir.ui.view">
         <field name="name">hr.custody.photo.performance.dashboard</field>
         <field name="model">hr.custody.photo.tests</field>
@@ -135,38 +135,30 @@
                         <p>Real-time monitoring of photo management system</p>
                     </div>
                     
-                    <!-- Key Metrics -->
+                    <!-- Key Metrics Cards -->
                     <div class="row">
                         <div class="col-md-3">
-                            <div class="card text-center">
-                                <div class="card-body">
-                                    <h5 class="card-title">📸 Total Photos</h5>
-                                    <h2 class="text-primary" id="total_photos">-</h2>
-                                </div>
+                            <div class="alert alert-info text-center">
+                                <h5>📸 Total Photos</h5>
+                                <h2 class="text-primary">Loading...</h2>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="card text-center">
-                                <div class="card-body">
-                                    <h5 class="card-title">⭐ Avg Quality</h5>
-                                    <h2 class="text-success" id="avg_quality">-</h2>
-                                </div>
+                            <div class="alert alert-success text-center">
+                                <h5>⭐ Avg Quality</h5>
+                                <h2 class="text-success">Loading...</h2>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="card text-center">
-                                <div class="card-body">
-                                    <h5 class="card-title">💾 Storage Used</h5>
-                                    <h2 class="text-info" id="storage_used">-</h2>
-                                </div>
+                            <div class="alert alert-warning text-center">
+                                <h5>💾 Storage Used</h5>
+                                <h2 class="text-info">Loading...</h2>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="card text-center">
-                                <div class="card-body">
-                                    <h5 class="card-title">📊 Completion</h5>
-                                    <h2 class="text-warning" id="completion_rate">-</h2>
-                                </div>
+                            <div class="alert alert-primary text-center">
+                                <h5>📊 Completion</h5>
+                                <h2 class="text-warning">Loading...</h2>
                             </div>
                         </div>
                     </div>
@@ -186,17 +178,6 @@
                         <field name="test_results" nolabel="1" widget="html"/>
                     </group>
                 </sheet>
-                
-                <!-- Auto-refresh dashboard -->
-                <script type="text/javascript">
-                    $(document).ready(function() {
-                        // Auto-refresh every 30 seconds
-                        setInterval(function() {
-                            // Would call analytics API to update metrics
-                            console.log('Refreshing photo analytics...');
-                        }, 30000);
-                    });
-                </script>
             </form>
         </field>
     </record>
