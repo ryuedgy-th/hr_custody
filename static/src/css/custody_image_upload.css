@@ -27,7 +27,6 @@
     border-color: #28a745 !important;
     background: #d4edda !important;
     border-style: solid !important;
-    transform: scale(1.02);
 }
 
 .upload-content {
@@ -55,13 +54,6 @@
     border: 1px solid #dee2e6;
     border-radius: 8px;
     padding: 15px;
-    margin-top: 15px;
-}
-
-#selected_files_preview h5 {
-    color: #495057;
-    margin-bottom: 15px;
-    font-weight: 600;
 }
 
 .file-preview-item {
@@ -155,7 +147,7 @@
     color: #1976d2;
 }
 
-/* Progress Styles */
+/* Progress Styles for Chunked Upload */
 .progress {
     height: 8px;
     margin-top: 10px;
@@ -165,6 +157,19 @@
 
 .progress-bar {
     transition: width 0.3s ease;
+}
+
+#upload_progress {
+    margin-top: 10px;
+}
+
+#upload_progress .progress {
+    height: 6px;
+    background: #e9ecef;
+}
+
+#upload_errors {
+    margin-top: 10px;
 }
 
 /* Button Styling */
@@ -180,18 +185,6 @@
 #browse_files_btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0,123,255,0.3);
-}
-
-/* Error Display */
-#upload_errors {
-    margin-top: 10px;
-}
-
-#upload_errors .alert {
-    margin-bottom: 10px;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 14px;
 }
 
 /* Mobile Responsive */
@@ -212,28 +205,4 @@
     .file-preview-item {
         margin-bottom: 15px;
     }
-    
-    .file-preview-img {
-        height: 100px;
-    }
-}
-
-/* Animation for file loading */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.file-preview-item {
-    animation: fadeIn 0.3s ease-out;
-}
-
-/* Improved visual feedback */
-.upload-dropzone.processing {
-    border-color: #ffc107;
-    background: #fff3cd;
-}
-
-.file-preview-item.loading {
-    opacity: 0.7;
 }
