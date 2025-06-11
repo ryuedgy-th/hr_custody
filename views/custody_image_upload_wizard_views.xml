@@ -11,19 +11,19 @@
                             name="action_upload_images" 
                             type="object" 
                             class="btn-primary"
-                            invisible="upload_status != 'draft' or not can_upload"/>
+                            attrs="{'invisible': [('upload_status', '!=', 'draft')]}"/>
                     
                     <button string="🔄 Reset" 
                             name="action_reset_wizard" 
                             type="object" 
                             class="btn-secondary"
-                            invisible="upload_status == 'uploading'"/>
+                            attrs="{'invisible': [('upload_status', '==', 'uploading')]}"/>
                     
                     <button string="👁️ View Images" 
                             name="action_view_uploaded_images" 
                             type="object" 
                             class="btn-success"
-                            invisible="upload_status != 'done'"/>
+                            attrs="{'invisible': [('upload_status', '!=', 'done')]}"/>
                     
                     <button string="❌ Close" 
                             name="action_close_wizard" 
@@ -34,38 +34,16 @@
                 </header>
 
                 <sheet>
-                    <!-- Alert for upload restrictions -->
-                    <div class="alert alert-warning" role="alert" invisible="can_upload">
-                        <strong>⚠️ Upload Restricted</strong><br/>
-                        <div invisible="image_type != 'before'">Before images can only be uploaded when custody is waiting for approval or later.</div>
-                        <div invisible="image_type != 'after'">After images can only be uploaded when custody is approved or being returned.</div>
-                        <div invisible="image_type != 'damage'">Damage images can only be uploaded when custody is approved or being returned.</div>
-                    </div>
-
-                    <!-- Progress Bar -->
-                    <div class="alert alert-info" role="alert" invisible="upload_status != 'uploading'">
-                        <div class="d-flex justify-content-between">
-                            <span>📤 Uploading images...</span>
-                            <span><field name="progress_percentage"/>%</span>
-                        </div>
-                        <div class="progress">
-                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
-                                 role="progressbar" 
-                                 style="width: 0%">
-                            </div>
-                        </div>
+                    <!-- Error Message -->
+                    <div class="alert alert-danger" role="alert" attrs="{'invisible': [('upload_status', '!=', 'error')]}">
+                        <strong>❌ Upload Failed</strong><br/>
+                        <field name="error_message" readonly="1"/>
                     </div>
 
                     <!-- Success Message -->
-                    <div class="alert alert-success" role="alert" invisible="upload_status != 'done'">
+                    <div class="alert alert-success" role="alert" attrs="{'invisible': [('upload_status', '!=', 'done')]}">
                         <strong>✅ Upload Complete!</strong><br/>
-                        All images have been successfully uploaded. You can now view them or close this wizard.
-                    </div>
-
-                    <!-- Error Message -->
-                    <div class="alert alert-danger" role="alert" invisible="upload_status != 'error'">
-                        <strong>❌ Upload Failed</strong><br/>
-                        <field name="error_message" readonly="1"/>
+                        All images have been successfully uploaded.
                     </div>
 
                     <group>
@@ -73,7 +51,7 @@
                             <field name="custody_id" readonly="1"/>
                             <field name="employee_name" readonly="1"/>
                             <field name="property_name" readonly="1"/>
-                            <field name="image_type" readonly="upload_status == 'uploading'"/>
+                            <field name="image_type"/>
                         </group>
                         <group string="📊 Upload Statistics">
                             <field name="total_files" readonly="1"/>
@@ -83,20 +61,18 @@
                     </group>
 
                     <!-- File Upload Zone -->
-                    <group string="📁 File Selection" invisible="upload_status in ['uploading', 'done']">
-                        <div class="o_form_field o_form_field_many2many_binary">
-                            <!-- Custom File Upload Widget will be inserted here via JavaScript -->
+                    <group string="📁 File Selection" attrs="{'invisible': [('upload_status', 'in', ['uploading', 'done'])]}">
+                        <div class="o_form_field">
                             <div id="custody_multiple_upload_zone" class="custody-upload-zone">
                                 <div class="upload-dropzone">
                                     <div class="upload-content">
                                         <i class="fa fa-cloud-upload fa-3x text-muted mb-3"></i>
                                         <h4>Drop images here or click to browse</h4>
                                         <p class="text-muted">
-                                            Supported formats: JPEG, PNG, GIF, WebP, BMP<br/>
-                                            Max file size: 5MB per image<br/>
-                                            Max total: 20 images, 100MB
+                                            Supported: JPEG, PNG, GIF, WebP, BMP<br/>
+                                            Max: 5MB per file, 20 files, 100MB total
                                         </p>
-                                        <div class="btn btn-primary btn-lg" id="browse_files_btn" style="cursor: pointer;">
+                                        <div class="btn btn-primary btn-lg" id="browse_files_btn">
                                             📂 Browse Files
                                         </div>
                                         <input type="file" 
@@ -114,6 +90,9 @@
                                         <!-- Files will be listed here -->
                                     </div>
                                 </div>
+
+                                <!-- Error display -->
+                                <div id="upload_errors" style="margin-top: 10px;"></div>
                             </div>
                         </div>
 
@@ -122,7 +101,7 @@
                     </group>
 
                     <!-- Upload Configuration -->
-                    <group string="⚙️ Upload Configuration" invisible="upload_status in ['uploading', 'done']">
+                    <group string="⚙️ Upload Configuration" attrs="{'invisible': [('upload_status', 'in', ['uploading', 'done'])]}">
                         <group>
                             <field name="auto_sequence"/>
                             <field name="location_notes" placeholder="e.g., IT Room, Teacher Office"/>
@@ -132,26 +111,35 @@
                         </group>
                     </group>
 
-                    <!-- Upload Instructions -->
-                    <group string="📖 Instructions" invisible="upload_status != 'draft'">
+                    <!-- Instructions -->
+                    <group string="📖 Instructions" attrs="{'invisible': [('upload_status', '!=', 'draft')]}">
                         <div class="text-muted">
-                            <p><strong>How to use this wizard:</strong></p>
+                            <p><strong>How to use:</strong></p>
                             <ol>
-                                <li>Select the type of images you want to upload</li>
-                                <li>Drop files into the upload zone or click "Browse Files"</li>
-                                <li>Configure upload options (optional)</li>
-                                <li>Click "Start Upload" to process all files</li>
+                                <li>Select image type above</li>
+                                <li>Drop files or click "Browse Files"</li>
+                                <li>Configure options (optional)</li>
+                                <li>Click "Start Upload"</li>
                             </ol>
-                            <p><strong>📝 Tips:</strong></p>
-                            <ul>
-                                <li>You can select multiple files at once using Ctrl+Click or Shift+Click</li>
-                                <li>Drag and drop multiple files directly into the upload zone</li>
-                                <li>Auto sequence will number your images automatically</li>
-                                <li>Bulk description will be applied to all uploaded images</li>
-                            </ul>
                         </div>
                     </group>
                 </sheet>
+
+                <!-- JavaScript Hook -->
+                <script type="text/javascript">
+                    // Hook สำหรับเชื่อมต่อ Start Upload button
+                    $(document).ready(function() {
+                        // Override form submission เพื่อตรวจสอบไฟล์ก่อน
+                        $('button[name="action_upload_images"]').click(function(e) {
+                            if (window.custodyUploadManager) {
+                                if (!window.custodyUploadManager.startUpload()) {
+                                    e.preventDefault();
+                                    return false;
+                                }
+                            }
+                        });
+                    });
+                </script>
             </form>
         </field>
     </record>
