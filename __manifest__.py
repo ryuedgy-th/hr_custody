@@ -26,6 +26,7 @@
         • 🏷️ Photo Categorization - By type and purpose
         • 📱 Mobile Upload - Camera integration
         • 🎨 Gallery View - Beautiful photo browsing
+        • 🧙‍♂️ Bulk Operations - Mass photo management
 
         🎯 SMART FILTERS & WORKFLOW:
         • 🔔 Waiting My Approval (priority view)
@@ -44,6 +45,7 @@
         • Mobile-responsive design
         • Multi-company support
         • Complete photo documentation workflow
+        • Advanced photo analytics and reporting
 
         Based on the original Open HRMS Custody module by Cybrosys Techno Solutions,
         extensively redesigned and enhanced for modern enterprise requirements.
@@ -63,9 +65,10 @@
         'data/ir_cron_data.xml',
         'data/mail_custody_notification_data.xml',
 
-        # Wizard views
+        # Wizard views (must be before other views that reference them)
         'wizard/property_return_reason_views.xml',
         'wizard/property_return_date_views.xml',
+        'views/custody_photo_wizard_views.xml',  # 📸 NEW: Photo management wizards
 
         # 🔧 PERFECT DEPENDENCY ORDER - External ID resolution
         # 1. Main menu structure FIRST (creates all parent menus)
@@ -79,7 +82,7 @@
         'views/hr_custody_views.xml',          # References: custody_property_action, hr_custody_menu_management
         'views/hr_employee_views.xml',
         
-        # 📸 4. NEW: Photo Management Views
+        # 📸 4. Photo Management Views
         'views/ir_attachment_custody_views.xml', # Photo management system
         
         # Reports last
