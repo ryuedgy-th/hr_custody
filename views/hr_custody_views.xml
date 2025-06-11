@@ -254,7 +254,7 @@
                                    }"
                                    groups="hr.group_hr_user,hr.group_hr_manager"/>
 
-                            <!-- Photo Gallery View -->
+                            <!-- 🔧 FIXED: Photo Gallery View - Added thumbnail display -->
                             <field name="return_photo_ids" 
                                    widget="image_gallery" 
                                    readonly="1"
