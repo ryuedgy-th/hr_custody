@@ -162,7 +162,7 @@
         </field>
     </record>
 
-    <!-- 📸 Custody Photos Search View - SIMPLIFIED FILTERS -->
+    <!-- 📸 Custody Photos Search View - FIXED XML ESCAPING -->
     <record id="ir_attachment_custody_view_search" model="ir.ui.view">
         <field name="name">ir.attachment.custody.search</field>
         <field name="model">ir.attachment</field>
@@ -185,7 +185,7 @@
                 
                 <separator/>
                 
-                <!-- ✅ SIMPLIFIED: Quality Filters without complex boolean expressions -->
+                <!-- Quality Filters -->
                 <filter string="✅ High Quality" name="high_quality"
                         domain="[('is_high_quality', '=', True)]"/>
                 <filter string="⚠️ Standard Quality" name="standard_quality"
@@ -193,19 +193,19 @@
                         
                 <separator/>
                 
-                <!-- ✅ SIMPLIFIED: Size Filters with simple comparisons -->
+                <!-- ✅ FIXED: Size Filters with proper XML escaping -->
                 <filter string="📦 Large Files" name="large_files"
-                        domain="[('photo_size_mb', '>', 2)]"/>
+                        domain="[('photo_size_mb', '&gt;', 2)]"/>
                 <filter string="📄 Small Files" name="small_files"
-                        domain="[('photo_size_mb', '<', 1)]"/>
+                        domain="[('photo_size_mb', '&lt;', 1)]"/>
                 
                 <separator/>
                 
-                <!-- ✅ SIMPLIFIED: Date Filters -->
+                <!-- Date Filters -->
                 <filter string="📅 Today" name="today"
-                        domain="[('custody_timestamp', '>=', context_today())]"/>
+                        domain="[('custody_timestamp', '&gt;=', context_today())]"/>
                 <filter string="📅 This Week" name="this_week"
-                        domain="[('custody_timestamp', '>=', (context_today() - datetime.timedelta(days=7)))]"/>
+                        domain="[('custody_timestamp', '&gt;=', (context_today() - datetime.timedelta(days=7)))]"/>
                 
                 <!-- Group By -->
                 <group expand="0" string="Group By">
