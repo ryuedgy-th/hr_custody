@@ -84,7 +84,7 @@
         </field>
     </record>
 
-    <!-- 📊 Quality Analysis Wizard -->
+    <!-- 📊 Quality Analysis Wizard - SIMPLIFIED VERSION -->
     <record id="custody_photo_quality_analysis_wizard_view_form" model="ir.ui.view">
         <field name="name">custody.photo.quality.analysis.wizard.form</field>
         <field name="model">custody.photo.quality.analysis.wizard</field>
@@ -123,46 +123,38 @@
                         </group>
                     </group>
                     
-                    <!-- Quality Visualization -->
+                    <!-- Simplified Quality Overview -->
                     <div invisible="context.get('show_results', False) == False" class="mt16">
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5>📊 Quality Overview</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="progress mb-2">
-                                            <div class="progress-bar bg-success" 
-                                                 t-attf-style="width: {{quality_percentage}}%"
-                                                 t-attf-aria-valuenow="{{quality_percentage}}">
-                                                <field name="quality_percentage"/>% High Quality
-                                            </div>
-                                        </div>
-                                        <small class="text-muted">
-                                            <field name="high_quality_photos"/> out of <field name="total_photos"/> photos are high quality
-                                        </small>
-                                    </div>
+                                <div class="o_horizontal_separator">📊 Quality Overview</div>
+                                <div class="mt8">
+                                    <strong>Quality Score: </strong>
+                                    <field name="quality_percentage" widget="percentage" nolabel="1"/>
+                                </div>
+                                <div class="mt4">
+                                    <field name="high_quality_photos" nolabel="1"/> out of 
+                                    <field name="total_photos" nolabel="1"/> photos are high quality
                                 </div>
                             </div>
                             
                             <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5>⚠️ Missing Documentation</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-6 text-center">
-                                                <h3 class="text-warning">
-                                                    <field name="missing_handover_photos"/>
-                                                </h3>
+                                <div class="o_horizontal_separator">⚠️ Missing Documentation</div>
+                                <div class="mt8">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <div class="text-center">
+                                                <div class="h3 text-warning">
+                                                    <field name="missing_handover_photos" nolabel="1"/>
+                                                </div>
                                                 <small>Missing Handover</small>
                                             </div>
-                                            <div class="col-6 text-center">
-                                                <h3 class="text-danger">
-                                                    <field name="missing_return_photos"/>
-                                                </h3>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-center">
+                                                <div class="h3 text-danger">
+                                                    <field name="missing_return_photos" nolabel="1"/>
+                                                </div>
                                                 <small>Missing Return</small>
                                             </div>
                                         </div>
