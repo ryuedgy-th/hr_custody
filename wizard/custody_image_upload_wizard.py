@@ -110,11 +110,12 @@ class CustodyImageUploadWizard(models.TransientModel):
         help='Whether images can be uploaded based on custody state'
     )
     
-    # 🎯 NEW: Enhanced computed fields for better UI
-    custody_state_display = fields.Char(
-        related='custody_id.state',
+    # 🔧 FIXED: Use proper field type for state display
+    custody_state = fields.Char(
         string='Custody State',
-        readonly=True
+        compute='_compute_custody_state',
+        readonly=True,
+        help='Current state of the custody record'
     )
     
     existing_images_count = fields.Integer(
@@ -122,6 +123,21 @@ class CustodyImageUploadWizard(models.TransientModel):
         compute='_compute_existing_images_count',
         help='Number of existing images of this type'
     )
+    
+    @api.depends('custody_id.state')
+    def _compute_custody_state(self):
+        """Compute custody state display"""
+        for wizard in self:
+            if wizard.custody_id:
+                # Get human-readable state label
+                state_selection = wizard.custody_id._fields['state'].selection
+                if callable(state_selection):
+                    state_selection = state_selection(wizard.custody_id)
+                
+                state_dict = dict(state_selection)
+                wizard.custody_state = state_dict.get(wizard.custody_id.state, wizard.custody_id.state)
+            else:
+                wizard.custody_state = ''
     
     @api.depends('custody_id', 'image_type')
     def _compute_existing_images_count(self):
