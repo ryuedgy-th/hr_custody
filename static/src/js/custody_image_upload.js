@@ -6,9 +6,9 @@ class CustodyUploadManager {
     constructor() {
         this.selectedFiles = [];
         this.totalSize = 0;
-        this.maxFileSize = 10 * 1024 * 1024; // 10MB per file
-        this.maxTotalSize = 50 * 1024 * 1024; // 50MB total
-        this.allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        this.maxFileSize = 5 * 1024 * 1024; // 5MB per file
+        this.maxTotalSize = 100 * 1024 * 1024; // 100MB total
+        this.allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
         console.log('📋 Upload Manager initialized');
     }
 
@@ -21,7 +21,7 @@ class CustodyUploadManager {
 
     setupEventListeners() {
         const uploadZone = document.querySelector('#custody_multiple_upload_zone, .custody-upload-zone');
-        const fileInput = document.querySelector('#custody_file_input');
+        const fileInput = document.querySelector('#file_input'); // แก้ไข selector
 
         if (!uploadZone || !fileInput) {
             console.warn('⚠️ Upload elements not found');
@@ -49,13 +49,18 @@ class CustodyUploadManager {
         });
 
         // Click to select files
-        uploadZone.addEventListener('click', () => {
-            fileInput.click();
-        });
+        const browseBtn = document.querySelector('#browse_files_btn');
+        if (browseBtn) {
+            browseBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                fileInput.click();
+            });
+        }
 
         fileInput.addEventListener('change', (e) => {
             const files = Array.from(e.target.files);
             this.handleFiles(files);
+            e.target.value = ''; // Reset input
         });
 
         console.log('✅ Event listeners setup complete');
@@ -77,19 +82,25 @@ class CustodyUploadManager {
     validateFile(file) {
         // Check file type
         if (!this.allowedTypes.includes(file.type)) {
-            this.showError(`File type not allowed: ${file.name}`);
+            this.showError(`File type not allowed: ${file.name}. Supported: JPG, PNG, GIF, WebP, BMP`);
             return false;
         }
 
         // Check file size
         if (file.size > this.maxFileSize) {
-            this.showError(`File too large: ${file.name} (max 10MB)`);
+            this.showError(`File too large: ${file.name} (max 5MB per file)`);
+            return false;
+        }
+
+        // Check total files limit
+        if (this.selectedFiles.length >= 20) {
+            this.showError('Maximum 20 images allowed');
             return false;
         }
 
         // Check total size
         if (this.totalSize + file.size > this.maxTotalSize) {
-            this.showError('Total file size exceeds 50MB limit');
+            this.showError('Total file size exceeds 100MB limit');
             return false;
         }
 
@@ -126,6 +137,7 @@ class CustodyUploadManager {
 
         reader.onerror = () => {
             console.error('❌ Error reading file:', fileData.filename);
+            this.showError(`Error reading file: ${fileData.filename}`);
         };
 
         reader.readAsDataURL(fileData.file);
@@ -236,41 +248,67 @@ class CustodyUploadManager {
 
     showError(message) {
         console.error('❌ Error:', message);
-        // แสดง error ใน UI
-        const errorContainer = document.getElementById('upload_errors');
-        if (errorContainer) {
-            errorContainer.innerHTML = `<div class="alert alert-danger">${message}</div>`;
-            setTimeout(() => {
-                errorContainer.innerHTML = '';
-            }, 5000);
+        
+        // สร้าง error display ถ้ายังไม่มี
+        let errorContainer = document.getElementById('upload_errors');
+        if (!errorContainer) {
+            errorContainer = document.createElement('div');
+            errorContainer.id = 'upload_errors';
+            errorContainer.style.marginTop = '10px';
+            
+            const uploadZone = document.querySelector('#custody_multiple_upload_zone');
+            if (uploadZone) {
+                uploadZone.appendChild(errorContainer);
+            }
         }
+        
+        errorContainer.innerHTML = `<div class="alert alert-danger" role="alert">${message}</div>`;
+        setTimeout(() => {
+            errorContainer.innerHTML = '';
+        }, 5000);
+    }
+
+    // เพิ่มฟังก์ชันสำหรับส่งข้อมูลกลับไปที่ Odoo
+    getFilesData() {
+        return this.selectedFiles.map(file => ({
+            filename: file.filename,
+            size: file.size,
+            type: file.type,
+            description: file.description,
+            dataUrl: file.dataUrl
+        }));
     }
 }
 
-// Initialize function
+// Initialize function with better error handling
 function initializeUpload() {
     console.log('🔍 Checking for upload zone...');
 
-    const uploadZone = document.querySelector('#custody_multiple_upload_zone') || 
-                      document.querySelector('.custody-upload-zone');
+    try {
+        const uploadZone = document.querySelector('#custody_multiple_upload_zone') || 
+                          document.querySelector('.custody-upload-zone');
 
-    if (uploadZone) {
-        console.log('✅ Upload zone found!');
-        
-        if (!window.custodyUploadManager) {
-            const manager = new CustodyUploadManager();
-            window.custodyUploadManager = manager;
-            manager.init();
+        if (uploadZone) {
+            console.log('✅ Upload zone found!');
+            
+            if (!window.custodyUploadManager) {
+                const manager = new CustodyUploadManager();
+                window.custodyUploadManager = manager;
+                manager.init();
+            } else {
+                console.log('ℹ️ Manager already exists');
+            }
         } else {
-            console.log('ℹ️ Manager already exists');
+            console.log('⏳ Upload zone not found, retrying in 1000ms...');
+            setTimeout(initializeUpload, 1000);
         }
-    } else {
-        console.log('⏳ Upload zone not found, retrying in 1000ms...');
-        setTimeout(initializeUpload, 1000);
+    } catch (error) {
+        console.error('❌ Error initializing upload:', error);
+        setTimeout(initializeUpload, 2000);
     }
 }
 
-// Multiple initialization strategies
+// Multiple initialization strategies with error handling
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeUpload);
 } else {
@@ -281,4 +319,7 @@ window.addEventListener('load', () => {
     setTimeout(initializeUpload, 1000);
 });
 
-console.log('✅ Custody Upload Module Loaded - Enhanced with Chunked Upload Strategy');
+// Additional safety for Odoo environment
+setTimeout(initializeUpload, 2000);
+
+console.log('✅ Custody Upload Module Loaded - Fixed Selectors & Error Handling');
