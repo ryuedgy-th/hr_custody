@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-console.log('📦 Loading Custody Upload Module...');
+console.log('📦 Loading Custody Upload Module with Chunked Upload...');
 
 class CustodyUploadManager {
     constructor() {
@@ -9,7 +9,14 @@ class CustodyUploadManager {
         this.maxFileSize = 5 * 1024 * 1024; // 5MB per file
         this.maxTotalSize = 100 * 1024 * 1024; // 100MB total
         this.allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
-        console.log('📋 Upload Manager initialized');
+        
+        // Chunked upload settings
+        this.chunkSize = 1024 * 1024; // 1MB default chunk size
+        this.minChunkSize = 256 * 1024; // 256KB minimum
+        this.maxRetries = 3;
+        this.uploadInProgress = false;
+        
+        console.log('📋 Upload Manager initialized with chunked upload support');
     }
 
     init() {
@@ -21,7 +28,7 @@ class CustodyUploadManager {
 
     setupEventListeners() {
         const uploadZone = document.querySelector('#custody_multiple_upload_zone, .custody-upload-zone');
-        const fileInput = document.querySelector('#file_input'); // แก้ไข selector
+        const fileInput = document.querySelector('#file_input');
 
         if (!uploadZone || !fileInput) {
             console.warn('⚠️ Upload elements not found');
@@ -201,10 +208,8 @@ class CustodyUploadManager {
     }
 
     updateOdooField(fieldName, value) {
-        // หา Odoo field widget
         const fieldWidget = document.querySelector(`div[name="${fieldName}"]`);
         if (fieldWidget) {
-            // อัพเดท span ข้างใน
             const span = fieldWidget.querySelector('span');
             if (span) {
                 span.textContent = value;
@@ -249,7 +254,6 @@ class CustodyUploadManager {
     showError(message) {
         console.error('❌ Error:', message);
         
-        // สร้าง error display ถ้ายังไม่มี
         let errorContainer = document.getElementById('upload_errors');
         if (!errorContainer) {
             errorContainer = document.createElement('div');
@@ -268,7 +272,191 @@ class CustodyUploadManager {
         }, 5000);
     }
 
-    // เพิ่มฟังก์ชันสำหรับส่งข้อมูลกลับไปที่ Odoo
+    showProgress(message, percent = 0) {
+        let progressContainer = document.getElementById('upload_progress');
+        if (!progressContainer) {
+            progressContainer = document.createElement('div');
+            progressContainer.id = 'upload_progress';
+            progressContainer.style.marginTop = '10px';
+            
+            const uploadZone = document.querySelector('#custody_multiple_upload_zone');
+            if (uploadZone) {
+                uploadZone.appendChild(progressContainer);
+            }
+        }
+        
+        progressContainer.innerHTML = `
+            <div class="alert alert-info" role="alert">
+                <div class="d-flex justify-content-between">
+                    <span>${message}</span>
+                    <span>${percent}%</span>
+                </div>
+                <div class="progress" style="height: 6px; margin-top: 5px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                         style="width: ${percent}%"></div>
+                </div>
+            </div>
+        `;
+    }
+
+    hideProgress() {
+        const progressContainer = document.getElementById('upload_progress');
+        if (progressContainer) {
+            progressContainer.innerHTML = '';
+        }
+    }
+
+    // 🚀 Chunked Upload Methods
+    async uploadFiles() {
+        if (this.uploadInProgress) {
+            console.log('🚫 Upload already in progress');
+            return;
+        }
+
+        if (this.selectedFiles.length === 0) {
+            this.showError('No files selected for upload');
+            return;
+        }
+
+        this.uploadInProgress = true;
+        console.log(`📡 Starting chunked upload for ${this.selectedFiles.length} files...`);
+
+        try {
+            await this.processFilesInChunks();
+            this.showProgress('✅ Upload completed successfully!', 100);
+            setTimeout(() => this.hideProgress(), 3000);
+        } catch (error) {
+            console.error('❌ Upload failed:', error);
+            this.showError(`Upload failed: ${error.message}`);
+        } finally {
+            this.uploadInProgress = false;
+        }
+    }
+
+    async processFilesInChunks() {
+        const chunkSize = this.calculateOptimalChunkSize();
+        const chunks = this.createFileChunks(chunkSize);
+        
+        console.log(`📦 Created ${chunks.length} chunks with size ${this.formatFileSize(chunkSize)}`);
+
+        for (let i = 0; i < chunks.length; i++) {
+            const chunk = chunks[i];
+            const progress = Math.round(((i + 1) / chunks.length) * 100);
+            
+            this.showProgress(`📤 Uploading chunk ${i + 1}/${chunks.length}...`, progress);
+            
+            let retries = 0;
+            while (retries < this.maxRetries) {
+                try {
+                    await this.uploadChunk(chunk, i);
+                    console.log(`✅ Chunk ${i + 1} uploaded successfully`);
+                    break;
+                } catch (error) {
+                    retries++;
+                    console.warn(`⚠️ Chunk ${i + 1} failed (attempt ${retries}):`, error);
+                    
+                    if (error.status === 413 && retries < this.maxRetries) {
+                        // HTTP 413 - reduce chunk size and retry
+                        const newChunkSize = Math.max(this.minChunkSize, chunkSize / 2);
+                        console.log(`🔄 Reducing chunk size to ${this.formatFileSize(newChunkSize)} and retrying...`);
+                        
+                        const smallerChunks = this.createFileChunks(newChunkSize);
+                        return this.processSpecificChunks(smallerChunks.slice(i));
+                    }
+                    
+                    if (retries >= this.maxRetries) {
+                        throw new Error(`Chunk ${i + 1} failed after ${this.maxRetries} attempts`);
+                    }
+                    
+                    // Wait before retry
+                    await new Promise(resolve => setTimeout(resolve, 1000 * retries));
+                }
+            }
+        }
+    }
+
+    calculateOptimalChunkSize() {
+        const avgFileSize = this.totalSize / this.selectedFiles.length;
+        
+        // Adjust chunk size based on total size and file count
+        if (this.totalSize > 50 * 1024 * 1024) { // > 50MB
+            return Math.max(this.minChunkSize, Math.min(2 * 1024 * 1024, avgFileSize)); // 2MB max
+        } else if (this.totalSize > 10 * 1024 * 1024) { // > 10MB
+            return Math.max(this.minChunkSize, Math.min(1 * 1024 * 1024, avgFileSize)); // 1MB max
+        } else {
+            return Math.max(this.minChunkSize, avgFileSize); // Use average file size
+        }
+    }
+
+    createFileChunks(chunkSize) {
+        const chunks = [];
+        let currentChunk = [];
+        let currentChunkSize = 0;
+
+        for (const file of this.selectedFiles) {
+            if (currentChunkSize + file.size > chunkSize && currentChunk.length > 0) {
+                chunks.push(currentChunk);
+                currentChunk = [];
+                currentChunkSize = 0;
+            }
+            
+            currentChunk.push(file);
+            currentChunkSize += file.size;
+        }
+
+        if (currentChunk.length > 0) {
+            chunks.push(currentChunk);
+        }
+
+        return chunks;
+    }
+
+    async uploadChunk(files, chunkIndex) {
+        const formData = new FormData();
+        
+        // Add chunk metadata
+        formData.append('chunk_index', chunkIndex);
+        formData.append('total_files', files.length);
+        formData.append('chunk_info', JSON.stringify({
+            index: chunkIndex,
+            fileCount: files.length,
+            totalSize: files.reduce((sum, f) => sum + f.size, 0),
+            uploadMethod: 'chunked'
+        }));
+
+        // Add files to form data
+        files.forEach((file, index) => {
+            formData.append(`file_${index}`, file.file);
+            formData.append(`filename_${index}`, file.filename);
+            formData.append(`description_${index}`, file.description || '');
+        });
+
+        // Send chunk to server
+        const response = await fetch('/web/dataset/call_kw', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw { status: response.status, message: response.statusText };
+        }
+
+        return response.json();
+    }
+
+    async processSpecificChunks(chunks) {
+        for (let i = 0; i < chunks.length; i++) {
+            const chunk = chunks[i];
+            const progress = Math.round(((i + 1) / chunks.length) * 100);
+            
+            this.showProgress(`📤 Uploading smaller chunk ${i + 1}/${chunks.length}...`, progress);
+            await this.uploadChunk(chunk, i);
+        }
+    }
+
     getFilesData() {
         return this.selectedFiles.map(file => ({
             filename: file.filename,
@@ -280,7 +468,7 @@ class CustodyUploadManager {
     }
 }
 
-// Initialize function with better error handling
+// Initialize function with enhanced error handling
 function initializeUpload() {
     console.log('🔍 Checking for upload zone...');
 
@@ -308,7 +496,7 @@ function initializeUpload() {
     }
 }
 
-// Multiple initialization strategies with error handling
+// Multiple initialization strategies
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeUpload);
 } else {
@@ -322,4 +510,4 @@ window.addEventListener('load', () => {
 // Additional safety for Odoo environment
 setTimeout(initializeUpload, 2000);
 
-console.log('✅ Custody Upload Module Loaded - Fixed Selectors & Error Handling');
+console.log('✅ Custody Upload Module Loaded - Complete with Chunked Upload Strategy');
