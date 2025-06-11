@@ -45,7 +45,7 @@
         </field>
     </record>
 
-    <!-- 📸 Custody Photo Gallery View -->
+    <!-- 📸 Custody Photo Gallery View - SIMPLIFIED FOR ODOO 18 -->
     <record id="ir_attachment_custody_view_kanban" model="ir.ui.view">
         <field name="name">ir.attachment.custody.kanban</field>
         <field name="model">ir.attachment</field>
@@ -68,16 +68,14 @@
                     <t t-name="kanban-box">
                         <div class="o_attachment_wrap">
                             <div class="o_image_box">
-                                <div class="o_attachment_image" 
-                                     t-attf-data-mimetype="{{record.mimetype.value}}"
-                                     t-attf-title="{{record.name.value}}">
+                                <div class="o_attachment_image">
                                     <t t-if="record.type.value == 'url'">
-                                        <img t-attf-src="{{record.url.value}}" 
+                                        <img t-att-src="record.url.value" 
                                              width="100" height="100" 
                                              alt="Document" class="o_image"/>
                                     </t>
                                     <t t-else="">
-                                        <img t-attf-src="'/web/image/{{record.id.value}}/120x120'" 
+                                        <img t-att-src="'/web/image/' + record.id.value + '/120x120'" 
                                              width="100" height="100" 
                                              alt="Document" class="o_image"/>
                                     </t>
