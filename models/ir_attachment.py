@@ -87,19 +87,22 @@ class IrAttachment(models.Model):
     photo_size_mb = fields.Float(
         string='Size (MB)',
         compute='_compute_photo_size_mb',
+        store=True,  # ✅ FIXED: Added store=True for search compatibility
         help='File size in megabytes'
     )
     
-    # Quality indicators
+    # ✅ FIXED: Quality indicators with store=True for search compatibility
     is_high_quality = fields.Boolean(
         string='High Quality',
         compute='_compute_photo_quality',
+        store=True,  # ✅ FIXED: Added store=True for search compatibility
         help='True if photo meets quality standards'
     )
     
     quality_score = fields.Float(
         string='Quality Score',
         compute='_compute_photo_quality',
+        store=True,  # ✅ FIXED: Added store=True for search compatibility
         help='Photo quality score (0-100)'
     )
 
@@ -123,7 +126,7 @@ class IrAttachment(models.Model):
             else:
                 attachment.photo_size_mb = 0.0
     
-    @api.depends('photo_width', 'photo_height', 'file_size')
+    @api.depends('photo_width', 'photo_height', 'file_size', 'mimetype')
     def _compute_photo_quality(self):
         """Compute photo quality indicators"""
         for attachment in self:
