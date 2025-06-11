@@ -1,6 +1,6 @@
 {
     'name': 'Open HRMS Custody',
-    'version': '18.0.1.2.0',  # ⭐ NEW: Version bump for image system removal
+    'version': '18.0.1.2.1',  # 🔧 HOTFIX: Fixed menu loading order
     'category': 'Human Resources',
     'summary': """Manage the company properties with hierarchical categories""",
     'description': """
@@ -37,10 +37,10 @@
         'wizard/property_return_reason_views.xml',
         'wizard/property_return_date_views.xml',
 
-        # Main views - ORDER MATTERS!
-        'views/property_category_views.xml',  # ⭐ Categories first
-        'views/custody_property_views.xml',  # Must come after categories - references category fields
-        'views/hr_custody_views.xml',        # References custody_property_action
+        # 🔧 FIXED ORDER: Main views - hr_custody_views.xml MUST come first (creates main menu)
+        'views/hr_custody_views.xml',        # Creates hr_custody_main_menu - MUST BE FIRST
+        'views/custody_property_views.xml',  # References hr_custody_main_menu
+        'views/property_category_views.xml', # References hr_custody_main_menu  
         'views/hr_employee_views.xml',
 
         # Reports last
