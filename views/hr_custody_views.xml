@@ -201,8 +201,8 @@
                                 </div>
                             </group>
                             
-                            <!-- 🔧 FIXED: Photo Upload Area - Replaced attrs with direct readonly -->
-                            <field name="handover_photo_ids" 
+                            <!-- 🔧 FIXED: Photo Upload Area - Changed to One2many -->
+                            <field name="attachment_ids" 
                                    widget="many2many_binary"
                                    string="Upload Handover Photos"
                                    options="{
@@ -210,14 +210,13 @@
                                        'max_upload_size': 5242880
                                    }"
                                    context="{
-                                       'default_res_model': 'hr.custody',
-                                       'default_res_id': id,
                                        'default_custody_photo_type': 'handover_overall'
                                    }"
+                                   domain="[('custody_photo_type', 'in', ['handover_overall', 'handover_detail', 'handover_serial'])]"
                                    readonly="state == 'returned'"
                                    groups="hr.group_hr_user,hr.group_hr_manager"/>
 
-                            <!-- Photo Gallery View -->
+                            <!-- 🔧 FIXED: Photo Gallery View - Changed to show handover_photo_ids -->
                             <field name="handover_photo_ids" 
                                    widget="image_gallery" 
                                    readonly="1"
@@ -239,8 +238,8 @@
                                 </div>
                             </group>
                             
-                            <!-- Photo Upload Area -->
-                            <field name="return_photo_ids" 
+                            <!-- 🔧 FIXED: Photo Upload Area - Changed to One2many -->
+                            <field name="attachment_ids" 
                                    widget="many2many_binary"
                                    string="Upload Return Photos"
                                    options="{
@@ -248,13 +247,12 @@
                                        'max_upload_size': 5242880
                                    }"
                                    context="{
-                                       'default_res_model': 'hr.custody',
-                                       'default_res_id': id,
                                        'default_custody_photo_type': 'return_overall'
                                    }"
+                                   domain="[('custody_photo_type', 'in', ['return_overall', 'return_detail', 'return_damage'])]"
                                    groups="hr.group_hr_user,hr.group_hr_manager"/>
 
-                            <!-- 🔧 FIXED: Photo Gallery View - Added thumbnail display -->
+                            <!-- 🔧 FIXED: Photo Gallery View - Changed to show return_photo_ids -->
                             <field name="return_photo_ids" 
                                    widget="image_gallery" 
                                    readonly="1"
