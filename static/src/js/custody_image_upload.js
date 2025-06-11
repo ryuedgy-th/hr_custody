@@ -187,7 +187,7 @@ class CustodyUploadManager {
 
         this.renderPreviews();
         this.updateDisplay();
-        this.updateOdooFields();
+        this.updateImagesDataField(); // 🔧 FIXED: Correct method name
     }
 
     /**
@@ -249,7 +249,7 @@ class CustodyUploadManager {
         reader.onload = (e) => {
             fileData.dataUrl = e.target.result;
             this.renderPreviews();
-            setTimeout(() => this.updateOdooFields(), 100);
+            setTimeout(() => this.updateImagesDataField(), 100); // 🔧 FIXED: Correct method name
         };
 
         reader.onerror = () => {
@@ -433,7 +433,7 @@ class CustodyUploadManager {
             this.selectedFiles.splice(fileIndex, 1);
             this.renderPreviews();
             this.updateDisplay();
-            this.updateOdooFields();
+            this.updateImagesDataField(); // 🔧 FIXED: Correct method name
         }
     }
 
@@ -683,7 +683,7 @@ class CustodyUploadManager {
             imagesDataLength: imagesDataField ? imagesDataField.value.length : 0,
             fallbackDataExists: !!(window.custodyUploadData && window.custodyUploadData.images_data),
             wizardId: this.getWizardId(),
-            version: '2.0.0-modern-odoo18'
+            version: '2.0.1-hotfix'
         };
     }
 }
@@ -732,4 +732,4 @@ window.addEventListener('load', () => {
 setTimeout(initializeUpload, 2000);
 
 // Production info
-console.log('✅ Custody Upload Module v2.0.0 - Modern Odoo 18 Standards (Enhanced Field Detection)');
+console.log('✅ Custody Upload Module v2.0.1 - Hotfix (Method Name Corrections)');
