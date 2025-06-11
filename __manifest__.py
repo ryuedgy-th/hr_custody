@@ -1,6 +1,6 @@
 {
     'name': 'Advanced HR Custody Management',
-    'version': '18.0.1.4.0',  # 🚀 MAJOR RELEASE: Photo Management System Added
+    'version': '18.0.1.5.0',  # 🚀 TESTING RELEASE: Photo Testing & Optimization Suite Added
     'category': 'Human Resources',
     'summary': """Modern enterprise-grade custody management with photo documentation and smart workflows""",
     'description': """
@@ -11,6 +11,7 @@
 
         ✨ KEY FEATURES:
         • 📸 Complete Photo Management System (inspired by hr_expense)
+        • 🧪 Comprehensive Testing & Optimization Suite
         • Smart Workflow Management with unified interface
         • Hierarchical Property Categories with inheritance
         • Advanced Multi-Level Approval System
@@ -27,6 +28,16 @@
         • 📱 Mobile Upload - Camera integration
         • 🎨 Gallery View - Beautiful photo browsing
         • 🧙‍♂️ Bulk Operations - Mass photo management
+
+        🧪 TESTING & OPTIMIZATION SUITE:
+        • 📋 Comprehensive Test Wizards
+        • ⚡ Performance Testing & Monitoring
+        • 📊 Real-time Analytics Dashboard  
+        • 🎯 Quality Assessment Validation
+        • 📱 Mobile Workflow Testing
+        • 🔍 Photo Comparison Testing
+        • 🧙‍♂️ Bulk Operations Testing
+        • 📈 Advanced Photo Analytics
 
         🎯 SMART FILTERS & WORKFLOW:
         • 🔔 Waiting My Approval (priority view)
@@ -46,6 +57,7 @@
         • Multi-company support
         • Complete photo documentation workflow
         • Advanced photo analytics and reporting
+        • Comprehensive testing and optimization tools
 
         Based on the original Open HRMS Custody module by Cybrosys Techno Solutions,
         extensively redesigned and enhanced for modern enterprise requirements.
@@ -68,7 +80,8 @@
         # Wizard views (must be before other views that reference them)
         'wizard/property_return_reason_views.xml',
         'wizard/property_return_date_views.xml',
-        'views/custody_photo_wizard_views.xml',  # 📸 NEW: Photo management wizards
+        'views/custody_photo_wizard_views.xml',  # 📸 Photo management wizards
+        'views/hr_custody_photo_testing_views.xml',  # 🧪 NEW: Photo testing & optimization
 
         # 🔧 PERFECT DEPENDENCY ORDER - External ID resolution
         # 1. Main menu structure FIRST (creates all parent menus)
