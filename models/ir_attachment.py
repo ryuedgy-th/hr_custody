@@ -87,22 +87,22 @@ class IrAttachment(models.Model):
     photo_size_mb = fields.Float(
         string='Size (MB)',
         compute='_compute_photo_size_mb',
-        store=True,  # ✅ FIXED: Added store=True for search compatibility
+        store=True,
         help='File size in megabytes'
     )
     
-    # ✅ FIXED: Quality indicators with store=True for search compatibility
+    # Quality indicators with store=True for search compatibility
     is_high_quality = fields.Boolean(
         string='High Quality',
         compute='_compute_photo_quality',
-        store=True,  # ✅ FIXED: Added store=True for search compatibility
+        store=True,
         help='True if photo meets quality standards'
     )
     
     quality_score = fields.Float(
         string='Quality Score',
         compute='_compute_photo_quality',
-        store=True,  # ✅ FIXED: Added store=True for search compatibility
+        store=True,
         help='Photo quality score (0-100)'
     )
 
@@ -261,9 +261,7 @@ class IrAttachment(models.Model):
         """Validate that photo types are only set for images"""
         for attachment in self:
             if (attachment.custody_photo_type and 
-                attachment.custody_photo_type != 'document' and
-                attachment.custody_photo_type != 'receipt' and
-                attachment.custody_photo_type != 'other' and
+                attachment.custody_photo_type not in ['document', 'receipt', 'other'] and
                 attachment.mimetype and 
                 not attachment.mimetype.startswith('image/')):
                 raise ValidationError(
