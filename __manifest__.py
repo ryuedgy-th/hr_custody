@@ -1,8 +1,8 @@
 {
     'name': 'Open HRMS Custody',
-    'version': '18.0.1.1.1',  # ⭐ NEW: Increment version for migration fix
+    'version': '18.0.1.2.0',  # ⭐ NEW: Version bump for image system removal
     'category': 'Human Resources',
-    'summary': """Manage the company properties with hierarchical categories and image documentation""",
+    'summary': """Manage the company properties with hierarchical categories""",
     'description': """
         Manage the company properties when it is in the custody of an employee.
 
@@ -10,7 +10,6 @@
         * Hierarchical property categories for better organization
         * Multiple approvers system with category inheritance
         * Flexible return date management
-        * Before/after photo documentation
         * Property status tracking
         * Email notifications
         * Comprehensive reporting
@@ -37,15 +36,12 @@
         # Wizard views
         'wizard/property_return_reason_views.xml',
         'wizard/property_return_date_views.xml',
-        'wizard/custody_before_wizard_views.xml',
-        'wizard/custody_after_wizard_views.xml',
 
         # Main views - ORDER MATTERS!
-        'views/property_category_views.xml',  # ⭐ NEW: Categories first
+        'views/property_category_views.xml',  # ⭐ Categories first
         'views/custody_property_views.xml',  # Must come after categories - references category fields
         'views/hr_custody_views.xml',        # References custody_property_action
         'views/hr_employee_views.xml',
-        'views/custody_image_views.xml',     # Image views and history
 
         # Reports last
         'reports/report_custody_views.xml',

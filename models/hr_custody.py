@@ -211,80 +211,6 @@ class HrCustody(models.Model):
         compute='_compute_is_read_only'
     )
 
-    # ===== IMAGE DOCUMENTATION FIELDS =====
-
-    # Image relationships
-    before_image_ids = fields.One2many(
-        'custody.image', 'custody_id',
-        domain=[('image_type', '=', 'before')],
-        string='Before Images',
-        help='Photos taken before handing over the equipment'
-    )
-
-    after_image_ids = fields.One2many(
-        'custody.image', 'custody_id',
-        domain=[('image_type', '=', 'after')],
-        string='After Images',
-        help='Photos taken when receiving back the equipment'
-    )
-
-    damage_image_ids = fields.One2many(
-        'custody.image', 'custody_id',
-        domain=[('image_type', '=', 'damage')],
-        string='Damage Documentation',
-        help='Photos documenting any damage or issues'
-    )
-
-    # Image computed fields
-    before_image_count = fields.Integer(
-        string='Before Images Count',
-        compute='_compute_image_counts',
-        help='Number of before images'
-    )
-
-    after_image_count = fields.Integer(
-        string='After Images Count',
-        compute='_compute_image_counts',
-        help='Number of after images'
-    )
-
-    has_before_images = fields.Boolean(
-        string='Has Before Images',
-        compute='_compute_image_counts',
-        help='True if there are before images'
-    )
-
-    has_after_images = fields.Boolean(
-        string='Has After Images',
-        compute='_compute_image_counts',
-        help='True if there are after images'
-    )
-
-    # Image workflow validation
-    can_take_before_photos = fields.Boolean(
-        string='Can Take Before Photos',
-        compute='_compute_image_permissions',
-        help='Whether before photos can be taken in current state'
-    )
-
-    can_take_after_photos = fields.Boolean(
-        string='Can Take After Photos',
-        compute='_compute_image_permissions',
-        help='Whether after photos can be taken in current state'
-    )
-
-    requires_before_images = fields.Boolean(
-        string='Requires Before Images',
-        compute='_compute_image_requirements',
-        help='Whether before images are required for approval'
-    )
-
-    requires_after_images = fields.Boolean(
-        string='Requires After Images',
-        compute='_compute_image_requirements',
-        help='Whether after images are required for return'
-    )
-
     # Computed Fields
     @api.depends('return_type', 'return_date', 'expected_return_period', 'state', 'actual_return_date')
     def _compute_return_status_display(self):
@@ -342,38 +268,6 @@ class HrCustody(models.Model):
                 record.is_read_only = True
             else:
                 record.is_read_only = False
-
-    @api.depends('before_image_ids', 'after_image_ids', 'damage_image_ids')
-    def _compute_image_counts(self):
-        """Compute image counts and availability"""
-        for record in self:
-            record.before_image_count = len(record.before_image_ids)
-            record.after_image_count = len(record.after_image_ids)
-            record.has_before_images = bool(record.before_image_ids)
-            record.has_after_images = bool(record.after_image_ids)
-
-    @api.depends('state')
-    def _compute_image_permissions(self):
-        """Compute whether images can be taken in current state"""
-        for record in self:
-            record.can_take_before_photos = (
-                record.state in ['to_approve', 'approved'] and
-                (self.env.user.has_group('hr.group_hr_user') or
-                 self.env.user in record.custody_property_id.approver_ids)
-            )
-
-            record.can_take_after_photos = (
-                record.state == 'approved' and
-                (self.env.user.has_group('hr.group_hr_user') or
-                 self.env.user in record.custody_property_id.approver_ids)
-            )
-
-    @api.depends('state')
-    def _compute_image_requirements(self):
-        """Compute whether images are required"""
-        for record in self:
-            record.requires_before_images = False
-            record.requires_after_images = record.state == 'returned'
 
     # Constraint and validation methods
     @api.constrains('return_type', 'return_date', 'expected_return_period', 'date_request')
@@ -466,16 +360,11 @@ class HrCustody(models.Model):
             self.custody_property_id.property_status = 'in_use'
 
         self.state = 'approved'
+        self.message_post(
+            body=_('✅ Request approved by %s') % self.env.user.name,
+            message_type='notification'
+        )
 
-        message_body = _('✅ Request approved by %s') % self.env.user.name
-        if self.has_before_images:
-            message_body += _(' with %d before photos documented.') % self.before_image_count
-        else:
-            message_body += _(' (Before photos can be taken later)')
-
-        self.message_post(body=message_body, message_type='notification')
-
-    # ✅ FIXED: Add missing refuse_with_reason method
     def refuse_with_reason(self):
         """Refuse with reason - open wizard"""
         return {
@@ -491,7 +380,6 @@ class HrCustody(models.Model):
             }
         }
 
-    # ✅ FIXED: Add missing set_to_draft method
     def set_to_draft(self):
         """Set the current record to the 'draft' state."""
         self.state = 'draft'
@@ -502,9 +390,6 @@ class HrCustody(models.Model):
 
     def set_to_return(self):
         """Process equipment return"""
-        if self.requires_after_images and not self.has_after_images:
-            raise UserError(_('After photos are required before accepting return. Please take after photos first.'))
-
         if self.custody_property_id.property_status == 'in_use':
             self.custody_property_id.property_status = 'available'
 
@@ -517,9 +402,6 @@ class HrCustody(models.Model):
             self.env.user.name
         )
 
-        if self.has_after_images:
-            message_body += _(' with %d after photos documented.') % self.after_image_count
-
         if (self.return_type == 'date' and
             self.return_date and
             self.actual_return_date > self.return_date):
@@ -527,132 +409,6 @@ class HrCustody(models.Model):
             message_body += _(' ⚠️ Returned %d days late.') % days_late
 
         self.message_post(body=message_body, message_type='notification')
-
-    # ✅ FIXED: Add missing image action methods
-    def action_view_all_images(self):
-        """Action to view all images for this custody"""
-        self.ensure_one()
-        return {
-            'name': _('📸 All Images - %s') % self.name,
-            'type': 'ir.actions.act_window',
-            'res_model': 'custody.image',
-            'view_mode': 'kanban,list,form',
-            'domain': [('custody_id', '=', self.id)],
-            'context': {'default_custody_id': self.id}
-        }
-
-    def action_view_image_comparison(self):
-        """Action to view before/after image comparison"""
-        self.ensure_one()
-        return {
-            'name': _('📸 Image Comparison - %s') % self.name,
-            'type': 'ir.actions.act_window',
-            'res_model': 'custody.image',
-            'view_mode': 'kanban,list',
-            'domain': [('custody_id', '=', self.id)],
-            'context': {
-                'group_by': 'image_type',
-                'default_custody_id': self.id,
-            }
-        }
-
-    def action_take_before_photos(self):
-        """Action to open before photos wizard"""
-        self.ensure_one()
-        if not self.can_take_before_photos:
-            raise UserError(_('Before photos cannot be taken in current state: %s') %
-                          dict(self._fields['state'].selection)[self.state])
-
-        return {
-            'name': _('📸 Take Before Photos'),
-            'type': 'ir.actions.act_window',
-            'res_model': 'custody.before.wizard',
-            'view_mode': 'form',
-            'target': 'new',
-            'context': {
-                'default_custody_id': self.id,
-                'default_property_name': self.custody_property_id.name,
-                'default_employee_name': self.employee_id.name,
-            }
-        }
-
-    def action_take_after_photos(self):
-        """Action to open after photos wizard"""
-        self.ensure_one()
-        if not self.can_take_after_photos:
-            raise UserError(_('After photos cannot be taken in current state: %s') %
-                          dict(self._fields['state'].selection)[self.state])
-
-        return {
-            'name': _('📸 Take After Photos & Return'),
-            'type': 'ir.actions.act_window',
-            'res_model': 'custody.after.wizard',
-            'view_mode': 'form',
-            'target': 'new',
-            'context': {
-                'default_custody_id': self.id,
-                'default_property_name': self.custody_property_id.name,
-                'default_employee_name': self.employee_id.name,
-                'default_before_image_count': self.before_image_count,
-            }
-        }
-
-    # ===== NEW: Multiple Image Upload Actions =====
-    def action_upload_before_images(self):
-        """Action to open multiple before images upload wizard"""
-        self.ensure_one()
-        if not self.can_take_before_photos:
-            raise UserError(_('Before photos cannot be taken in current state: %s') %
-                          dict(self._fields['state'].selection)[self.state])
-
-        return {
-            'name': _('📸 Upload Multiple Before Images'),
-            'type': 'ir.actions.act_window',
-            'res_model': 'custody.image.upload.wizard',
-            'view_mode': 'form',
-            'target': 'new',
-            'context': {
-                'default_custody_id': self.id,
-                'default_image_type': 'before',
-            }
-        }
-
-    def action_upload_after_images(self):
-        """Action to open multiple after images upload wizard"""
-        self.ensure_one()
-        if not self.can_take_after_photos:
-            raise UserError(_('After photos cannot be taken in current state: %s') %
-                          dict(self._fields['state'].selection)[self.state])
-
-        return {
-            'name': _('📸 Upload Multiple After Images'),
-            'type': 'ir.actions.act_window',
-            'res_model': 'custody.image.upload.wizard',
-            'view_mode': 'form',
-            'target': 'new',
-            'context': {
-                'default_custody_id': self.id,
-                'default_image_type': 'after',
-            }
-        }
-
-    def action_upload_damage_images(self):
-        """Action to open multiple damage images upload wizard"""
-        self.ensure_one()
-        if self.state not in ['approved', 'returned']:
-            raise UserError(_('Damage photos can only be uploaded when custody is approved or returned'))
-
-        return {
-            'name': _('📸 Upload Multiple Damage Images'),
-            'type': 'ir.actions.act_window',
-            'res_model': 'custody.image.upload.wizard',
-            'view_mode': 'form',
-            'target': 'new',
-            'context': {
-                'default_custody_id': self.id,
-                'default_image_type': 'damage',
-            }
-        }
 
     # Helper methods
     @api.model
