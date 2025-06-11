@@ -78,6 +78,19 @@ class HrCustodyPhotoTests(models.TransientModel):
         elif self.test_type == 'performance_test':
             return self._test_performance()
     
+    def action_copy_results(self):
+        """Copy test results to clipboard or show in new window"""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'message': 'Test results are displayed above. You can copy them manually.',
+                'type': 'info',
+                'sticky': False,
+            }
+        }
+    
     def _test_handover_upload(self):
         """Test handover photo upload workflow"""
         results = []
