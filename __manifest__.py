@@ -1,8 +1,8 @@
 {
     'name': 'Open HRMS Custody',
-    'version': '18.0.1.2.0',  # ⭐ NEW: Increment version for multiple upload feature
+    'version': '18.0.1.1.1',  # ⭐ NEW: Increment version for migration fix
     'category': 'Human Resources',
-    'summary': """Manage the company properties with hierarchical categories and multiple image upload""",
+    'summary': """Manage the company properties with hierarchical categories and image documentation""",
     'description': """
         Manage the company properties when it is in the custody of an employee.
 
@@ -10,8 +10,7 @@
         * Hierarchical property categories for better organization
         * Multiple approvers system with category inheritance
         * Flexible return date management
-        * Before/after photo documentation with MULTIPLE IMAGE UPLOAD
-        * Drag & drop multiple file upload with preview
+        * Before/after photo documentation
         * Property status tracking
         * Email notifications
         * Comprehensive reporting
@@ -19,7 +18,6 @@
         * Performance analytics
         * Category-based property management
         * Default approvers per category
-        * Batch image processing with validation
     """,
     'author': 'Cybrosys Techno solutions',
     'company': 'Cybrosys Techno Solutions',
@@ -41,7 +39,6 @@
         'wizard/property_return_date_views.xml',
         'wizard/custody_before_wizard_views.xml',
         'wizard/custody_after_wizard_views.xml',
-        'views/custody_image_upload_wizard_views.xml',  # ⭐ NEW: Multiple upload wizard
 
         # Main views - ORDER MATTERS!
         'views/property_category_views.xml',  # ⭐ NEW: Categories first
@@ -53,12 +50,6 @@
         # Reports last
         'reports/report_custody_views.xml',
     ],
-    'assets': {
-        'web.assets_backend': [
-            'hr_custody/static/src/css/custody_image_upload.css',
-            'hr_custody/static/src/js/custody_image_upload.js',  # เปิดกลับ
-        ],
-    },
     'demo': ['data/demo_data.xml'],
     'images': ['static/description/banner.jpg'],
     'license': 'LGPL-3',
