@@ -217,77 +217,77 @@
 
     <!-- 📸 Server Actions for Multi-select Operations -->
     
-    <!-- Server Action: Add Notes to Selected Photos -->
+    <!-- Server Action: Add Notes to Selected Photos - FIXED INDENTATION -->
     <record id="action_add_notes_to_photos" model="ir.actions.server">
         <field name="name">📝 Add Notes</field>
         <field name="model_id" ref="base.model_ir_attachment"/>
         <field name="binding_model_id" ref="base.model_ir_attachment"/>
         <field name="binding_view_types">list</field>
         <field name="state">code</field>
-        <field name="code">
-            # Filter only custody photos
-            custody_photos = records.filtered(lambda r: r.res_model == 'hr.custody' and r.mimetype and r.mimetype.startswith('image/'))
-            
-            if not custody_photos:
-                raise UserError("Please select custody photos only")
-            
-            if len(custody_photos) == 1:
-                # Single photo - open notes wizard
-                action = {
-                    'type': 'ir.actions.act_window',
-                    'name': 'Add Photo Notes',
-                    'res_model': 'custody.photo.notes.wizard',
-                    'view_mode': 'form',
-                    'target': 'new',
-                    'context': {
-                        'default_attachment_id': custody_photos.id,
-                        'default_notes': custody_photos.custody_notes or '',
-                        'default_custody_location': custody_photos.custody_location or '',
-                    }
-                }
-            else:
-                # Multiple photos - open bulk categorize wizard
-                action = {
-                    'type': 'ir.actions.act_window',
-                    'name': 'Bulk Categorize Photos',
-                    'res_model': 'custody.photo.bulk.categorize.wizard',
-                    'view_mode': 'form',
-                    'target': 'new',
-                    'context': {
-                        'default_attachment_ids': [(6, 0, custody_photos.ids)],
-                        'default_add_notes': True,
-                    }
-                }
-        </field>
+        <field name="code"><![CDATA[
+# Filter only custody photos
+custody_photos = records.filtered(lambda r: r.res_model == 'hr.custody' and r.mimetype and r.mimetype.startswith('image/'))
+
+if not custody_photos:
+    raise UserError("Please select custody photos only")
+
+if len(custody_photos) == 1:
+    # Single photo - open notes wizard
+    action = {
+        'type': 'ir.actions.act_window',
+        'name': 'Add Photo Notes',
+        'res_model': 'custody.photo.notes.wizard',
+        'view_mode': 'form',
+        'target': 'new',
+        'context': {
+            'default_attachment_id': custody_photos.id,
+            'default_notes': custody_photos.custody_notes or '',
+            'default_custody_location': custody_photos.custody_location or '',
+        }
+    }
+else:
+    # Multiple photos - open bulk categorize wizard
+    action = {
+        'type': 'ir.actions.act_window',
+        'name': 'Bulk Categorize Photos',
+        'res_model': 'custody.photo.bulk.categorize.wizard',
+        'view_mode': 'form',
+        'target': 'new',
+        'context': {
+            'default_attachment_ids': [(6, 0, custody_photos.ids)],
+            'default_add_notes': True,
+        }
+    }
+]]></field>
         <field name="groups_id" eval="[(4, ref('hr.group_hr_user'))]"/>
     </record>
 
-    <!-- Server Action: Set Photo Type -->
+    <!-- Server Action: Set Photo Type - FIXED INDENTATION -->
     <record id="action_set_photo_type" model="ir.actions.server">
         <field name="name">🏷️ Set Photo Type</field>
         <field name="model_id" ref="base.model_ir_attachment"/>
         <field name="binding_model_id" ref="base.model_ir_attachment"/>
         <field name="binding_view_types">list</field>
         <field name="state">code</field>
-        <field name="code">
-            # Filter only custody photos
-            custody_photos = records.filtered(lambda r: r.res_model == 'hr.custody' and r.mimetype and r.mimetype.startswith('image/'))
-            
-            if not custody_photos:
-                raise UserError("Please select custody photos only")
-            
-            # Open bulk categorize wizard
-            action = {
-                'type': 'ir.actions.act_window',
-                'name': 'Bulk Categorize Photos',
-                'res_model': 'custody.photo.bulk.categorize.wizard',
-                'view_mode': 'form',
-                'target': 'new',
-                'context': {
-                    'default_attachment_ids': [(6, 0, custody_photos.ids)],
-                }
-            }
-        </field>
+        <field name="code"><![CDATA[
+# Filter only custody photos
+custody_photos = records.filtered(lambda r: r.res_model == 'hr.custody' and r.mimetype and r.mimetype.startswith('image/'))
+
+if not custody_photos:
+    raise UserError("Please select custody photos only")
+
+# Open bulk categorize wizard
+action = {
+    'type': 'ir.actions.act_window',
+    'name': 'Bulk Categorize Photos',
+    'res_model': 'custody.photo.bulk.categorize.wizard',
+    'view_mode': 'form',
+    'target': 'new',
+    'context': {
+        'default_attachment_ids': [(6, 0, custody_photos.ids)],
+    }
+}
+]]></field>
         <field name="groups_id" eval="[(4, ref('hr.group_hr_user'))]"/>
     </record>
 
