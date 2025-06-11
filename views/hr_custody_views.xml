@@ -302,19 +302,8 @@
         </field>
     </record>
 
-    <!-- ===== MENU STRUCTURE ===== -->
-
-    <!-- Main menu -->
-    <menuitem id="hr_custody_main_menu"
-              name="Custody"
-              sequence="20"
-              web_icon="hr_custody,static/description/icon.png"/>
-
-    <!-- Management submenu -->
-    <menuitem id="hr_custody_menu_management"
-              parent="hr_custody_main_menu"
-              name="Custody Management"
-              sequence="10"/>
+    <!-- ===== MENU ITEMS ===== -->
+    <!-- Note: Main menu structure is defined in hr_custody_menu_structure.xml -->
 
     <!-- Custody Request menu -->
     <menuitem action="hr_custody_action"
