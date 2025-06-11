@@ -10,8 +10,7 @@
             <field name="res_name" position="after">
                 <!-- Custody-specific fields -->
                 <field name="custody_photo_type" 
-                       invisible="res_model != 'hr.custody'"
-                       required="res_model == 'hr.custody' and mimetype and mimetype.startswith('image/')"/>
+                       invisible="res_model != 'hr.custody'"/>
                 <field name="custody_timestamp" 
                        invisible="res_model != 'hr.custody'"/>
                 <field name="custody_location" 
@@ -163,7 +162,7 @@
         </field>
     </record>
 
-    <!-- 📸 Custody Photos Search View -->
+    <!-- 📸 Custody Photos Search View - SIMPLIFIED FILTERS -->
     <record id="ir_attachment_custody_view_search" model="ir.ui.view">
         <field name="name">ir.attachment.custody.search</field>
         <field name="model">ir.attachment</field>
@@ -186,7 +185,7 @@
                 
                 <separator/>
                 
-                <!-- Quality Filters -->
+                <!-- ✅ SIMPLIFIED: Quality Filters without complex boolean expressions -->
                 <filter string="✅ High Quality" name="high_quality"
                         domain="[('is_high_quality', '=', True)]"/>
                 <filter string="⚠️ Standard Quality" name="standard_quality"
@@ -194,21 +193,19 @@
                         
                 <separator/>
                 
-                <!-- Size Filters -->
-                <filter string="📦 Large Files (&gt;2MB)" name="large_files"
-                        domain="[('photo_size_mb', '&gt;', 2)]"/>
-                <filter string="📄 Small Files (&lt;1MB)" name="small_files"
-                        domain="[('photo_size_mb', '&lt;', 1)]"/>
+                <!-- ✅ SIMPLIFIED: Size Filters with simple comparisons -->
+                <filter string="📦 Large Files" name="large_files"
+                        domain="[('photo_size_mb', '>', 2)]"/>
+                <filter string="📄 Small Files" name="small_files"
+                        domain="[('photo_size_mb', '<', 1)]"/>
                 
                 <separator/>
                 
-                <!-- Date Filters -->
+                <!-- ✅ SIMPLIFIED: Date Filters -->
                 <filter string="📅 Today" name="today"
-                        domain="[('custody_timestamp', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                        domain="[('custody_timestamp', '>=', context_today())]"/>
                 <filter string="📅 This Week" name="this_week"
-                        domain="[('custody_timestamp', '&gt;=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
-                <filter string="📅 This Month" name="this_month"
-                        domain="[('custody_timestamp', '&gt;=', (context_today().replace(day=1)).strftime('%Y-%m-%d'))]"/>
+                        domain="[('custody_timestamp', '>=', (context_today() - datetime.timedelta(days=7)))]"/>
                 
                 <!-- Group By -->
                 <group expand="0" string="Group By">
