@@ -337,43 +337,53 @@ class HrCustody(models.Model):
     # ===== 📸 PHOTO MANAGEMENT METHODS =====
     
     def action_view_handover_photos(self):
-        """Open handover photos in gallery view"""
+        """🔧 FIXED: Open handover photos in gallery (kanban) view"""
         self.ensure_one()
         handover_photos = self.attachment_ids.filtered(
             lambda att: att.custody_photo_type in ['handover_overall', 'handover_detail', 'handover_serial']
         )
         return {
             'type': 'ir.actions.act_window',
-            'name': _('Handover Photos - %s') % self.name,
+            'name': _('📸 Handover Photos - %s') % self.name,
             'res_model': 'ir.attachment',
-            'view_mode': 'kanban,list,form',
+            'view_mode': 'kanban,list,form',  # Start with kanban for gallery view
             'domain': [('id', 'in', handover_photos.ids)],
             'context': {
                 'default_res_model': 'hr.custody',
                 'default_res_id': self.id,
                 'default_custody_photo_type': 'handover_overall',
             },
-            'target': 'current'
+            'target': 'current',
+            'views': [
+                (self.env.ref('hr_custody.ir_attachment_custody_view_kanban').id, 'kanban'),
+                (self.env.ref('hr_custody.ir_attachment_custody_view_tree').id, 'list'),
+                (False, 'form')
+            ]
         }
     
     def action_view_return_photos(self):
-        """Open return photos in gallery view"""
+        """🔧 FIXED: Open return photos in gallery (kanban) view"""
         self.ensure_one()
         return_photos = self.attachment_ids.filtered(
             lambda att: att.custody_photo_type in ['return_overall', 'return_detail', 'return_damage']
         )
         return {
             'type': 'ir.actions.act_window',
-            'name': _('Return Photos - %s') % self.name,
+            'name': _('📦 Return Photos - %s') % self.name,
             'res_model': 'ir.attachment',
-            'view_mode': 'kanban,list,form',
+            'view_mode': 'kanban,list,form',  # Start with kanban for gallery view
             'domain': [('id', 'in', return_photos.ids)],
             'context': {
                 'default_res_model': 'hr.custody',
                 'default_res_id': self.id,
                 'default_custody_photo_type': 'return_overall',
             },
-            'target': 'current'
+            'target': 'current',
+            'views': [
+                (self.env.ref('hr_custody.ir_attachment_custody_view_kanban').id, 'kanban'),
+                (self.env.ref('hr_custody.ir_attachment_custody_view_tree').id, 'list'),
+                (False, 'form')
+            ]
         }
     
     def action_compare_photos(self):
