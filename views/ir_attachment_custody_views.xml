@@ -44,12 +44,12 @@
         </field>
     </record>
 
-    <!-- 📸 Custody Photo Gallery View - WITH LIGHTBOX FUNCTIONALITY -->
+    <!-- 📸 Custody Photo Gallery View - SIMPLIFIED APPROACH -->
     <record id="ir_attachment_custody_view_kanban" model="ir.ui.view">
         <field name="name">ir.attachment.custody.kanban</field>
         <field name="model">ir.attachment</field>
         <field name="arch" type="xml">
-            <kanban class="o_attachment_kanban o_custody_photo_gallery" create="false" js_class="attachment_kanban">
+            <kanban class="o_attachment_kanban o_custody_photo_gallery" create="false">
                 <field name="id"/>
                 <field name="name"/>
                 <field name="mimetype"/>
@@ -67,40 +67,34 @@
                 <field name="checksum"/>
                 <templates>
                     <t t-name="kanban-box">
-                        <div class="o_attachment_wrap oe_kanban_card">
-                            <!-- 📸 Main Photo Display with Lightbox -->
-                            <div class="o_image_box" style="position: relative; cursor: pointer;">
+                        <div class="oe_kanban_card o_attachment_wrap" style="margin: 10px; padding: 10px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background: white;">
+                            <!-- 📸 Photo Display -->
+                            <div class="o_image_box" style="position: relative; text-align: center; margin-bottom: 10px;">
                                 <t t-if="record.mimetype.value and record.mimetype.value.startswith('image/')">
-                                    <!-- Real Image Display -->
-                                    <img class="o_image o_attachment_image" 
-                                         t-att-src="'/web/image/' + record.id.value + '?unique=' + record.checksum.value" 
-                                         style="width: 200px; height: 150px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
-                                         t-att-alt="record.name.value"
-                                         t-att-title="record.name.value"
-                                         data-toggle="lightbox"
-                                         t-att-data-src="'/web/image/' + record.id.value"
-                                         onclick="openPhotoLightbox(this)"/>
-                                    
-                                    <!-- Photo Overlay Info -->
-                                    <div class="o_image_overlay" style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.7)); color: white; padding: 8px; border-radius: 0 0 8px 8px;">
-                                        <div style="font-size: 12px; font-weight: bold;" t-esc="record.name.value"/>
-                                    </div>
-                                    
-                                    <!-- Quality Badge -->
-                                    <t t-if="record.is_high_quality.value">
-                                        <span class="badge badge-success" style="position: absolute; top: 8px; right: 8px;">
-                                            ✅ HQ
-                                        </span>
-                                    </t>
-                                    <t t-else="">
-                                        <span class="badge badge-warning" style="position: absolute; top: 8px; right: 8px;">
-                                            ⚠️ STD
-                                        </span>
-                                    </t>
+                                    <!-- Real Image Display with Clickable Link -->
+                                    <a t-att-href="'/web/image/' + record.id.value" target="_blank" style="display: block; position: relative;">
+                                        <img class="o_image" 
+                                             t-att-src="'/web/image/' + record.id.value + '?unique=' + record.checksum.value" 
+                                             style="width: 200px; height: 150px; object-fit: cover; border-radius: 8px; cursor: pointer;"
+                                             t-att-alt="record.name.value"
+                                             t-att-title="Click to view full size"/>
+                                        
+                                        <!-- Quality Badge -->
+                                        <t t-if="record.is_high_quality.value">
+                                            <span class="badge badge-success" style="position: absolute; top: 5px; right: 5px; z-index: 2;">
+                                                ✅ HQ
+                                            </span>
+                                        </t>
+                                        <t t-else="">
+                                            <span class="badge badge-warning" style="position: absolute; top: 5px; right: 5px; z-index: 2;">
+                                                ⚠️ STD
+                                            </span>
+                                        </t>
+                                    </a>
                                 </t>
                                 <t t-else="">
                                     <!-- Non-Image File Display -->
-                                    <div class="o_attachment_image" style="width: 200px; height: 150px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border: 2px dashed #dee2e6; border-radius: 8px;">
+                                    <div style="width: 200px; height: 150px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border: 2px dashed #dee2e6; border-radius: 8px; margin: 0 auto;">
                                         <div class="text-center text-muted">
                                             <i class="fa fa-file fa-3x mb-2"/>
                                             <br/>
@@ -111,9 +105,15 @@
                             </div>
                             
                             <!-- 📋 Photo Information -->
-                            <div class="o_attachment_info" style="padding: 12px;">
+                            <div class="o_attachment_info">
+                                <!-- File Name -->
+                                <div style="font-weight: bold; margin-bottom: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" 
+                                     t-att-title="record.name.value">
+                                    <t t-esc="record.name.value"/>
+                                </div>
+                                
                                 <!-- Photo Type Badge -->
-                                <div class="mb-2">
+                                <div style="margin-bottom: 8px;">
                                     <t t-if="record.custody_photo_type.value == 'handover_overall'">
                                         <span class="badge badge-primary">📸 Handover Overall</span>
                                     </t>
@@ -138,11 +138,11 @@
                                 </div>
                                 
                                 <!-- Photo Details -->
-                                <div class="o_attachment_details text-muted small">
+                                <div class="text-muted small" style="margin-bottom: 8px;">
                                     <t t-if="record.custody_timestamp.value">
                                         <div>📅 <field name="custody_timestamp" widget="datetime"/></div>
                                     </t>
-                                    <div>💾 <t t-esc="record.photo_size_mb.value"/> MB</div>
+                                    <div>💾 <t t-esc="Math.round(record.photo_size_mb.value * 100) / 100"/> MB</div>
                                     <t t-if="record.quality_score.value">
                                         <div>🎯 Quality: <t t-esc="Math.round(record.quality_score.value)"/>%</div>
                                     </t>
@@ -150,23 +150,24 @@
                                 
                                 <!-- Notes -->
                                 <t t-if="record.custody_notes.value">
-                                    <div class="o_attachment_notes mt-2 p-2" style="background: #f8f9fa; border-radius: 4px; font-size: 12px;">
+                                    <div style="background: #f8f9fa; border-radius: 4px; padding: 6px; font-size: 12px; margin-bottom: 8px; max-height: 60px; overflow-y: auto;">
                                         <t t-esc="record.custody_notes.value"/>
                                     </div>
                                 </t>
                                 
-                                <!-- Action Buttons -->
-                                <div class="mt-2">
-                                    <button class="btn btn-sm btn-outline-primary" 
-                                            type="button" 
-                                            t-att-onclick="'openPhotoLightbox(document.querySelector(\\'img[data-src=\\\\\\'/web/image/' + record.id.value + '\\\\\\']\\'))'">
+                                <!-- Action Links -->
+                                <div class="text-center">
+                                    <a t-att-href="'/web/image/' + record.id.value" 
+                                       target="_blank" 
+                                       class="btn btn-sm btn-outline-primary"
+                                       style="margin-right: 5px;">
                                         🔍 View Full Size
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-secondary ml-1" 
-                                            type="button"
-                                            t-att-onclick="'window.open(\\'/web/content/' + record.id.value + '?download=true\\', \\'_blank\\')'">
+                                    </a>
+                                    <a t-att-href="'/web/content/' + record.id.value + '?download=true'" 
+                                       target="_blank"
+                                       class="btn btn-sm btn-outline-secondary">
                                         📥 Download
-                                    </button>
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -176,176 +177,7 @@
         </field>
     </record>
 
-    <!-- 📸 Custom CSS and JavaScript for Photo Gallery -->
-    <template id="custody_photo_gallery_assets" name="Custody Photo Gallery Assets">
-        <xpath expr="." position="inside">
-            <style>
-                /* Photo Gallery Styles */
-                .o_custody_photo_gallery .oe_kanban_card {
-                    margin: 10px;
-                    padding: 0;
-                    border-radius: 12px;
-                    overflow: hidden;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                    transition: all 0.3s ease;
-                    background: white;
-                }
-                
-                .o_custody_photo_gallery .oe_kanban_card:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-                }
-                
-                .o_custody_photo_gallery .o_image_overlay {
-                    opacity: 0;
-                    transition: opacity 0.3s ease;
-                }
-                
-                .o_custody_photo_gallery .oe_kanban_card:hover .o_image_overlay {
-                    opacity: 1;
-                }
-                
-                /* Lightbox Styles */
-                .photo-lightbox-overlay {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0, 0, 0, 0.9);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 9999;
-                    opacity: 0;
-                    transition: opacity 0.3s ease;
-                }
-                
-                .photo-lightbox-overlay.show {
-                    opacity: 1;
-                }
-                
-                .photo-lightbox-content {
-                    max-width: 90%;
-                    max-height: 90%;
-                    position: relative;
-                }
-                
-                .photo-lightbox-image {
-                    max-width: 100%;
-                    max-height: 100%;
-                    border-radius: 8px;
-                    box-shadow: 0 4px 20px rgba(255,255,255,0.1);
-                }
-                
-                .photo-lightbox-close {
-                    position: absolute;
-                    top: -40px;
-                    right: 0;
-                    color: white;
-                    font-size: 24px;
-                    cursor: pointer;
-                    background: rgba(0,0,0,0.5);
-                    border-radius: 50%;
-                    width: 35px;
-                    height: 35px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    transition: background 0.3s ease;
-                }
-                
-                .photo-lightbox-close:hover {
-                    background: rgba(0,0,0,0.8);
-                }
-                
-                .photo-lightbox-info {
-                    position: absolute;
-                    bottom: -60px;
-                    left: 0;
-                    right: 0;
-                    color: white;
-                    text-align: center;
-                    background: rgba(0,0,0,0.5);
-                    padding: 10px;
-                    border-radius: 4px;
-                }
-            </style>
-            
-            <script type="text/javascript">
-                // Lightbox Functionality
-                function openPhotoLightbox(imgElement) {
-                    if (!imgElement || !imgElement.getAttribute('data-src')) return;
-                    
-                    // Create lightbox overlay
-                    const overlay = document.createElement('div');
-                    overlay.className = 'photo-lightbox-overlay';
-                    overlay.onclick = function(e) {
-                        if (e.target === overlay) closeLightbox();
-                    };
-                    
-                    // Create lightbox content
-                    const content = document.createElement('div');
-                    content.className = 'photo-lightbox-content';
-                    
-                    // Create full-size image
-                    const fullImage = document.createElement('img');
-                    fullImage.className = 'photo-lightbox-image';
-                    fullImage.src = imgElement.getAttribute('data-src');
-                    fullImage.alt = imgElement.alt || 'Photo';
-                    
-                    // Create close button
-                    const closeBtn = document.createElement('div');
-                    closeBtn.className = 'photo-lightbox-close';
-                    closeBtn.innerHTML = '×';
-                    closeBtn.onclick = closeLightbox;
-                    
-                    // Create info panel
-                    const info = document.createElement('div');
-                    info.className = 'photo-lightbox-info';
-                    info.innerHTML = imgElement.alt || 'Custody Photo';
-                    
-                    // Assemble lightbox
-                    content.appendChild(fullImage);
-                    content.appendChild(closeBtn);
-                    content.appendChild(info);
-                    overlay.appendChild(content);
-                    
-                    // Add to page
-                    document.body.appendChild(overlay);
-                    
-                    // Show with animation
-                    setTimeout(() => overlay.classList.add('show'), 10);
-                    
-                    // Handle keyboard
-                    document.addEventListener('keydown', handleLightboxKeydown);
-                    
-                    function closeLightbox() {
-                        overlay.classList.remove('show');
-                        setTimeout(() => {
-                            if (overlay.parentNode) {
-                                overlay.parentNode.removeChild(overlay);
-                            }
-                            document.removeEventListener('keydown', handleLightboxKeydown);
-                        }, 300);
-                    }
-                    
-                    function handleLightboxKeydown(e) {
-                        if (e.key === 'Escape') {
-                            closeLightbox();
-                        }
-                    }
-                }
-                
-                // Initialize when DOM is ready
-                document.addEventListener('DOMContentLoaded', function() {
-                    console.log('📸 Custody Photo Gallery loaded with lightbox functionality');
-                });
-            </script>
-        </xpath>
-    </template>
-
-    <!-- 📸 Custody Photos List View - SIMPLIFIED (NO BULK ACTIONS) -->
+    <!-- 📸 Custody Photos List View -->
     <record id="ir_attachment_custody_view_tree" model="ir.ui.view">
         <field name="name">ir.attachment.custody.list</field>
         <field name="model">ir.attachment</field>
@@ -449,7 +281,7 @@
                 • <strong>🔧 Maintenance Photos</strong> - During maintenance or repairs
             </p>
             <p class="text-muted">
-                <small>💡 Click on any photo to view in full size. Use the "🔍 View Full Size" button or click directly on the image.</small>
+                <small>💡 Click on any photo to view in full size in a new tab.</small>
             </p>
         </field>
     </record>
