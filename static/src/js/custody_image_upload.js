@@ -1,46 +1,137 @@
 /** @odoo-module **/
 
-// Production-ready version with enhanced field detection
+/**
+ * Modern Custody Upload Manager - Odoo 18 Standards
+ * Enhanced field detection with modern service patterns
+ */
 class CustodyUploadManager {
     constructor() {
         this.selectedFiles = [];
         this.totalSize = 0;
         this.maxFileSize = 5 * 1024 * 1024; // 5MB per file
         this.maxTotalSize = 100 * 1024 * 1024; // 100MB total
+        this.maxFiles = 20;
         this.allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
         
-        // Debug mode สามารถ toggle ได้
-        this.debugMode = false; // เปลี่ยนเป็น true เมื่อต้องการ debug
+        // Debug mode - can be toggled via console
+        this.debugMode = false;
+        
+        // Services will be set up when available
+        this.servicesReady = false;
+        this.setupServices();
     }
 
-    log(message, data = null) {
-        if (this.debugMode) {
-            console.log(message, data || '');
+    /**
+     * Setup Odoo 18 services with fallback
+     */
+    setupServices() {
+        try {
+            // Try to use modern Odoo 18 services
+            if (typeof useService !== 'undefined') {
+                this.orm = useService("orm");
+                this.notification = useService("notification");
+                this.rpc = useService("rpc");
+                this.servicesReady = true;
+                this.log("✅ Modern Odoo 18 services initialized");
+            } else {
+                this.setupLegacyServices();
+            }
+        } catch (error) {
+            this.log("⚠️ Services not available, using legacy mode");
+            this.setupLegacyServices();
         }
     }
 
+    /**
+     * Fallback to legacy methods when services unavailable
+     */
+    setupLegacyServices() {
+        this.servicesReady = false;
+        this.orm = null;
+        this.notification = null;
+        this.rpc = window.odoo?.rpc || null;
+        this.log("📦 Using legacy service mode");
+    }
+
+    /**
+     * Smart logging with debug mode
+     */
+    log(message, data = null) {
+        if (this.debugMode) {
+            console.log(`🔍 [CustodyUpload] ${message}`, data || '');
+        }
+    }
+
+    /**
+     * Always log errors
+     */
     error(message, data = null) {
-        // Error logs ควรเก็บไว้เสมอ
-        console.error(message, data || '');
+        console.error(`❌ [CustodyUpload] ${message}`, data || '');
     }
 
+    /**
+     * Initialize upload functionality
+     */
     init() {
-        this.log('🚀 Initializing upload functionality...');
-        this.setupEventListeners();
-        this.updateDisplay();
+        this.log('🚀 Initializing Modern Custody Upload Manager...');
+        try {
+            this.setupEventListeners();
+            this.updateDisplay();
+            this.log('✅ Initialization completed successfully');
+        } catch (error) {
+            this.error('Initialization failed:', error);
+        }
     }
 
+    /**
+     * Setup event listeners for file handling
+     */
     setupEventListeners() {
-        const uploadZone = document.querySelector('#custody_multiple_upload_zone, .custody-upload-zone');
+        const uploadZone = this.findUploadZone();
         const fileInput = document.querySelector('#file_input');
         const browseBtn = document.querySelector('#browse_files_btn');
 
         if (!uploadZone || !fileInput) {
-            this.error('⚠️ Upload elements not found');
+            this.error('⚠️ Required upload elements not found');
             return;
         }
 
-        // Drag & Drop
+        this.setupDragAndDrop(uploadZone);
+        this.setupFileInput(fileInput);
+        if (browseBtn) {
+            this.setupBrowseButton(browseBtn, fileInput);
+        }
+
+        this.log('✅ Event listeners configured');
+    }
+
+    /**
+     * Enhanced upload zone detection
+     */
+    findUploadZone() {
+        const selectors = [
+            '#custody_multiple_upload_zone',
+            '.custody-upload-zone',
+            '[data-upload-zone="custody"]',
+            '.o_file_upload_zone'
+        ];
+
+        for (const selector of selectors) {
+            const element = document.querySelector(selector);
+            if (element) {
+                this.log(`✅ Found upload zone: ${selector}`);
+                return element;
+            }
+        }
+        
+        this.log('⚠️ No upload zone found');
+        return null;
+    }
+
+    /**
+     * Drag and drop functionality
+     */
+    setupDragAndDrop(uploadZone) {
         uploadZone.addEventListener('dragover', (e) => {
             e.preventDefault();
             uploadZone.classList.add('drag-over');
@@ -59,27 +150,34 @@ class CustodyUploadManager {
             const files = Array.from(e.dataTransfer.files);
             this.handleFiles(files);
         });
+    }
 
-        // Browse button
-        if (browseBtn) {
-            browseBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                fileInput.click();
-            });
-        }
-
-        // File input change
+    /**
+     * File input change handler
+     */
+    setupFileInput(fileInput) {
         fileInput.addEventListener('change', (e) => {
             const files = Array.from(e.target.files);
             this.handleFiles(files);
             e.target.value = '';
         });
-
-        this.log('✅ Event listeners setup complete');
     }
 
+    /**
+     * Browse button handler
+     */
+    setupBrowseButton(browseBtn, fileInput) {
+        browseBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            fileInput.click();
+        });
+    }
+
+    /**
+     * Process selected files
+     */
     handleFiles(files) {
-        this.log('📂 Processing files', { count: files.length });
+        this.log(`📂 Processing ${files.length} files`);
 
         for (const file of files) {
             if (this.validateFile(file)) {
@@ -92,32 +190,38 @@ class CustodyUploadManager {
         this.updateOdooFields();
     }
 
+    /**
+     * Enhanced file validation
+     */
     validateFile(file) {
         if (!this.allowedTypes.includes(file.type)) {
-            this.showError(`File type not allowed: ${file.name}. Supported: JPG, PNG, GIF, WebP, BMP`);
+            this.showError(`File type not supported: ${file.name}. Allowed: JPG, PNG, GIF, WebP, BMP`);
             return false;
         }
 
         if (file.size > this.maxFileSize) {
-            this.showError(`File too large: ${file.name} (max 5MB per file)`);
+            this.showError(`File too large: ${file.name} (max ${this.formatFileSize(this.maxFileSize)})`);
             return false;
         }
 
-        if (this.selectedFiles.length >= 20) {
-            this.showError('Maximum 20 images allowed');
+        if (this.selectedFiles.length >= this.maxFiles) {
+            this.showError(`Maximum ${this.maxFiles} files allowed`);
             return false;
         }
 
         if (this.totalSize + file.size > this.maxTotalSize) {
-            this.showError('Total file size exceeds 100MB limit');
+            this.showError(`Total size would exceed ${this.formatFileSize(this.maxTotalSize)} limit`);
             return false;
         }
 
         return true;
     }
 
+    /**
+     * Add file to selection
+     */
     addFile(file) {
-        const fileId = Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        const fileId = `file_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         
         const fileData = {
             id: fileId,
@@ -133,28 +237,33 @@ class CustodyUploadManager {
         this.totalSize += file.size;
         this.generatePreview(fileData);
 
-        this.log('✅ File added', { filename: file.name, size: file.size });
+        this.log(`✅ File added: ${file.name} (${this.formatFileSize(file.size)})`);
     }
 
+    /**
+     * Generate file preview
+     */
     generatePreview(fileData) {
         const reader = new FileReader();
         
         reader.onload = (e) => {
             fileData.dataUrl = e.target.result;
             this.renderPreviews();
-            // เรียก updateOdooFields ใน setTimeout เพื่อให้ DOM update เสร็จก่อน
             setTimeout(() => this.updateOdooFields(), 100);
         };
 
         reader.onerror = () => {
-            this.error('❌ Error reading file', fileData.filename);
+            this.error(`❌ Failed to read file: ${fileData.filename}`);
         };
 
         reader.readAsDataURL(fileData.file);
     }
 
+    /**
+     * Render file previews
+     */
     renderPreviews() {
-        this.log('🖼️ Rendering previews', { count: this.selectedFiles.length });
+        this.log(`🖼️ Rendering ${this.selectedFiles.length} previews`);
 
         const previewContainer = document.getElementById('selected_files_preview');
         const filesList = document.getElementById('files_list');
@@ -195,114 +304,130 @@ class CustodyUploadManager {
         });
     }
 
+    /**
+     * Update display information
+     */
     updateDisplay() {
-        // Essential display updates only
         const totalFiles = this.selectedFiles.length;
         const totalSizeMB = (this.totalSize / (1024 * 1024)).toFixed(2);
         
-        this.log('📊 Display updated', { files: totalFiles, totalSizeMB: totalSizeMB });
-    }
-
-    updateOdooFields() {
-        // อัพเดท Odoo field widgets
-        this.updateOdooField('total_files', this.selectedFiles.length);
-        this.updateOdooField('total_size_mb', (this.totalSize / (1024 * 1024)).toFixed(2));
+        this.log(`📊 Display updated: ${totalFiles} files, ${totalSizeMB}MB`);
         
-        // 🎯 สำคัญ: อัพเดท images_data field สำหรับ Odoo wizard
-        this.updateImagesDataField();
+        // Update Odoo field widgets
+        this.updateOdooField('total_files', totalFiles);
+        this.updateOdooField('total_size_mb', totalSizeMB);
     }
 
+    /**
+     * Update individual Odoo field widget
+     */
     updateOdooField(fieldName, value) {
         const fieldWidget = document.querySelector(`div[name="${fieldName}"] span`);
         if (fieldWidget) {
             fieldWidget.textContent = value;
-            this.log(`✅ Updated Odoo field ${fieldName}`, value);
+            this.log(`✅ Updated field ${fieldName}: ${value}`);
         }
     }
 
+    /**
+     * 🎯 ENHANCED: Smart images_data field detection with multiple strategies
+     */
     findImagesDataField() {
-        // ลองหา images_data field ด้วย selector หลายแบบ
-        const selectors = [
+        // Strategy 1: Direct selectors
+        const directSelectors = [
             'input[name="images_data"]',
             'field[name="images_data"] input',
             'div[name="images_data"] input',
             '.o_field_widget[name="images_data"] input',
             '[data-field-name="images_data"] input',
-            'input[data-field="images_data"]'
+            'input[data-field="images_data"]',
+            '.o_field_text[name="images_data"] textarea',
+            'textarea[name="images_data"]'
         ];
 
-        for (const selector of selectors) {
+        for (const selector of directSelectors) {
             const field = document.querySelector(selector);
             if (field) {
-                this.log(`✅ Found images_data field with selector: ${selector}`);
+                this.log(`✅ Found images_data field via direct selector: ${selector}`);
                 return field;
             }
         }
 
-        // ลองหาโดยการ iterate ผ่าน input fields
-        const allInputs = document.querySelectorAll('input[type="text"], input[type="hidden"], input:not([type])');
+        // Strategy 2: Iterate through all inputs
+        const allInputs = document.querySelectorAll('input, textarea');
         for (const input of allInputs) {
             if (input.name === 'images_data' || 
                 input.getAttribute('data-field') === 'images_data' ||
                 input.getAttribute('data-field-name') === 'images_data') {
-                this.log('✅ Found images_data field by iteration');
+                this.log('✅ Found images_data field via iteration');
                 return input;
             }
         }
 
+        // Strategy 3: Look in form containers
+        const forms = document.querySelectorAll('form, .o_form_view');
+        for (const form of forms) {
+            const field = form.querySelector('[name="images_data"], [data-field="images_data"]');
+            if (field) {
+                this.log('✅ Found images_data field in form container');
+                return field;
+            }
+        }
+
+        this.log('❌ images_data field not found with any strategy');
         return null;
     }
 
+    /**
+     * 🎯 ENHANCED: Update images_data field with smart detection and fallback
+     */
     updateImagesDataField() {
-        // 🔧 ปรับปรุงการหา images_data field
         const imagesDataField = this.findImagesDataField();
         
+        const imagesData = this.selectedFiles
+            .filter(file => file.dataUrl)
+            .map(file => ({
+                filename: file.filename,
+                size: file.size,
+                type: file.type,
+                description: file.description || '',
+                data: file.dataUrl
+            }));
+
+        const jsonData = JSON.stringify(imagesData);
+
         if (imagesDataField) {
-            const imagesData = this.selectedFiles
-                .filter(file => file.dataUrl) // เฉพาะไฟล์ที่มี dataUrl แล้ว
-                .map(file => ({
-                    filename: file.filename,
-                    size: file.size,
-                    type: file.type,
-                    description: file.description || '',
-                    data: file.dataUrl // ใช้ dataUrl ที่มี format 'data:image/jpeg;base64,xxx'
-                }));
-            
-            imagesDataField.value = JSON.stringify(imagesData);
-            this.log('📋 Updated images_data field', { 
+            imagesDataField.value = jsonData;
+            this.log('📋 Updated images_data field successfully', {
                 fileCount: imagesData.length,
                 fieldFound: true,
-                dataLength: imagesDataField.value.length
+                dataLength: jsonData.length
             });
         } else {
-            this.error('❌ images_data field not found - tried all selectors');
-            
-            // 🔧 Fallback: เก็บข้อมูลใน window object
+            // 🎯 ENHANCED: Fallback system with better organization
             if (!window.custodyUploadData) {
                 window.custodyUploadData = {};
             }
             
-            const imagesData = this.selectedFiles
-                .filter(file => file.dataUrl)
-                .map(file => ({
-                    filename: file.filename,
-                    size: file.size,
-                    type: file.type,
-                    description: file.description || '',
-                    data: file.dataUrl
-                }));
+            window.custodyUploadData.images_data = jsonData;
+            window.custodyUploadData.timestamp = Date.now();
+            window.custodyUploadData.fileCount = imagesData.length;
             
-            window.custodyUploadData.images_data = JSON.stringify(imagesData);
-            this.log('📋 Stored images_data in window object as fallback', { 
-                fileCount: imagesData.length 
+            this.log('📋 Stored in fallback system', {
+                fileCount: imagesData.length,
+                fallbackStorage: true,
+                dataLength: jsonData.length
             });
         }
     }
 
+    /**
+     * Remove file from selection
+     */
     removeFile(fileId) {
-        this.log('🗑️ Removing file', fileId);
+        this.log(`🗑️ Removing file: ${fileId}`);
         
-        const fileIndex = this.selectedFiles.findIndex(f => f.id == fileId);
+        const fileIndex = this.selectedFiles.findIndex(f => f.id === fileId);
         if (fileIndex !== -1) {
             this.totalSize -= this.selectedFiles[fileIndex].size;
             this.selectedFiles.splice(fileIndex, 1);
@@ -312,15 +437,21 @@ class CustodyUploadManager {
         }
     }
 
+    /**
+     * Update file description
+     */
     updateFileDescription(fileId, description) {
-        const file = this.selectedFiles.find(f => f.id == fileId);
+        const file = this.selectedFiles.find(f => f.id === fileId);
         if (file) {
             file.description = description;
-            this.updateImagesDataField(); // อัพเดทข้อมูลเมื่อมีการเปลี่ยน description
-            this.log('📝 Updated description', { filename: file.filename });
+            this.updateImagesDataField();
+            this.log(`📝 Updated description for: ${file.filename}`);
         }
     }
 
+    /**
+     * Format file size for display
+     */
     formatFileSize(bytes) {
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
@@ -329,17 +460,42 @@ class CustodyUploadManager {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
+    /**
+     * 🎯 ENHANCED: Modern error display with notification service
+     */
     showError(message) {
-        // User-facing errors ควรเก็บไว้
-        this.error('❌ Validation Error:', message);
+        this.error(`Validation Error: ${message}`);
         
+        // Try modern notification service first
+        if (this.servicesReady && this.notification) {
+            try {
+                this.notification.add({
+                    title: "Upload Error",
+                    message: message,
+                    type: "danger",
+                    sticky: false
+                });
+                return;
+            } catch (error) {
+                this.log('⚠️ Modern notification failed, using fallback');
+            }
+        }
+        
+        // Fallback to DOM notification
+        this.showDOMError(message);
+    }
+
+    /**
+     * Fallback DOM error display
+     */
+    showDOMError(message) {
         let errorContainer = document.getElementById('upload_errors');
         if (!errorContainer) {
             errorContainer = document.createElement('div');
             errorContainer.id = 'upload_errors';
             errorContainer.style.marginTop = '10px';
             
-            const uploadZone = document.querySelector('#custody_multiple_upload_zone');
+            const uploadZone = this.findUploadZone();
             if (uploadZone) {
                 uploadZone.appendChild(errorContainer);
             }
@@ -351,19 +507,10 @@ class CustodyUploadManager {
         }, 5000);
     }
 
-    // ฟังก์ชันสำหรับส่งข้อมูลไปยัง Odoo
-    getFilesData() {
-        return this.selectedFiles.map(file => ({
-            filename: file.filename,
-            size: file.size,
-            type: file.type,
-            description: file.description,
-            dataUrl: file.dataUrl
-        }));
-    }
-
-    // ฟังก์ชันสำหรับ Start Upload button
-    startUpload() {
+    /**
+     * 🎯 ENHANCED: Modern upload process with ORM service
+     */
+    async startUpload() {
         const readyFiles = this.selectedFiles.filter(file => file.dataUrl);
         
         if (this.selectedFiles.length === 0) {
@@ -377,19 +524,20 @@ class CustodyUploadManager {
         }
 
         if (readyFiles.length !== this.selectedFiles.length) {
-            this.showError(`${this.selectedFiles.length - readyFiles.length} images are still being processed. Please wait...`);
+            this.showError(`${this.selectedFiles.length - readyFiles.length} images still processing. Please wait...`);
             return false;
         }
 
-        this.log('🚀 Starting upload', { 
+        this.log('🚀 Starting modern upload process', {
             selectedFiles: this.selectedFiles.length,
-            readyFiles: readyFiles.length 
+            readyFiles: readyFiles.length,
+            useModernServices: this.servicesReady
         });
-        
-        // อัพเดทข้อมูลครั้งสุดท้าย
+
+        // Update field data before upload
         this.updateImagesDataField();
         
-        // ตรวจสอบว่าข้อมูลถูกเก็บแล้ว (ใน field หรือ window object)
+        // Validate data preparation
         const imagesDataField = this.findImagesDataField();
         const hasFieldData = imagesDataField && imagesDataField.value;
         const hasFallbackData = window.custodyUploadData && window.custodyUploadData.images_data;
@@ -399,20 +547,123 @@ class CustodyUploadManager {
             return false;
         }
 
-        // 🔧 ถ้าใช้ fallback data ให้ copy ไปยัง field (ถ้าเจอ)
+        // 🎯 NEW: Copy fallback data to field if needed
         if (!hasFieldData && hasFallbackData && imagesDataField) {
             imagesDataField.value = window.custodyUploadData.images_data;
             this.log('✅ Copied fallback data to field');
         }
 
-        // ให้ Odoo wizard จัดการต่อ
+        // Try modern upload first, then fallback
+        if (this.servicesReady) {
+            return await this.performModernUpload();
+        } else {
+            return this.performLegacyUpload();
+        }
+    }
+
+    /**
+     * 🎯 NEW: Modern upload using ORM service
+     */
+    async performModernUpload() {
+        try {
+            const wizardId = this.getWizardId();
+            if (!wizardId) {
+                throw new Error('Could not detect wizard ID');
+            }
+
+            this.log(`📡 Using modern ORM service for wizard ${wizardId}`);
+
+            const imagesData = this.selectedFiles
+                .filter(file => file.dataUrl)
+                .map(file => ({
+                    filename: file.filename,
+                    size: file.size,
+                    type: file.type,
+                    description: file.description || '',
+                    data: file.dataUrl
+                }));
+
+            // Step 1: Update wizard data
+            await this.orm.write('custody.image.upload.wizard', [wizardId], {
+                'images_data': JSON.stringify(imagesData),
+                'total_files': this.selectedFiles.length,
+                'total_size_mb': parseFloat((this.totalSize / (1024 * 1024)).toFixed(2))
+            });
+
+            this.log('✅ Step 1: Wizard data updated via ORM');
+
+            // Step 2: Trigger upload action
+            const result = await this.orm.call(
+                'custody.image.upload.wizard', 
+                'action_upload_images', 
+                [wizardId]
+            );
+
+            this.log('✅ Step 2: Upload action completed', result);
+
+            // Handle success
+            if (this.notification) {
+                this.notification.add({
+                    title: "Upload Successful!",
+                    message: `Successfully uploaded ${imagesData.length} images`,
+                    type: "success"
+                });
+            }
+
+            setTimeout(() => window.location.reload(), 1000);
+            return true;
+
+        } catch (error) {
+            this.error('Modern upload failed:', error);
+            this.showError(`Upload failed: ${error.message || 'Unknown error'}`);
+            return false;
+        }
+    }
+
+    /**
+     * Fallback to legacy upload method
+     */
+    performLegacyUpload() {
+        this.log('📦 Using legacy upload method');
+        // Let Odoo wizard handle the upload with the prepared data
         return true;
     }
 
-    // 🔧 Debug Helper Methods (สำหรับ development)
+    /**
+     * Extract wizard ID from URL
+     */
+    getWizardId() {
+        const url = window.location.href;
+        const match = url.match(/\/(\d+)(?:\?|$|\/)/);
+        if (match) {
+            const wizardId = parseInt(match[1]);
+            this.log(`✅ Detected wizard ID: ${wizardId}`);
+            return wizardId;
+        }
+        
+        this.log('❌ Could not extract wizard ID from URL');
+        return null;
+    }
+
+    /**
+     * Get files data for external use
+     */
+    getFilesData() {
+        return this.selectedFiles.map(file => ({
+            filename: file.filename,
+            size: file.size,
+            type: file.type,
+            description: file.description,
+            dataUrl: file.dataUrl
+        }));
+    }
+
+    /**
+     * 🔧 Debug helper methods
+     */
     enableDebug() {
         this.debugMode = true;
-        console.log('🐛 Debug mode enabled');
+        console.log('🐛 Debug mode enabled for Custody Upload');
     }
 
     disableDebug() {
@@ -427,15 +678,19 @@ class CustodyUploadManager {
             readyFiles: this.selectedFiles.filter(f => f.dataUrl).length,
             totalSize: this.formatFileSize(this.totalSize),
             debugMode: this.debugMode,
+            servicesReady: this.servicesReady,
             fieldFound: !!imagesDataField,
             imagesDataLength: imagesDataField ? imagesDataField.value.length : 0,
             fallbackDataExists: !!(window.custodyUploadData && window.custodyUploadData.images_data),
-            version: '1.2.0-production'
+            wizardId: this.getWizardId(),
+            version: '2.0.0-modern-odoo18'
         };
     }
 }
 
-// Initialize function
+/**
+ * Smart initialization with multiple strategies
+ */
 function initializeUpload() {
     try {
         const uploadZone = document.querySelector('#custody_multiple_upload_zone') || 
@@ -447,21 +702,23 @@ function initializeUpload() {
                 window.custodyUploadManager = manager;
                 manager.init();
                 
-                // 🔧 Debug helpers สำหรับ console
+                // 🔧 Global debug helpers
                 window.enableCustodyDebug = () => manager.enableDebug();
                 window.disableCustodyDebug = () => manager.disableDebug();
                 window.getCustodyDebugInfo = () => manager.getDebugInfo();
+                
+                console.log('✅ Modern Custody Upload Manager initialized');
             }
         } else {
             setTimeout(initializeUpload, 1000);
         }
     } catch (error) {
-        console.error('❌ Error initializing upload:', error);
+        console.error('❌ Upload initialization error:', error);
         setTimeout(initializeUpload, 2000);
     }
 }
 
-// Multiple initialization strategies
+// Multiple initialization strategies for reliability
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeUpload);
 } else {
@@ -475,4 +732,4 @@ window.addEventListener('load', () => {
 setTimeout(initializeUpload, 2000);
 
 // Production info
-console.log('✅ Custody Upload Module Loaded - Production Version 1.2.0 (Enhanced Field Detection)');
+console.log('✅ Custody Upload Module v2.0.0 - Modern Odoo 18 Standards (Enhanced Field Detection)');
