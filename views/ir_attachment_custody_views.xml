@@ -141,12 +141,12 @@
         </field>
     </record>
 
-    <!-- 📸 Custody Photos List View with Bulk Actions -->
+    <!-- 📸 Custody Photos List View with Bulk Actions - FIXED FOR ODOO 18 -->
     <record id="ir_attachment_custody_view_tree" model="ir.ui.view">
-        <field name="name">ir.attachment.custody.tree</field>
+        <field name="name">ir.attachment.custody.list</field>
         <field name="model">ir.attachment</field>
         <field name="arch" type="xml">
-            <tree create="false" delete="true" edit="false" multi_edit="1">
+            <list create="false" delete="true" edit="false" multi_edit="1">
                 <header>
                     <button string="🏷️ Bulk Categorize" 
                             name="%(hr_custody.custody_photo_bulk_categorize_wizard_action)d" 
@@ -166,7 +166,7 @@
                 <field name="custody_property_id" string="Property"/>
                 <field name="custody_location" string="Location"/>
                 <field name="custody_notes" string="Notes"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -238,7 +238,7 @@
     <record id="ir_attachment_custody_action" model="ir.actions.act_window">
         <field name="name">📸 Custody Photos</field>
         <field name="res_model">ir.attachment</field>
-        <field name="view_mode">kanban,tree,form</field>
+        <field name="view_mode">kanban,list,form</field>
         <field name="domain">[('res_model', '=', 'hr.custody'), ('mimetype', 'like', 'image%')]</field>
         <field name="search_view_id" ref="ir_attachment_custody_view_search"/>
         <field name="context">{
