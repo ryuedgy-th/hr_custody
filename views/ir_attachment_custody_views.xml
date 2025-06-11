@@ -6,6 +6,7 @@
         <field name="model">ir.attachment</field>
         <field name="inherit_id" ref="base.view_attachment_form"/>
         <field name="arch" type="xml">
+            <!-- ✅ FIXED: Add fields after res_name field instead of trying to find notebook -->
             <field name="res_name" position="after">
                 <!-- Custody-specific fields -->
                 <field name="custody_photo_type" 
@@ -23,25 +24,24 @@
                        placeholder="Add notes about this photo..."/>
             </field>
             
-            <notebook position="inside">
-                <!-- Custody Information Tab -->
-                <page string="🏢 Custody Info" invisible="res_model != 'hr.custody'">
-                    <group>
-                        <group string="Related Custody">
-                            <field name="custody_id" readonly="1"/>
-                            <field name="custody_property_id" readonly="1"/>
-                            <field name="custody_employee_id" readonly="1"/>
-                        </group>
-                        <group string="Photo Quality">
-                            <field name="photo_width" readonly="1"/>
-                            <field name="photo_height" readonly="1"/>
-                            <field name="photo_size_mb" readonly="1"/>
-                            <field name="quality_score" readonly="1" widget="progressbar"/>
-                            <field name="is_high_quality" readonly="1"/>
-                        </group>
+            <!-- ✅ FIXED: Add custody info at the end instead of inside notebook -->
+            <sheet position="inside">
+                <!-- Custody Information Group (only for custody attachments) -->
+                <group string="🏢 Custody Info" invisible="res_model != 'hr.custody'">
+                    <group string="Related Custody">
+                        <field name="custody_id" readonly="1"/>
+                        <field name="custody_property_id" readonly="1"/>
+                        <field name="custody_employee_id" readonly="1"/>
                     </group>
-                </page>
-            </notebook>
+                    <group string="Photo Quality">
+                        <field name="photo_width" readonly="1"/>
+                        <field name="photo_height" readonly="1"/>
+                        <field name="photo_size_mb" readonly="1"/>
+                        <field name="quality_score" readonly="1" widget="progressbar"/>
+                        <field name="is_high_quality" readonly="1"/>
+                    </group>
+                </group>
+            </sheet>
         </field>
     </record>
 
@@ -202,7 +202,7 @@
                 <separator/>
                 
                 <!-- Size Filters -->
-                <filter string="📦 Large Files (>2MB)" name="large_files"
+                <filter string="📦 Large Files (&gt;2MB)" name="large_files"
                         domain="[('photo_size_mb', '&gt;', 2)]"/>
                 <filter string="📄 Small Files (&lt;1MB)" name="small_files"
                         domain="[('photo_size_mb', '&lt;', 1)]"/>
