@@ -216,12 +216,16 @@
                                    readonly="state == 'returned'"
                                    groups="hr.group_hr_user,hr.group_hr_manager"/>
 
-                            <!-- 🔧 FIXED: Photo Gallery View - Changed to show handover_photo_ids -->
-                            <field name="handover_photo_ids" 
-                                   widget="image_gallery" 
-                                   readonly="1"
-                                   string="Handover Photo Gallery"
-                                   invisible="not handover_photo_ids"/>
+                            <!-- 🔧 FIXED: Photo Gallery - Use attachment_ids with domain filter -->
+                            <div invisible="not handover_photo_count" class="mt16">
+                                <h4>📸 Handover Photo Gallery</h4>
+                                <field name="attachment_ids" 
+                                       widget="image_gallery"
+                                       readonly="1"
+                                       nolabel="1"
+                                       domain="[('custody_photo_type', 'in', ['handover_overall', 'handover_detail', 'handover_serial'])]"
+                                       options="{'size': [200, 150]}"/>
+                            </div>
                         </page>
 
                         <!-- 📦 NEW: Return Photos Tab -->
@@ -252,12 +256,16 @@
                                    domain="[('custody_photo_type', 'in', ['return_overall', 'return_detail', 'return_damage'])]"
                                    groups="hr.group_hr_user,hr.group_hr_manager"/>
 
-                            <!-- 🔧 FIXED: Photo Gallery View - Changed to show return_photo_ids -->
-                            <field name="return_photo_ids" 
-                                   widget="image_gallery" 
-                                   readonly="1"
-                                   string="Return Photo Gallery"
-                                   invisible="not return_photo_ids"/>
+                            <!-- 🔧 FIXED: Photo Gallery - Use attachment_ids with domain filter -->
+                            <div invisible="not return_photo_count" class="mt16">
+                                <h4>📦 Return Photo Gallery</h4>
+                                <field name="attachment_ids" 
+                                       widget="image_gallery"
+                                       readonly="1"
+                                       nolabel="1"
+                                       domain="[('custody_photo_type', 'in', ['return_overall', 'return_detail', 'return_damage'])]"
+                                       options="{'size': [200, 150]}"/>
+                            </div>
                         </page>
 
                         <!-- 🔍 NEW: Photo Comparison Tab -->
@@ -271,19 +279,23 @@
                                 <div class="col-md-6">
                                     <h4>📸 Handover Photos</h4>
                                     <div class="o_field_widget">
-                                        <field name="handover_photo_ids" 
+                                        <field name="attachment_ids" 
                                                widget="image_gallery" 
                                                readonly="1"
-                                               nolabel="1"/>
+                                               nolabel="1"
+                                               domain="[('custody_photo_type', 'in', ['handover_overall', 'handover_detail', 'handover_serial'])]"
+                                               options="{'size': [150, 120]}"/>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <h4>📦 Return Photos</h4>
                                     <div class="o_field_widget">
-                                        <field name="return_photo_ids"
+                                        <field name="attachment_ids"
                                                widget="image_gallery" 
                                                readonly="1"
-                                               nolabel="1"/>
+                                               nolabel="1"
+                                               domain="[('custody_photo_type', 'in', ['return_overall', 'return_detail', 'return_damage'])]"
+                                               options="{'size': [150, 120]}"/>
                                     </div>
                                 </div>
                             </div>
@@ -350,17 +362,19 @@
                     <div class="row mt16">
                         <div class="col-md-6">
                             <h3>📸 Handover Condition</h3>
-                            <field name="handover_photo_ids" 
+                            <field name="attachment_ids" 
                                    widget="image_gallery" 
                                    readonly="1" 
-                                   nolabel="1"/>
+                                   nolabel="1"
+                                   domain="[('custody_photo_type', 'in', ['handover_overall', 'handover_detail', 'handover_serial'])]"/>
                         </div>
                         <div class="col-md-6">
                             <h3>📦 Return Condition</h3>
-                            <field name="return_photo_ids"
+                            <field name="attachment_ids"
                                    widget="image_gallery" 
                                    readonly="1" 
-                                   nolabel="1"/>
+                                   nolabel="1"
+                                   domain="[('custody_photo_type', 'in', ['return_overall', 'return_detail', 'return_damage'])]"/>
                         </div>
                     </div>
                 </sheet>
