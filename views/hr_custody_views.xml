@@ -201,7 +201,7 @@
                                 </div>
                             </group>
                             
-                            <!-- 🔧 FIXED: Photo Upload Area - Changed to One2many -->
+                            <!-- 🔧 FIXED: Photo Upload Area -->
                             <field name="attachment_ids" 
                                    widget="many2many_binary"
                                    string="Upload Handover Photos"
@@ -216,15 +216,59 @@
                                    readonly="state == 'returned'"
                                    groups="hr.group_hr_user,hr.group_hr_manager"/>
 
-                            <!-- 🔧 FIXED: Photo Gallery - Use attachment_ids with domain filter -->
+                            <!-- 🔧 FIXED: Custom Photo Gallery using Kanban -->
                             <div invisible="not handover_photo_count" class="mt16">
                                 <h4>📸 Handover Photo Gallery</h4>
                                 <field name="attachment_ids" 
-                                       widget="image_gallery"
-                                       readonly="1"
+                                       mode="kanban"
                                        nolabel="1"
-                                       domain="[('custody_photo_type', 'in', ['handover_overall', 'handover_detail', 'handover_serial'])]"
-                                       options="{'size': [200, 150]}"/>
+                                       domain="[('custody_photo_type', 'in', ['handover_overall', 'handover_detail', 'handover_serial'])]">
+                                    <kanban class="o_kanban_mobile" create="false" delete="true">
+                                        <field name="name"/>
+                                        <field name="mimetype"/>
+                                        <field name="custody_photo_type"/>
+                                        <field name="file_size"/>
+                                        <field name="datas"/>
+                                        <field name="checksum"/>
+                                        <templates>
+                                            <t t-name="kanban-box">
+                                                <div class="oe_kanban_card" style="margin: 10px; max-width: 250px;">
+                                                    <!-- Photo Display -->
+                                                    <div class="o_kanban_image" style="text-align: center; margin-bottom: 10px;">
+                                                        <t t-if="record.mimetype.raw_value and record.mimetype.raw_value.indexOf('image') == 0">
+                                                            <a t-att-href="'/web/image/ir.attachment/' + record.id.raw_value + '/datas'" target="_blank">
+                                                                <img t-att-src="'/web/image/ir.attachment/' + record.id.raw_value + '/datas'" 
+                                                                     style="max-width: 200px; max-height: 150px; border-radius: 8px; cursor: pointer;"
+                                                                     t-att-alt="record.name.value"/>
+                                                            </a>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <div class="fa fa-file-o fa-3x text-muted"/>
+                                                        </t>
+                                                    </div>
+                                                    
+                                                    <!-- Photo Info -->
+                                                    <div class="o_kanban_details">
+                                                        <strong><field name="name"/></strong><br/>
+                                                        <t t-if="record.custody_photo_type.raw_value == 'handover_overall'">
+                                                            <span class="badge badge-primary">📸 Overall</span>
+                                                        </t>
+                                                        <t t-elif="record.custody_photo_type.raw_value == 'handover_detail'">
+                                                            <span class="badge badge-info">🔍 Detail</span>
+                                                        </t>
+                                                        <t t-elif="record.custody_photo_type.raw_value == 'handover_serial'">
+                                                            <span class="badge badge-secondary">🏷️ Serial</span>
+                                                        </t>
+                                                        <br/>
+                                                        <small class="text-muted">
+                                                            Size: <t t-esc="Math.round(record.file_size.raw_value / 1024)"/> KB
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </templates>
+                                    </kanban>
+                                </field>
                             </div>
                         </page>
 
@@ -242,7 +286,7 @@
                                 </div>
                             </group>
                             
-                            <!-- 🔧 FIXED: Photo Upload Area - Changed to One2many -->
+                            <!-- 🔧 FIXED: Photo Upload Area -->
                             <field name="attachment_ids" 
                                    widget="many2many_binary"
                                    string="Upload Return Photos"
@@ -256,15 +300,59 @@
                                    domain="[('custody_photo_type', 'in', ['return_overall', 'return_detail', 'return_damage'])]"
                                    groups="hr.group_hr_user,hr.group_hr_manager"/>
 
-                            <!-- 🔧 FIXED: Photo Gallery - Use attachment_ids with domain filter -->
+                            <!-- 🔧 FIXED: Custom Photo Gallery using Kanban -->
                             <div invisible="not return_photo_count" class="mt16">
                                 <h4>📦 Return Photo Gallery</h4>
                                 <field name="attachment_ids" 
-                                       widget="image_gallery"
-                                       readonly="1"
+                                       mode="kanban"
                                        nolabel="1"
-                                       domain="[('custody_photo_type', 'in', ['return_overall', 'return_detail', 'return_damage'])]"
-                                       options="{'size': [200, 150]}"/>
+                                       domain="[('custody_photo_type', 'in', ['return_overall', 'return_detail', 'return_damage'])]">
+                                    <kanban class="o_kanban_mobile" create="false" delete="true">
+                                        <field name="name"/>
+                                        <field name="mimetype"/>
+                                        <field name="custody_photo_type"/>
+                                        <field name="file_size"/>
+                                        <field name="datas"/>
+                                        <field name="checksum"/>
+                                        <templates>
+                                            <t t-name="kanban-box">
+                                                <div class="oe_kanban_card" style="margin: 10px; max-width: 250px;">
+                                                    <!-- Photo Display -->
+                                                    <div class="o_kanban_image" style="text-align: center; margin-bottom: 10px;">
+                                                        <t t-if="record.mimetype.raw_value and record.mimetype.raw_value.indexOf('image') == 0">
+                                                            <a t-att-href="'/web/image/ir.attachment/' + record.id.raw_value + '/datas'" target="_blank">
+                                                                <img t-att-src="'/web/image/ir.attachment/' + record.id.raw_value + '/datas'" 
+                                                                     style="max-width: 200px; max-height: 150px; border-radius: 8px; cursor: pointer;"
+                                                                     t-att-alt="record.name.value"/>
+                                                            </a>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <div class="fa fa-file-o fa-3x text-muted"/>
+                                                        </t>
+                                                    </div>
+                                                    
+                                                    <!-- Photo Info -->
+                                                    <div class="o_kanban_details">
+                                                        <strong><field name="name"/></strong><br/>
+                                                        <t t-if="record.custody_photo_type.raw_value == 'return_overall'">
+                                                            <span class="badge badge-success">📦 Overall</span>
+                                                        </t>
+                                                        <t t-elif="record.custody_photo_type.raw_value == 'return_detail'">
+                                                            <span class="badge badge-warning">🔍 Detail</span>
+                                                        </t>
+                                                        <t t-elif="record.custody_photo_type.raw_value == 'return_damage'">
+                                                            <span class="badge badge-danger">⚠️ Damage</span>
+                                                        </t>
+                                                        <br/>
+                                                        <small class="text-muted">
+                                                            Size: <t t-esc="Math.round(record.file_size.raw_value / 1024)"/> KB
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </templates>
+                                    </kanban>
+                                </field>
                             </div>
                         </page>
 
@@ -278,25 +366,59 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <h4>📸 Handover Photos</h4>
-                                    <div class="o_field_widget">
-                                        <field name="attachment_ids" 
-                                               widget="image_gallery" 
-                                               readonly="1"
-                                               nolabel="1"
-                                               domain="[('custody_photo_type', 'in', ['handover_overall', 'handover_detail', 'handover_serial'])]"
-                                               options="{'size': [150, 120]}"/>
-                                    </div>
+                                    <field name="attachment_ids" 
+                                           mode="kanban"
+                                           nolabel="1"
+                                           domain="[('custody_photo_type', 'in', ['handover_overall', 'handover_detail', 'handover_serial'])]">
+                                        <kanban class="o_kanban_mobile" create="false" delete="false">
+                                            <field name="name"/>
+                                            <field name="mimetype"/>
+                                            <field name="datas"/>
+                                            <templates>
+                                                <t t-name="kanban-box">
+                                                    <div class="oe_kanban_card" style="margin: 5px; max-width: 150px;">
+                                                        <div class="o_kanban_image" style="text-align: center;">
+                                                            <t t-if="record.mimetype.raw_value and record.mimetype.raw_value.indexOf('image') == 0">
+                                                                <a t-att-href="'/web/image/ir.attachment/' + record.id.raw_value + '/datas'" target="_blank">
+                                                                    <img t-att-src="'/web/image/ir.attachment/' + record.id.raw_value + '/datas'" 
+                                                                         style="max-width: 120px; max-height: 90px; border-radius: 4px;"
+                                                                         t-att-alt="record.name.value"/>
+                                                                </a>
+                                                            </t>
+                                                        </div>
+                                                    </div>
+                                                </t>
+                                            </templates>
+                                        </kanban>
+                                    </field>
                                 </div>
                                 <div class="col-md-6">
                                     <h4>📦 Return Photos</h4>
-                                    <div class="o_field_widget">
-                                        <field name="attachment_ids"
-                                               widget="image_gallery" 
-                                               readonly="1"
-                                               nolabel="1"
-                                               domain="[('custody_photo_type', 'in', ['return_overall', 'return_detail', 'return_damage'])]"
-                                               options="{'size': [150, 120]}"/>
-                                    </div>
+                                    <field name="attachment_ids" 
+                                           mode="kanban"
+                                           nolabel="1"
+                                           domain="[('custody_photo_type', 'in', ['return_overall', 'return_detail', 'return_damage'])]">
+                                        <kanban class="o_kanban_mobile" create="false" delete="false">
+                                            <field name="name"/>
+                                            <field name="mimetype"/>
+                                            <field name="datas"/>
+                                            <templates>
+                                                <t t-name="kanban-box">
+                                                    <div class="oe_kanban_card" style="margin: 5px; max-width: 150px;">
+                                                        <div class="o_kanban_image" style="text-align: center;">
+                                                            <t t-if="record.mimetype.raw_value and record.mimetype.raw_value.indexOf('image') == 0">
+                                                                <a t-att-href="'/web/image/ir.attachment/' + record.id.raw_value + '/datas'" target="_blank">
+                                                                    <img t-att-src="'/web/image/ir.attachment/' + record.id.raw_value + '/datas'" 
+                                                                         style="max-width: 120px; max-height: 90px; border-radius: 4px;"
+                                                                         t-att-alt="record.name.value"/>
+                                                                </a>
+                                                            </t>
+                                                        </div>
+                                                    </div>
+                                                </t>
+                                            </templates>
+                                        </kanban>
+                                    </field>
                                 </div>
                             </div>
 
@@ -363,18 +485,58 @@
                         <div class="col-md-6">
                             <h3>📸 Handover Condition</h3>
                             <field name="attachment_ids" 
-                                   widget="image_gallery" 
-                                   readonly="1" 
+                                   mode="kanban"
                                    nolabel="1"
-                                   domain="[('custody_photo_type', 'in', ['handover_overall', 'handover_detail', 'handover_serial'])]"/>
+                                   domain="[('custody_photo_type', 'in', ['handover_overall', 'handover_detail', 'handover_serial'])]">
+                                <kanban class="o_kanban_mobile" create="false" delete="false">
+                                    <field name="name"/>
+                                    <field name="mimetype"/>
+                                    <field name="datas"/>
+                                    <templates>
+                                        <t t-name="kanban-box">
+                                            <div class="oe_kanban_card" style="margin: 5px; max-width: 150px;">
+                                                <div class="o_kanban_image" style="text-align: center;">
+                                                    <t t-if="record.mimetype.raw_value and record.mimetype.raw_value.indexOf('image') == 0">
+                                                        <a t-att-href="'/web/image/ir.attachment/' + record.id.raw_value + '/datas'" target="_blank">
+                                                            <img t-att-src="'/web/image/ir.attachment/' + record.id.raw_value + '/datas'" 
+                                                                 style="max-width: 120px; max-height: 90px; border-radius: 4px;"
+                                                                 t-att-alt="record.name.value"/>
+                                                        </a>
+                                                    </t>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </templates>
+                                </kanban>
+                            </field>
                         </div>
                         <div class="col-md-6">
                             <h3>📦 Return Condition</h3>
-                            <field name="attachment_ids"
-                                   widget="image_gallery" 
-                                   readonly="1" 
+                            <field name="attachment_ids" 
+                                   mode="kanban"
                                    nolabel="1"
-                                   domain="[('custody_photo_type', 'in', ['return_overall', 'return_detail', 'return_damage'])]"/>
+                                   domain="[('custody_photo_type', 'in', ['return_overall', 'return_detail', 'return_damage'])]">
+                                <kanban class="o_kanban_mobile" create="false" delete="false">
+                                    <field name="name"/>
+                                    <field name="mimetype"/>
+                                    <field name="datas"/>
+                                    <templates>
+                                        <t t-name="kanban-box">
+                                            <div class="oe_kanban_card" style="margin: 5px; max-width: 150px;">
+                                                <div class="o_kanban_image" style="text-align: center;">
+                                                    <t t-if="record.mimetype.raw_value and record.mimetype.raw_value.indexOf('image') == 0">
+                                                        <a t-att-href="'/web/image/ir.attachment/' + record.id.raw_value + '/datas'" target="_blank">
+                                                            <img t-att-src="'/web/image/ir.attachment/' + record.id.raw_value + '/datas'" 
+                                                                 style="max-width: 120px; max-height: 90px; border-radius: 4px;"
+                                                                 t-att-alt="record.name.value"/>
+                                                        </a>
+                                                    </t>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </templates>
+                                </kanban>
+                            </field>
                         </div>
                     </div>
                 </sheet>
