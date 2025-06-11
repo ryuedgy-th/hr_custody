@@ -201,7 +201,7 @@
                                 </div>
                             </group>
                             
-                            <!-- Photo Upload Area -->
+                            <!-- 🔧 FIXED: Photo Upload Area - Replaced attrs with direct readonly -->
                             <field name="handover_photo_ids" 
                                    widget="many2many_binary"
                                    string="Upload Handover Photos"
@@ -214,7 +214,7 @@
                                        'default_res_id': id,
                                        'default_custody_photo_type': 'handover_overall'
                                    }"
-                                   attrs="{'readonly': [('state', '=', 'returned')]}"
+                                   readonly="state == 'returned'"
                                    groups="hr.group_hr_user,hr.group_hr_manager"/>
 
                             <!-- Photo Gallery View -->
