@@ -194,6 +194,55 @@ class CustodyImageUploadWizard(models.TransientModel):
                 'Please check the custody workflow requirements.'
             ) % (image_type_label, current_state))
     
+    def _get_images_data_from_request(self):
+        """
+        🎯 ENHANCED: Get images data from multiple sources with fallback support
+        """
+        _logger.info("🔍 Searching for images data from multiple sources...")
+        
+        # Source 1: Standard images_data field
+        if self.images_data:
+            _logger.info(f"✅ Found images_data in standard field: {len(self.images_data)} chars")
+            return self.images_data
+        
+        # Source 2: Check request params for form data
+        request = self.env.context.get('request')
+        if request and hasattr(request, 'params'):
+            # Check for standard field name
+            if 'images_data' in request.params:
+                data = request.params['images_data']
+                _logger.info(f"✅ Found images_data in request params: {len(data)} chars")
+                return data
+            
+            # Check for fallback field name
+            if 'custody_images_data_fallback' in request.params:
+                data = request.params['custody_images_data_fallback']
+                _logger.info(f"✅ Found images_data in fallback field: {len(data)} chars")
+                return data
+        
+        # Source 3: Check all fields for images_data pattern
+        all_fields = self.read()[0] if self.exists() else {}
+        for field_name, field_value in all_fields.items():
+            if 'images' in field_name.lower() and field_value and isinstance(field_value, str):
+                try:
+                    # Try to parse as JSON to verify it's image data
+                    json.loads(field_value)
+                    _logger.info(f"✅ Found images_data in field '{field_name}': {len(field_value)} chars")
+                    return field_value
+                except (json.JSONDecodeError, TypeError):
+                    continue
+        
+        # Source 4: Check HTTP request form data directly
+        if hasattr(self.env, 'request') and hasattr(self.env.request, 'httprequest'):
+            form_data = self.env.request.httprequest.form
+            if 'images_data' in form_data:
+                data = form_data['images_data']
+                _logger.info(f"✅ Found images_data in HTTP form: {len(data)} chars")
+                return data
+        
+        _logger.warning("❌ No images_data found in any source")
+        return None
+    
     def _validate_image_file(self, file_data, filename):
         """
         🎯 ENHANCED: Comprehensive image validation with better error messages
@@ -270,23 +319,35 @@ class CustodyImageUploadWizard(models.TransientModel):
     
     def action_upload_images(self):
         """
-        🎯 ENHANCED: Modern upload process with comprehensive error handling
+        🎯 ENHANCED: Modern upload process with comprehensive error handling and fallback data support
         """
         self.ensure_one()
         
         try:
             # 🎯 ENHANCED: Detailed logging for debugging
             _logger.info(f"🚀 UPLOAD START - Wizard {self.id} for custody {self.custody_id.id}")
-            _logger.info(f"📊 Upload details - Type: {self.image_type}, Data length: {len(self.images_data or '')}")
             
             # Step 1: Validate permissions
             self._validate_upload_permissions()
             
-            # Step 2: Validate input data
-            if not self.images_data:
+            # Step 2: Get images data from multiple sources
+            images_data_str = self._get_images_data_from_request()
+            
+            if not images_data_str:
+                _logger.error("❌ No images_data found in any source!")
+                _logger.info("📋 Available wizard fields:")
+                for field_name in self._fields:
+                    if hasattr(self, field_name):
+                        field_value = getattr(self, field_name)
+                        if field_value and isinstance(field_value, str) and len(field_value) > 10:
+                            _logger.info(f"  - {field_name}: {len(field_value)} chars")
+                
                 raise UserError(_(
-                    'No image data found. Please select images using the upload interface and try again.'
+                    'No image data found. Please select images using the upload interface and try again. '
+                    'If this problem persists, try refreshing the page and uploading again.'
                 ))
+            
+            _logger.info(f"📊 Upload details - Type: {self.image_type}, Data length: {len(images_data_str)}")
             
             # Update status to uploading
             self.write({
@@ -296,10 +357,11 @@ class CustodyImageUploadWizard(models.TransientModel):
             
             # Step 3: Parse and validate JSON data
             try:
-                images_list = json.loads(self.images_data)
+                images_list = json.loads(images_data_str)
                 _logger.info(f"✅ Successfully parsed {len(images_list)} images from JSON")
             except json.JSONDecodeError as e:
                 _logger.error(f"❌ JSON parsing failed: {str(e)}")
+                _logger.error(f"❌ Data preview: {images_data_str[:200]}...")
                 raise UserError(_(
                     'Invalid image data format. The uploaded data appears to be corrupted. '
                     'Please refresh the page and try uploading again.'
