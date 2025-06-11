@@ -198,22 +198,25 @@ class HrCustody(models.Model):
         help='Total number of photos'
     )
     
-    # Photo status indicators
+    # ✅ FIXED: Photo status indicators with store=True for search compatibility
     has_handover_photos = fields.Boolean(
         string='Has Handover Photos',
         compute='_compute_photo_status',
+        store=True,
         help='True if handover photos are uploaded'
     )
     
     has_return_photos = fields.Boolean(
         string='Has Return Photos',
-        compute='_compute_photo_status', 
+        compute='_compute_photo_status',
+        store=True,
         help='True if return photos are uploaded'
     )
     
     photos_complete = fields.Boolean(
         string='Photos Complete',
         compute='_compute_photo_status',
+        store=True,
         help='True if both handover and return photos are available'
     )
 
