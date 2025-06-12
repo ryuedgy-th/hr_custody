@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- 📸 HR CUSTODY PHOTO MANAGEMENT SYSTEM - FIXED CONTEXT LINKING -->
+    <!-- 📸 HR CUSTODY PHOTO MANAGEMENT SYSTEM - FIXED UPLOAD FUNCTIONALITY -->
     
     <!-- ===== ATTACHMENT MODEL EXTENSIONS ===== -->
     
@@ -233,7 +233,7 @@
                         </div>
                     </div>
 
-                    <!-- Upload Section -->
+                    <!-- 🔧 FIXED: Upload Section using attachment_ids -->
                     <div style="background: #f8f9fa; border: 2px dashed #dee2e6; 
                                 border-radius: 16px; padding: 24px; margin-bottom: 24px; 
                                 transition: all 0.3s ease;">
@@ -245,13 +245,19 @@
                             <p style="color: #6c757d; margin: 0;">Drag and drop photos here or click to browse</p>
                         </div>
                         
-                        <field name="handover_photo_ids" 
+                        <!-- 🔧 FIXED: Use attachment_ids for upload (writable field) -->
+                        <field name="attachment_ids" 
                                widget="many2many_binary"
                                string=""
                                nolabel="1"
                                options="{
                                    'accepted_file_extensions': 'image/*',
                                    'max_upload_size': 5242880
+                               }"
+                               context="{
+                                   'default_res_model': 'hr.custody',
+                                   'default_res_id': id,
+                                   'handover_upload': True
                                }"
                                readonly="state == 'returned'"
                                groups="hr.group_hr_user,hr.group_hr_manager"/>
@@ -267,7 +273,7 @@
                         </div>
                     </div>
 
-                    <!-- Photo Gallery -->
+                    <!-- Photo Gallery (using computed field for display) -->
                     <div invisible="not handover_photo_count">
                         <div style="display: flex; align-items: center; justify-content: space-between; 
                                     margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #e9ecef;">
@@ -329,7 +335,7 @@
                         </div>
                     </div>
 
-                    <!-- Upload Section -->
+                    <!-- 🔧 FIXED: Upload Section using attachment_ids -->
                     <div style="background: #f8f9fa; border: 2px dashed #dee2e6; 
                                 border-radius: 16px; padding: 24px; margin-bottom: 24px; 
                                 transition: all 0.3s ease;">
@@ -341,13 +347,19 @@
                             <p style="color: #6c757d; margin: 0;">Drag and drop photos here or click to browse</p>
                         </div>
                         
-                        <field name="return_photo_ids" 
+                        <!-- 🔧 FIXED: Use attachment_ids for upload (writable field) -->
+                        <field name="attachment_ids" 
                                widget="many2many_binary"
                                string=""
                                nolabel="1"
                                options="{
                                    'accepted_file_extensions': 'image/*',
                                    'max_upload_size': 5242880
+                               }"
+                               context="{
+                                   'default_res_model': 'hr.custody',
+                                   'default_res_id': id,
+                                   'return_upload': True
                                }"
                                groups="hr.group_hr_user,hr.group_hr_manager"/>
                         
@@ -362,7 +374,7 @@
                         </div>
                     </div>
 
-                    <!-- Return Photo Gallery -->
+                    <!-- Return Photo Gallery (using computed field for display) -->
                     <div invisible="not return_photo_count">
                         <div style="display: flex; align-items: center; justify-content: space-between; 
                                     margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #e9ecef;">
