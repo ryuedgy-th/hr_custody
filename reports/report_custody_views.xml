@@ -202,32 +202,8 @@
         </field>
     </record>
 
-    <!-- ===== MENU STRUCTURE FOR REPORTS ===== -->
+    <!-- ===== MENU STRUCTURE FOR REPORTS - FIXED ===== -->
+    <!-- Reports menus are now defined in hr_custody_views_actions.xml to prevent conflicts -->
+    <!-- This ensures centralized menu management and avoids External ID issues -->
 
-    <!-- Reports submenu -->
-    <menuitem id="custody_report_menu"
-              parent="hr_custody_main_menu"
-              name="📊 Reports &amp; Analytics"
-              sequence="20"/>
-
-    <!-- Main Analysis menu -->
-    <menuitem action="action_report_custody"
-              id="custody_report_menu_analysis"
-              parent="custody_report_menu"
-              name="📈 Custody Analysis"
-              sequence="1"/>
-
-    <!-- Performance Analysis menu -->
-    <menuitem action="action_report_custody_performance"
-              id="custody_report_menu_performance"
-              parent="custody_report_menu"
-              name="📊 Return Performance"
-              sequence="2"/>
-
-    <!-- Approver Performance menu -->
-    <menuitem action="action_report_custody_approver_performance"
-              id="custody_report_menu_approver"
-              parent="custody_report_menu"
-              name="👥 Approver Performance"
-              sequence="3"/>
 </odoo>
