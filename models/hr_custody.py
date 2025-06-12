@@ -467,9 +467,13 @@ class HrCustody(models.Model):
                     # For other states, assign as handover photos
                     default_type = 'handover_overall'
                 
-                # Update photo type for untyped photos
+                # 🔧 NEW: Set res_field for proper display
+                res_field = 'attachment_ids'  # Default field name
+                
+                # Update photo type and res_field for untyped photos
                 untyped_photos.write({
-                    'custody_photo_type': default_type
+                    'custody_photo_type': default_type,
+                    'res_field': res_field
                 })
                 
                 # Log the auto-assignment
@@ -541,45 +545,6 @@ class HrCustody(models.Model):
                     'sticky': False,
                 }
             }
-
-    # 🔧 NEW: Override create to handle attachment sync
-    @api.model
-    def create(self, vals):
-        """🔧 FIXED: Override create to handle attachment sync"""
-        record = super(HrCustody, self).create(vals)
-        
-        # Generate sequence if needed
-        if not record.name or record.name == 'New':
-            record.name = self.env['ir.sequence'].next_by_code('hr.custody') or 'New'
-        
-        # Auto-assign photo types for any existing attachments
-        record._auto_assign_photo_types()
-            
-        return record
-
-    def write(self, vals):
-        """🔧 FIXED: Override write to handle attachment sync and state changes"""
-        result = super(HrCustody, self).write(vals)
-        
-        # Handle attachment updates
-        if 'attachment_ids' in vals:
-            # Auto-assign photo types after attachment update
-            for record in self:
-                record._auto_assign_photo_types()
-        
-        # Handle computed field updates  
-        if any(field in vals for field in ['return_date', 'return_type', 'state', 'actual_return_date', 'attachment_ids']):
-            self._compute_overdue_status()
-            self._compute_photo_counts()
-            self._compute_photo_status()
-            
-        # Handle state change notifications
-        if 'state' in vals:
-            for record in self:
-                record.message_post(
-                    body=_('Custody state changed to %s') % dict(record._fields['state'].selection)[record.state]
-                )
-        return result
 
     # Computed Fields (existing)
     @api.depends('return_type', 'return_date', 'expected_return_period', 'state', 'actual_return_date')
@@ -671,14 +636,60 @@ class HrCustody(models.Model):
                         % property_obj.name
                     )
 
-    # CRUD methods
+    # 🔧 FIXED: Single create method that handles everything properly
     @api.model_create_multi
     def create(self, vals_list):
-        """Create a new record for the HrCustody model."""
+        """🔧 FIXED: Create method with proper photo type assignment"""
         for vals in vals_list:
+            # Generate sequence name if needed
             if not vals.get('name'):
                 vals['name'] = self.env['ir.sequence'].next_by_code('hr.custody') or 'New'
-        return super(HrCustody, self).create(vals_list)
+        
+        # Create the records first
+        records = super(HrCustody, self).create(vals_list)
+        
+        # Process photo assignments for each new record
+        for record in records:
+            # Auto-assign photo types for any existing attachments
+            record._auto_assign_photo_types()
+            
+        return records
+
+    def write(self, vals):
+        """🔧 FIXED: Override write to handle attachment sync and state changes"""
+        # Store old state for comparison
+        old_states = {record.id: record.state for record in self}
+        
+        result = super(HrCustody, self).write(vals)
+        
+        # Handle attachment updates or state changes
+        for record in self:
+            should_assign_photos = False
+            
+            # Check if attachments were added/modified
+            if 'attachment_ids' in vals:
+                should_assign_photos = True
+            
+            # Check if state changed to a state that affects photo assignment
+            old_state = old_states.get(record.id)
+            if 'state' in vals and old_state != record.state:
+                should_assign_photos = True
+                # Post state change message
+                record.message_post(
+                    body=_('Custody state changed to %s') % dict(record._fields['state'].selection)[record.state]
+                )
+            
+            # Auto-assign photo types if needed
+            if should_assign_photos:
+                record._auto_assign_photo_types()
+        
+        # Handle computed field updates if relevant fields changed
+        if any(field in vals for field in ['return_date', 'return_type', 'state', 'actual_return_date', 'attachment_ids']):
+            self._compute_overdue_status()
+            self._compute_photo_counts()
+            self._compute_photo_status()
+            
+        return result
 
     def unlink(self):
         """Override unlink to prevent deletion of approved records"""
