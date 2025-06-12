@@ -439,7 +439,7 @@ class HrCustody(models.Model):
         return summary
 
     # 🔧 NEW: Method to auto-assign photo types for attachments
-    def _auto_assign_photo_types(self):
+    def _auto_assign_photo_types(self, photo_category='auto'):
         """🔧 NEW: Auto-assign photo types to uploaded attachments"""
         for record in self:
             # Find image attachments without photo type
@@ -452,8 +452,12 @@ class HrCustody(models.Model):
             )
             
             if untyped_photos:
-                # Determine appropriate photo type based on record state
-                if record.state == 'returned':
+                # Determine appropriate photo type based on category or record state
+                if photo_category == 'handover':
+                    default_type = 'handover_overall'
+                elif photo_category == 'return':
+                    default_type = 'return_overall'
+                elif record.state == 'returned':
                     # For returned state, assign as return photos
                     default_type = 'return_overall'
                 elif record.state in ['approved']:
@@ -470,12 +474,73 @@ class HrCustody(models.Model):
                 
                 # Log the auto-assignment
                 if len(untyped_photos) > 0:
+                    photo_type_label = dict(self.env['ir.attachment']._fields['custody_photo_type'].selection)[default_type]
                     record.message_post(
                         body=_('📸 Auto-assigned photo type "%s" to %d uploaded photos') % (
-                            dict(self.env['ir.attachment']._fields['custody_photo_type'].selection)[default_type],
+                            photo_type_label,
                             len(untyped_photos)
                         )
                     )
+                
+                return len(untyped_photos)
+            return 0
+
+    # 🔧 NEW: Button action methods for manual photo type assignment
+    def action_assign_handover_photo_types(self):
+        """🔧 NEW: Manually assign handover photo types"""
+        self.ensure_one()
+        assigned_count = self._auto_assign_photo_types(photo_category='handover')
+        
+        if assigned_count > 0:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('📸 Photo Types Assigned'),
+                    'message': _('Successfully assigned handover photo type to %d photos!') % assigned_count,
+                    'type': 'success',
+                    'sticky': False,
+                }
+            }
+        else:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('ℹ️ No Photos to Assign'),
+                    'message': _('All uploaded photos already have photo types assigned.'),
+                    'type': 'info',
+                    'sticky': False,
+                }
+            }
+
+    def action_assign_return_photo_types(self):
+        """🔧 NEW: Manually assign return photo types"""
+        self.ensure_one()
+        assigned_count = self._auto_assign_photo_types(photo_category='return')
+        
+        if assigned_count > 0:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('📦 Photo Types Assigned'),
+                    'message': _('Successfully assigned return photo type to %d photos!') % assigned_count,
+                    'type': 'success',
+                    'sticky': False,
+                }
+            }
+        else:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('ℹ️ No Photos to Assign'),
+                    'message': _('All uploaded photos already have photo types assigned.'),
+                    'type': 'info',
+                    'sticky': False,
+                }
+            }
 
     # 🔧 NEW: Override create to handle attachment sync
     @api.model
