@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- 🔍 HR CUSTODY SEARCH & FILTERS - Dedicated File -->
+    <!-- 🔍 HR CUSTODY SEARCH & FILTERS - Simplified Version -->
     
     <!-- Enhanced Search View with Smart Filters -->
     <record id="hr_custody_view_search" model="ir.ui.view">
@@ -45,22 +45,14 @@
 
                 <separator/>
 
-                <!-- 📸 PHOTO STATUS FILTERS -->
-                <filter string="📸 Has Handover Photos" name="has_handover_photos"
-                        domain="[('has_handover_photos', '=', True)]"
-                        help="Items with handover photos"/>
+                <!-- 📸 SIMPLIFIED PHOTO FILTERS -->
+                <filter string="📸 Has Photos" name="has_photos"
+                        domain="[('attachment_ids', '!=', False)]"
+                        help="Items with photos attached"/>
 
-                <filter string="📦 Has Return Photos" name="has_return_photos"
-                        domain="[('has_return_photos', '=', True)]"
-                        help="Items with return photos"/>
-
-                <filter string="📊 Complete Documentation" name="photos_complete"
-                        domain="[('photos_complete', '=', True)]"
-                        help="Items with complete photo documentation"/>
-
-                <filter string="⚠️ Missing Photos" name="missing_photos"
-                        domain="[('state', 'in', ['approved', 'returned']), ('photos_complete', '=', False)]"
-                        help="Items missing photo documentation"/>
+                <filter string="📷 No Photos" name="no_photos"
+                        domain="[('attachment_ids', '=', False), ('state', 'in', ['approved', 'returned'])]"
+                        help="Items without photos"/>
 
                 <separator/>
 
@@ -106,8 +98,6 @@
                             context="{'group_by':'approved_by_id'}"/>
                     <filter string="⚠️ Return Status" name="group_return_status"
                             context="{'group_by':'is_overdue'}"/>
-                    <filter string="📸 Photo Status" name="group_photo_status"
-                            context="{'group_by':'photos_complete'}"/>
                     <filter string="📅 Request Date" name="group_request_date"
                             context="{'group_by':'date_request'}"/>
                     <filter string="🔄 Return Type" name="group_return_type"
@@ -117,7 +107,7 @@
         </field>
     </record>
 
-    <!-- Saved Filters for Quick Access -->
+    <!-- Simplified Saved Filters -->
     <record id="filter_my_urgent_requests" model="ir.filters">
         <field name="name">🚨 My Urgent Requests</field>
         <field name="model_id">hr.custody</field>
@@ -130,14 +120,6 @@
         <field name="name">📋 Pending My Approval</field>
         <field name="model_id">hr.custody</field>
         <field name="domain">[('property_approver_ids', 'in', [uid]), ('state', '=', 'to_approve')]</field>
-        <field name="user_id" eval="False"/>
-        <field name="is_default">False</field>
-    </record>
-
-    <record id="filter_missing_photos" model="ir.filters">
-        <field name="name">📸 Missing Photo Documentation</field>
-        <field name="model_id">hr.custody</field>
-        <field name="domain">[('state', 'in', ['approved', 'returned']), ('photos_complete', '=', False)]</field>
         <field name="user_id" eval="False"/>
         <field name="is_default">False</field>
     </record>
