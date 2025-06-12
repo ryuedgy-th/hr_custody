@@ -237,6 +237,28 @@ class HrCustody(models.Model):
         help='Total number of photos'
     )
 
+    # ✅ FIX: Add missing boolean fields for view conditions
+    has_handover_photos = fields.Boolean(
+        string='Has Handover Photos',
+        compute='_compute_has_handover_photos',
+        store=False,
+        help='Whether this custody has handover photos'
+    )
+
+    has_return_photos = fields.Boolean(
+        string='Has Return Photos',
+        compute='_compute_has_return_photos',
+        store=False,
+        help='Whether this custody has return photos'
+    )
+
+    has_photos = fields.Boolean(
+        string='Has Photos',
+        compute='_compute_has_photos',
+        store=False,
+        help='Whether this custody has any photos'
+    )
+
     # 🔧 COMPUTED METHODS - Optimized for Performance
 
     @api.depends('return_type', 'return_date', 'expected_return_period', 'state', 'actual_return_date')
@@ -298,6 +320,27 @@ class HrCustody(models.Model):
                 lambda a: a.mimetype and a.mimetype.startswith('image/')
             )
             record.total_photo_count = len(image_attachments)
+
+    @api.depends('handover_photo_ids')
+    def _compute_has_handover_photos(self) -> None:
+        """Compute whether custody has handover photos"""
+        for record in self:
+            record.has_handover_photos = len(record.handover_photo_ids) > 0
+
+    @api.depends('return_photo_ids')
+    def _compute_has_return_photos(self) -> None:
+        """Compute whether custody has return photos"""
+        for record in self:
+            record.has_return_photos = len(record.return_photo_ids) > 0
+
+    @api.depends('attachment_ids.mimetype')
+    def _compute_has_photos(self) -> None:
+        """Compute whether custody has any photos"""
+        for record in self:
+            image_attachments = record.attachment_ids.filtered(
+                lambda a: a.mimetype and a.mimetype.startswith('image/')
+            )
+            record.has_photos = len(image_attachments) > 0
 
     @api.depends('attachment_ids.custody_photo_type', 'state')
     def _compute_photo_status(self) -> None:
