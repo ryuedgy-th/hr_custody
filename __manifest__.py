@@ -59,7 +59,7 @@
     'website': "https://github.com/ryuedgy-th/hr_custody",
     'depends': ['hr', 'mail', 'base'],
     
-    # 📁 MODULAR DATA FILES - Fixed File Paths
+    # 📁 MODULAR DATA FILES - FIXED FILE LOADING ORDER
     'data': [
         # 🔐 Security & Access Control
         'security/custody_security.xml',
@@ -75,14 +75,14 @@
         'wizard/property_return_date_views.xml',
         'views/custody_photo_wizard_views.xml',
 
+        # 🤖 Auto-Assignment Helper Views (MUST BE BEFORE actions.xml)
+        'views/hr_custody_auto_assignment_views.xml',
+
         # 📋 HR CUSTODY VIEWS (Modular Structure)
         'views/hr_custody/hr_custody_views_basic.xml',     # Core form & list views
         'views/hr_custody/hr_custody_views_photo.xml',     # Photo management system
         'views/hr_custody/hr_custody_views_search.xml',    # Search & filters
-        'views/hr_custody/hr_custody_views_actions.xml',   # Actions & menus
-        
-        # 🤖 Auto-Assignment Helper Views
-        'views/hr_custody_auto_assignment_views.xml',      # Auto-assignment helper
+        'views/hr_custody/hr_custody_views_actions.xml',   # Actions & menus (LAST)
         
         # 🏢 Property Management - FIXED PATHS
         'views/custody_property_views.xml',
