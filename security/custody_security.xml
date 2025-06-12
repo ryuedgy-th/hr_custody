@@ -2,18 +2,20 @@
 <odoo>
     <data noupdate="0">
 
-        <!-- Multi-Company Rule (Global) -->
+        <!-- 🔒 ENHANCED SECURITY RULES FOR ODOO 18 COMPLIANCE -->
+
+        <!-- Multi-Company Rules (Global) -->
         <record id="property_rule_custody_multicompany" model="ir.rule">
-            <field name="name">Custody Property: Multi-Company</field>
+            <field name="name">Custody Property: Multi-Company Access</field>
             <field name="model_id" ref="model_custody_property"/>
             <field name="global" eval="True"/>
             <field name="domain_force">
-                [('company_id', 'in', company_ids)]
+                ['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]
             </field>
         </record>
 
         <record id="hr_custody_multicompany_rule" model="ir.rule">
-            <field name="name">HR Custody: Multi-Company</field>
+            <field name="name">HR Custody: Multi-Company Access</field>
             <field name="model_id" ref="model_hr_custody"/>
             <field name="global" eval="True"/>
             <field name="domain_force">
@@ -21,15 +23,12 @@
             </field>
         </record>
 
-        <!-- ⭐ UPDATED: Employee Level Access - Own Records + Property Approvers -->
-        <record id="hr_custody_employee_rule" model="ir.rule">
-            <field name="name">HR Custody: Employee Own Records + Property Approvers</field>
+        <!-- Employee Level Access Rules -->
+        <record id="hr_custody_employee_own_rule" model="ir.rule">
+            <field name="name">HR Custody: Employee Own Records</field>
             <field name="model_id" ref="model_hr_custody"/>
             <field name="domain_force">
-                ['|',
-                    ('employee_id.user_id', '=', user.id),
-                    ('custody_property_id.approver_ids', 'in', [user.id])
-                ]
+                [('employee_id.user_id', '=', user.id)]
             </field>
             <field name="groups" eval="[(4, ref('base.group_user'))]"/>
             <field name="perm_read" eval="True"/>
@@ -38,16 +37,29 @@
             <field name="perm_unlink" eval="False"/>
         </record>
 
-        <!-- HR User Level Access: Department and Subordinate Records + Property Approvers -->
-        <record id="hr_custody_hr_user_rule" model="ir.rule">
-            <field name="name">HR Custody: HR User Department Access + Property Approvers</field>
+        <!-- Property Approver Access Rule -->
+        <record id="hr_custody_property_approver_rule" model="ir.rule">
+            <field name="name">HR Custody: Property Approver Access</field>
             <field name="model_id" ref="model_hr_custody"/>
             <field name="domain_force">
-                ['|', '|', '|',
+                [('custody_property_id.approver_ids', 'in', [user.id])]
+            </field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <!-- HR User Level Access: Department and Subordinate Records -->
+        <record id="hr_custody_hr_user_department_rule" model="ir.rule">
+            <field name="name">HR Custody: HR User Department Access</field>
+            <field name="model_id" ref="model_hr_custody"/>
+            <field name="domain_force">
+                ['|', '|',
                     ('employee_id.department_id.manager_id.user_id', '=', user.id),
                     ('employee_id.parent_id.user_id', '=', user.id),
-                    ('employee_id.user_id', '=', user.id),
-                    ('custody_property_id.approver_ids', 'in', [user.id])
+                    ('employee_id.user_id', '=', user.id)
                 ]
             </field>
             <field name="groups" eval="[(4, ref('hr.group_hr_user'))]"/>
@@ -58,8 +70,8 @@
         </record>
 
         <!-- HR Manager Level Access: All Records -->
-        <record id="hr_custody_hr_manager_rule" model="ir.rule">
-            <field name="name">HR Custody: HR Manager All Access</field>
+        <record id="hr_custody_hr_manager_all_rule" model="ir.rule">
+            <field name="name">HR Custody: HR Manager Full Access</field>
             <field name="model_id" ref="model_hr_custody"/>
             <field name="domain_force">[(1, '=', 1)]</field>
             <field name="groups" eval="[(4, ref('hr.group_hr_manager'))]"/>
@@ -70,9 +82,37 @@
         </record>
 
         <!-- Property Access Rules -->
-        <record id="custody_property_employee_rule" model="ir.rule">
-            <field name="name">Custody Property: Employee Access</field>
+        <record id="custody_property_employee_read_rule" model="ir.rule">
+            <field name="name">Custody Property: Employee Read Access</field>
             <field name="model_id" ref="model_custody_property"/>
+            <field name="domain_force">
+                ['|', 
+                    ('property_status', '=', 'available'),
+                    ('approver_ids', 'in', [user.id])
+                ]
+            </field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <record id="custody_property_hr_user_full_rule" model="ir.rule">
+            <field name="name">Custody Property: HR User Full Access</field>
+            <field name="model_id" ref="model_custody_property"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('hr.group_hr_user'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+
+        <!-- Property Category Access Rules -->
+        <record id="property_category_employee_read_rule" model="ir.rule">
+            <field name="name">Property Category: Employee Read Access</field>
+            <field name="model_id" ref="model_property_category"/>
             <field name="domain_force">[(1, '=', 1)]</field>
             <field name="groups" eval="[(4, ref('base.group_user'))]"/>
             <field name="perm_read" eval="True"/>
@@ -81,15 +121,73 @@
             <field name="perm_unlink" eval="False"/>
         </record>
 
-        <record id="custody_property_hr_user_rule" model="ir.rule">
-            <field name="name">Custody Property: HR User Access</field>
-            <field name="model_id" ref="model_custody_property"/>
+        <record id="property_category_hr_user_full_rule" model="ir.rule">
+            <field name="name">Property Category: HR User Full Access</field>
+            <field name="model_id" ref="model_property_category"/>
             <field name="domain_force">[(1, '=', 1)]</field>
             <field name="groups" eval="[(4, ref('hr.group_hr_user'))]"/>
             <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="True"/>
             <field name="perm_create" eval="True"/>
             <field name="perm_unlink" eval="True"/>
+        </record>
+
+        <!-- 🔐 STATE-BASED ACCESS CONTROL -->
+        
+        <!-- Draft State: Owner can edit -->
+        <record id="hr_custody_draft_edit_rule" model="ir.rule">
+            <field name="name">HR Custody: Draft State Edit Access</field>
+            <field name="model_id" ref="model_hr_custody"/>
+            <field name="domain_force">
+                ['&amp;', 
+                    ('state', '=', 'draft'),
+                    ('employee_id.user_id', '=', user.id)
+                ]
+            </field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+            <field name="perm_write" eval="True"/>
+        </record>
+
+        <!-- Approved State: Only HR can modify -->
+        <record id="hr_custody_approved_modify_rule" model="ir.rule">
+            <field name="name">HR Custody: Approved State Modify Access</field>
+            <field name="model_id" ref="model_hr_custody"/>
+            <field name="domain_force">
+                [('state', 'in', ['approved', 'returned'])]
+            </field>
+            <field name="groups" eval="[(4, ref('hr.group_hr_user'))]"/>
+            <field name="perm_write" eval="True"/>
+        </record>
+
+        <!-- 🏢 DEPARTMENT-BASED ACCESS CONTROL -->
+        
+        <!-- Department Manager can see department's custody requests -->
+        <record id="hr_custody_department_manager_rule" model="ir.rule">
+            <field name="name">HR Custody: Department Manager Access</field>
+            <field name="model_id" ref="model_hr_custody"/>
+            <field name="domain_force">
+                [('employee_id.department_id.manager_id.user_id', '=', user.id)]
+            </field>
+            <field name="groups" eval="[(4, ref('hr.group_hr_user'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+        </record>
+
+        <!-- 📎 ATTACHMENT SECURITY -->
+        
+        <!-- Attachment access based on custody access -->
+        <record id="ir_attachment_custody_rule" model="ir.rule">
+            <field name="name">Attachment: Custody Photo Access</field>
+            <field name="model_id" ref="base.model_ir_attachment"/>
+            <field name="domain_force">
+                ['|',
+                    ('res_model', '!=', 'hr.custody'),
+                    '&amp;',
+                        ('res_model', '=', 'hr.custody'),
+                        ('res_id', 'in', [r.id for r in user.env['hr.custody'].search([])])
+                ]
+            </field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
         </record>
 
     </data>
