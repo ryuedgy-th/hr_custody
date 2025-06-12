@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- SUPER SIMPLE HR CUSTODY FORM VIEW -->
+    <!-- BRAND NEW SUPER SIMPLE HR CUSTODY FORM VIEW -->
     
-    <!-- Main Form View -->
-    <record id="hr_custody_view_form" model="ir.ui.view">
-        <field name="name">hr.custody.form</field>
+    <!-- Main Form View - NEW ID -->
+    <record id="hr_custody_simple_form_view" model="ir.ui.view">
+        <field name="name">hr.custody.simple.form</field>
         <field name="model">hr.custody</field>
         <field name="arch" type="xml">
-            <form string="Custody">
+            <form string="Custody Request">
                 <header>
                     <button string="Send For Approval" type="object"
                             name="sent"
@@ -60,6 +60,16 @@
                         <page string="Notes">
                             <field name="notes"/>
                         </page>
+                        
+                        <!-- Simple Photos Tab -->
+                        <page string="📸 Photos" invisible="state not in ['approved', 'returned']">
+                            <group string="Upload Photos">
+                                <field name="attachment_ids" 
+                                       widget="many2many_binary"
+                                       nolabel="1"
+                                       options="{'accepted_file_extensions': 'image/*'}"/>
+                            </group>
+                        </page>
                     </notebook>
                 </sheet>
                 
@@ -71,9 +81,9 @@
         </field>
     </record>
 
-    <!-- List View -->
-    <record id="hr_custody_view_tree" model="ir.ui.view">
-        <field name="name">hr.custody.list</field>
+    <!-- List View - NEW ID -->
+    <record id="hr_custody_simple_tree_view" model="ir.ui.view">
+        <field name="name">hr.custody.simple.tree</field>
         <field name="model">hr.custody</field>
         <field name="arch" type="xml">
             <list>
