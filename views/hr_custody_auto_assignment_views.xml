@@ -86,7 +86,7 @@
         </field>
     </record>
 
-    <!-- Auto Assignment Helper Action (Updated to use form view) -->
+    <!-- 🔧 FIXED: Auto Assignment Helper Action with CORRECT External ID -->
     <record id="hr_custody_auto_assignment_action_form" model="ir.actions.act_window">
         <field name="name">🤖 Auto Assignment Helper</field>
         <field name="res_model">hr.custody.auto.assignment</field>
