@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Hr Custody form view with Modern Photo Management System -->
+    <!-- Hr Custody form view with FIXED Photo Management System -->
     <record id="hr_custody_view_form" model="ir.ui.view">
         <field name="name">hr.custody.form</field>
         <field name="model">hr.custody</field>
@@ -223,7 +223,8 @@
                                     <p style="color: #6c757d; margin: 0;">Drag and drop photos here or click to browse</p>
                                 </div>
                                 
-                                <field name="attachment_ids" 
+                                <!-- 🚨 CRITICAL FIX: Use dedicated handover_photo_ids field -->
+                                <field name="handover_photo_ids" 
                                        widget="many2many_binary"
                                        string=""
                                        nolabel="1"
@@ -232,9 +233,9 @@
                                            'max_upload_size': 5242880
                                        }"
                                        context="{
-                                           'default_custody_photo_type': 'handover_overall'
+                                           'default_custody_photo_type': 'handover_overall',
+                                           'default_res_model': 'hr.custody'
                                        }"
-                                       domain="[('custody_photo_type', 'in', ['handover_overall', 'handover_detail', 'handover_serial'])]"
                                        readonly="state == 'returned'"
                                        groups="hr.group_hr_user,hr.group_hr_manager"/>
                             </div>
@@ -251,10 +252,10 @@
                                     </span>
                                 </div>
                                 
-                                <field name="attachment_ids" 
+                                <!-- 🚨 CRITICAL FIX: Display handover_photo_ids directly -->
+                                <field name="handover_photo_ids" 
                                        mode="kanban"
-                                       nolabel="1"
-                                       domain="[('custody_photo_type', 'in', ['handover_overall', 'handover_detail', 'handover_serial'])]">
+                                       nolabel="1">
                                     <kanban class="o_kanban_mobile" create="false" delete="true">
                                         <field name="name"/>
                                         <field name="mimetype"/>
@@ -429,7 +430,8 @@
                                     <p style="color: #6c757d; margin: 0;">Drag and drop photos here or click to browse</p>
                                 </div>
                                 
-                                <field name="attachment_ids" 
+                                <!-- 🚨 CRITICAL FIX: Use dedicated return_photo_ids field -->
+                                <field name="return_photo_ids" 
                                        widget="many2many_binary"
                                        string=""
                                        nolabel="1"
@@ -438,9 +440,9 @@
                                            'max_upload_size': 5242880
                                        }"
                                        context="{
-                                           'default_custody_photo_type': 'return_overall'
+                                           'default_custody_photo_type': 'return_overall',
+                                           'default_res_model': 'hr.custody'
                                        }"
-                                       domain="[('custody_photo_type', 'in', ['return_overall', 'return_detail', 'return_damage'])]"
                                        groups="hr.group_hr_user,hr.group_hr_manager"/>
                             </div>
 
@@ -456,10 +458,10 @@
                                     </span>
                                 </div>
                                 
-                                <field name="attachment_ids" 
+                                <!-- 🚨 CRITICAL FIX: Display return_photo_ids directly -->
+                                <field name="return_photo_ids" 
                                        mode="kanban"
-                                       nolabel="1"
-                                       domain="[('custody_photo_type', 'in', ['return_overall', 'return_detail', 'return_damage'])]">
+                                       nolabel="1">
                                     <kanban class="o_kanban_mobile" create="false" delete="true">
                                         <field name="name"/>
                                         <field name="mimetype"/>
@@ -623,10 +625,10 @@
                                             Handover Condition
                                         </h4>
                                     </div>
-                                    <field name="attachment_ids" 
+                                    <!-- 🚨 CRITICAL FIX: Use handover_photo_ids for comparison -->
+                                    <field name="handover_photo_ids" 
                                            mode="kanban"
-                                           nolabel="1"
-                                           domain="[('custody_photo_type', 'in', ['handover_overall', 'handover_detail', 'handover_serial'])]">
+                                           nolabel="1">
                                         <kanban class="o_kanban_mobile" create="false" delete="false">
                                             <field name="name"/>
                                             <field name="mimetype"/>
@@ -656,10 +658,10 @@
                                             Return Condition
                                         </h4>
                                     </div>
-                                    <field name="attachment_ids" 
+                                    <!-- 🚨 CRITICAL FIX: Use return_photo_ids for comparison -->
+                                    <field name="return_photo_ids" 
                                            mode="kanban"
-                                           nolabel="1"
-                                           domain="[('custody_photo_type', 'in', ['return_overall', 'return_detail', 'return_damage'])]">
+                                           nolabel="1">
                                         <kanban class="o_kanban_mobile" create="false" delete="false">
                                             <field name="name"/>
                                             <field name="mimetype"/>
@@ -768,10 +770,10 @@
                     <div class="row mt16">
                         <div class="col-md-6">
                             <h3>📸 Handover Condition</h3>
-                            <field name="attachment_ids" 
+                            <!-- 🚨 CRITICAL FIX: Use handover_photo_ids -->
+                            <field name="handover_photo_ids" 
                                    mode="kanban"
-                                   nolabel="1"
-                                   domain="[('custody_photo_type', 'in', ['handover_overall', 'handover_detail', 'handover_serial'])]">
+                                   nolabel="1">
                                 <kanban class="o_kanban_mobile" create="false" delete="false">
                                     <field name="name"/>
                                     <field name="mimetype"/>
@@ -796,10 +798,10 @@
                         </div>
                         <div class="col-md-6">
                             <h3>📦 Return Condition</h3>
-                            <field name="attachment_ids" 
+                            <!-- 🚨 CRITICAL FIX: Use return_photo_ids -->
+                            <field name="return_photo_ids" 
                                    mode="kanban"
-                                   nolabel="1"
-                                   domain="[('custody_photo_type', 'in', ['return_overall', 'return_detail', 'return_damage'])]">
+                                   nolabel="1">
                                 <kanban class="o_kanban_mobile" create="false" delete="false">
                                     <field name="name"/>
                                     <field name="mimetype"/>
