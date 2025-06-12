@@ -98,6 +98,29 @@
         </field>
     </record>
 
+    <!-- Dashboard Action - FIXED: Use standard action instead of client action -->
+    <record id="hr_custody_dashboard_action" model="ir.actions.act_window">
+        <field name="name">Custody Dashboard</field>
+        <field name="res_model">hr.custody</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="hr_custody.hr_custody_view_search"/>
+        <field name="context">{
+            'search_default_group_by_state': 1,
+        }</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Click to Create a New Custody Request.
+            </p>
+            <p>
+                <strong>📊 Dashboard Overview:</strong><br/>
+                • View all custody requests by status<br/>
+                • Quick access to pending approvals<br/>
+                • Monitor overdue returns<br/>
+                • Track photo documentation completion
+            </p>
+        </field>
+    </record>
+
     <!-- Property Management Actions -->
     <record id="custody_property_action" model="ir.actions.act_window">
         <field name="name">Properties</field>
@@ -147,11 +170,19 @@
               web_icon="hr_custody,static/description/icon.png"
               sequence="85"/>
 
+    <!-- Dashboard Menu - First Item -->
+    <menuitem action="hr_custody_dashboard_action"
+              id="hr_custody_menu_dashboard"
+              parent="hr_custody_menu_management"
+              name="📊 Dashboard"
+              sequence="0"
+              groups="hr.group_hr_user,hr.group_hr_manager"/>
+
     <!-- Primary Menu Items -->
     <menuitem action="hr_custody_action"
               id="hr_custody_menu_unified"
               parent="hr_custody_menu_management"
-              name="📋 Custody Requests"
+              name="📋 All Requests"
               sequence="1"/>
 
     <menuitem action="hr_custody_action_my_requests"
@@ -274,18 +305,4 @@ for record in records:
         <field name="binding_model_id" ref="model_hr_custody"/>
         <field name="binding_type">report</field>
     </record>
-
-    <!-- Dashboard Action -->
-    <record id="hr_custody_dashboard_action" model="ir.actions.client">
-        <field name="name">Custody Dashboard</field>
-        <field name="tag">hr_custody_dashboard</field>
-        <field name="target">current</field>
-    </record>
-
-    <menuitem action="hr_custody_dashboard_action"
-              id="hr_custody_menu_dashboard"
-              parent="hr_custody_menu_management"
-              name="📊 Dashboard"
-              sequence="0"
-              groups="hr.group_hr_user,hr.group_hr_manager"/>
 </odoo>
