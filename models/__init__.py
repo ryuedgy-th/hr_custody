@@ -4,3 +4,4 @@ from . import hr_employee
 from . import property_category
 from . import custody_image
 from . import ir_attachment  # 📸 NEW: Enhanced attachment model for photo management
+from . import hr_custody_auto_assignment  # 🤖 NEW: Auto-assignment helper
