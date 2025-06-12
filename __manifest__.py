@@ -28,7 +28,7 @@
     'website': "https://github.com/ryuedgy-th/hr_custody",
     'depends': ['hr', 'mail', 'base'],
     
-    # 📁 SIMPLIFIED DATA FILES
+    # 📁 MINIMAL DATA FILES - ONLY ESSENTIAL
     'data': [
         # 🔐 Security & Access Control
         'security/custody_security.xml',
@@ -37,10 +37,10 @@
         # 📊 Core Data & Sequences
         'data/custody_sequence_data.xml',
 
-        # 🧙‍♂️ Wizards
+        # 🧙‍♂️ Only Essential Wizard
         'wizard/property_return_reason_views.xml',
 
-        # 📋 HR CUSTODY VIEWS (Simplified)
+        # 📋 HR CUSTODY VIEWS (Core Only)
         'views/hr_custody/hr_custody_views_basic.xml',     # Core form & list views
         'views/hr_custody/hr_custody_views_photo.xml',     # Simple photo management
         'views/hr_custody/hr_custody_views_search.xml',    # Search & filters
@@ -53,12 +53,6 @@
         # 👤 Employee Integration
         'views/hr_employee_views.xml',
     ],
-    
-    # 📦 Demo Data
-    'demo': ['data/demo_data.xml'],
-    
-    # 🖼️ Images & Branding
-    'images': ['static/description/banner.jpg'],
     
     # ⚙️ Configuration
     'license': 'LGPL-3',
