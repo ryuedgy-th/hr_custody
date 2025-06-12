@@ -98,8 +98,8 @@
         </field>
     </record>
 
-    <!-- Dashboard Action - FIXED: Use standard action instead of client action -->
-    <record id="hr_custody_dashboard_action" model="ir.actions.act_window">
+    <!-- Dashboard Action - FIXED: Use new External ID to avoid conflicts -->
+    <record id="hr_custody_dashboard_action_v2" model="ir.actions.act_window">
         <field name="name">Custody Dashboard</field>
         <field name="res_model">hr.custody</field>
         <field name="view_mode">kanban,list,form</field>
@@ -170,8 +170,8 @@
               web_icon="hr_custody,static/description/icon.png"
               sequence="85"/>
 
-    <!-- Dashboard Menu - First Item -->
-    <menuitem action="hr_custody_dashboard_action"
+    <!-- Dashboard Menu - First Item with NEW ACTION -->
+    <menuitem action="hr_custody_dashboard_action_v2"
               id="hr_custody_menu_dashboard"
               parent="hr_custody_menu_management"
               name="📊 Dashboard"
