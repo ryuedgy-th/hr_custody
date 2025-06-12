@@ -1,145 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- 📸 HR CUSTODY PHOTO MANAGEMENT - SIMPLIFIED VERSION -->
+    <!-- SUPER SIMPLE PHOTO MANAGEMENT -->
     
-    <!-- ===== SPECIALIZED KANBAN VIEW FOR CUSTODY PHOTOS ===== -->
-    
-    <!-- Professional Photo Gallery Kanban View -->
-    <record id="ir_attachment_custody_view_kanban" model="ir.ui.view">
-        <field name="name">ir.attachment.custody.kanban</field>
-        <field name="model">ir.attachment</field>
-        <field name="arch" type="xml">
-            <kanban class="o_kanban_mobile" create="false" delete="true">
-                <field name="name"/>
-                <field name="mimetype"/>
-                <field name="file_size"/>
-                <field name="checksum"/>
-                <templates>
-                    <t t-name="kanban-box">
-                        <div class="oe_kanban_card o_attachment_wrap" 
-                             style="margin: 10px; padding: 10px; border-radius: 8px; 
-                                    box-shadow: 0 2px 8px rgba(0,0,0,0.1); background: white;">
-                            
-                            <!-- Image Display Area -->
-                            <div class="o_image_box" style="position: relative; text-align: center; margin-bottom: 10px;">
-                                <t t-if="record.mimetype.value and record.mimetype.value.startsWith('image/')">
-                                    <a t-attf-href="/web/image/#{record.id.raw_value}?field=datas" target="_blank" 
-                                       style="display: block; position: relative;">
-                                        <img class="o_image" 
-                                             t-attf-src="/web/image/#{record.id.raw_value}?field=datas"
-                                             style="width: 200px; height: 150px; object-fit: cover; 
-                                                    border-radius: 6px; cursor: pointer;"
-                                             t-att-alt="record.name.value"
-                                             title="Click to view full size"
-                                             loading="lazy"/>
-                                    </a>
-                                </t>
-                                <t t-else="">
-                                    <div style="width: 200px; height: 150px; display: flex; 
-                                                align-items: center; justify-content: center; 
-                                                background: #f8f9fa; border: 2px dashed #dee2e6; 
-                                                border-radius: 6px; margin: 0 auto;">
-                                        <div class="text-center text-muted">
-                                            <i class="fa fa-file fa-2x mb-2"/>
-                                            <br/>
-                                            <small><t t-esc="record.name.value"/></small>
-                                        </div>
-                                    </div>
-                                </t>
-                            </div>
-                            
-                            <!-- Photo Information -->
-                            <div class="o_attachment_info">
-                                <!-- File Name -->
-                                <div style="font-weight: bold; margin-bottom: 8px; 
-                                            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
-                                     t-att-title="record.name.value">
-                                    <t t-esc="record.name.value"/>
-                                </div>
-                                
-                                <!-- File Size -->
-                                <div class="text-muted small" style="margin-bottom: 8px;">
-                                    💾 <t t-esc="Math.round(record.file_size.value / 1024 / 1024 * 100) / 100"/> MB
-                                </div>
-                                
-                                <!-- Action Buttons -->
-                                <div class="text-center">
-                                    <a t-attf-href="/web/image/#{record.id.raw_value}?field=datas" 
-                                       target="_blank"
-                                       class="btn btn-sm btn-outline-primary" 
-                                       style="margin-right: 5px;">
-                                        🔍 View
-                                    </a>
-                                    <a t-attf-href="/web/content/#{record.id.raw_value}?download=true" 
-                                       target="_blank"
-                                       class="btn btn-sm btn-outline-secondary">
-                                        📥 Download
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </t>
-                </templates>
-            </kanban>
-        </field>
-    </record>
-
-    <!-- Custody Photos Tree/List View -->
-    <record id="ir_attachment_custody_view_tree" model="ir.ui.view">
-        <field name="name">ir.attachment.custody.tree</field>
-        <field name="model">ir.attachment</field>
-        <field name="arch" type="xml">
-            <list create="false" delete="true" edit="false">
-                <field name="name"/>
-                <field name="mimetype"/>
-                <field name="file_size" widget="float"/>
-                <field name="create_date"/>
-            </list>
-        </field>
-    </record>
-
-    <!-- ===== SIMPLE PHOTO TABS FOR MAIN FORM ===== -->
-    
-    <!-- Photo Tabs Extension for Main Form -->
+    <!-- Add Photos Tab to Main Form -->
     <record id="hr_custody_photo_tabs" model="ir.ui.view">
         <field name="name">hr.custody.photo.tabs</field>
         <field name="model">hr.custody</field>
         <field name="inherit_id" ref="hr_custody.hr_custody_view_form"/>
         <field name="arch" type="xml">
             <notebook position="inside">
-                
-                <!-- 📸 Photos Tab -->
                 <page string="📸 Photos" invisible="state not in ['approved', 'returned']">
-                    
-                    <!-- Simple Upload Section -->
-                    <group string="📤 Upload Photos">
+                    <group string="Upload Photos">
                         <field name="attachment_ids" 
                                widget="many2many_binary"
                                nolabel="1"
-                               options="{
-                                   'accepted_file_extensions': 'image/*',
-                                   'max_upload_size': 5242880
-                               }"
-                               groups="hr.group_hr_user,hr.group_hr_manager"/>
+                               options="{'accepted_file_extensions': 'image/*'}"/>
                     </group>
-
-                    <!-- Photo Gallery -->
-                    <group string="🖼️ Photo Gallery" invisible="not attachment_ids">
-                        <field name="attachment_ids" 
-                               mode="kanban"
-                               nolabel="1"
-                               kanban_view_ref="hr_custody.ir_attachment_custody_view_kanban"
-                               domain="[('mimetype', 'ilike', 'image')]"/>
-                    </group>
-
-                    <!-- Empty State -->
-                    <div invisible="attachment_ids" 
-                         style="text-align: center; padding: 40px; background: #f8f9fa; 
-                                border-radius: 8px; border: 2px dashed #dee2e6;">
-                        <div style="font-size: 48px; color: #dee2e6; margin-bottom: 16px;">📸</div>
-                        <h4 style="color: #6c757d; margin-bottom: 8px;">No Photos Yet</h4>
-                        <p style="color: #adb5bd; margin: 0;">Upload photos using the section above</p>
-                    </div>
                 </page>
             </notebook>
         </field>
