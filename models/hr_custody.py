@@ -237,7 +237,7 @@ class HrCustody(models.Model):
         help='Total number of photos'
     )
 
-    # ✅ FIX: Add missing boolean fields for view conditions
+    # Boolean fields for view conditions
     has_handover_photos = fields.Boolean(
         string='Has Handover Photos',
         compute='_compute_has_handover_photos',
@@ -257,6 +257,29 @@ class HrCustody(models.Model):
         compute='_compute_has_photos',
         store=False,
         help='Whether this custody has any photos'
+    )
+
+    # ✅ FIX: Add missing photos_complete field
+    photos_complete = fields.Boolean(
+        string='Photos Complete',
+        compute='_compute_photos_complete',
+        store=False,
+        help='Whether photo documentation is complete for current state'
+    )
+
+    # Additional photo quality and status fields
+    photo_quality_status = fields.Char(
+        string='Photo Quality Status',
+        compute='_compute_photo_quality_status',
+        store=False,
+        help='Overall photo quality assessment'
+    )
+
+    photos_required = fields.Boolean(
+        string='Photos Required',
+        compute='_compute_photos_required',
+        store=False,
+        help='Whether photos are required for current state'
     )
 
     # 🔧 COMPUTED METHODS - Optimized for Performance
@@ -341,6 +364,59 @@ class HrCustody(models.Model):
                 lambda a: a.mimetype and a.mimetype.startswith('image/')
             )
             record.has_photos = len(image_attachments) > 0
+
+    @api.depends('state', 'handover_photo_ids', 'return_photo_ids')
+    def _compute_photos_complete(self) -> None:
+        """Compute whether photo documentation is complete for current state"""
+        for record in self:
+            handover_count = len(record.handover_photo_ids)
+            return_count = len(record.return_photo_ids)
+            
+            if record.state in ['draft', 'to_approve']:
+                # Draft states don't require photos
+                record.photos_complete = True
+            elif record.state == 'approved':
+                # Approved state should have handover photos
+                record.photos_complete = handover_count > 0
+            elif record.state == 'returned':
+                # Returned state should have both handover and return photos
+                record.photos_complete = handover_count > 0 and return_count > 0
+            else:
+                # Rejected or other states
+                record.photos_complete = True
+
+    @api.depends('state')
+    def _compute_photos_required(self) -> None:
+        """Compute whether photos are required for current state"""
+        for record in self:
+            record.photos_required = record.state in ['approved', 'returned']
+
+    @api.depends('attachment_ids.custody_photo_type', 'attachment_ids.is_high_quality')
+    def _compute_photo_quality_status(self) -> None:
+        """Compute overall photo quality status"""
+        for record in self:
+            if not record.attachment_ids:
+                record.photo_quality_status = _("No photos")
+                continue
+            
+            image_attachments = record.attachment_ids.filtered(
+                lambda a: a.mimetype and a.mimetype.startswith('image/')
+            )
+            
+            if not image_attachments:
+                record.photo_quality_status = _("No photos")
+                continue
+            
+            high_quality_count = len(image_attachments.filtered('is_high_quality'))
+            total_count = len(image_attachments)
+            quality_percentage = (high_quality_count / total_count) * 100
+            
+            if quality_percentage >= 80:
+                record.photo_quality_status = _("High Quality (%d%%)") % quality_percentage
+            elif quality_percentage >= 50:
+                record.photo_quality_status = _("Good Quality (%d%%)") % quality_percentage
+            else:
+                record.photo_quality_status = _("Low Quality (%d%%)") % quality_percentage
 
     @api.depends('attachment_ids.custody_photo_type', 'state')
     def _compute_photo_status(self) -> None:
