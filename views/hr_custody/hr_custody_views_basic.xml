@@ -147,7 +147,7 @@
         </field>
     </record>
 
-    <!-- Simplified List/Tree View -->
+    <!-- Clean List/Tree View -->
     <record id="hr_custody_view_tree" model="ir.ui.view">
         <field name="name">hr.custody.list</field>
         <field name="model">hr.custody</field>
