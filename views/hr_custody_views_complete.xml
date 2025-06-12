@@ -120,7 +120,7 @@
                             </group>
 
                             <!-- Photo Gallery Display -->
-                            <group string="📷 Handover Photo Gallery" invisible="not handover_photo_ids">
+                            <group string="📷 Handover Photo Gallery">
                                 <field name="handover_photo_ids" nolabel="1" readonly="1">
                                     <kanban class="o_kanban_mobile">
                                         <field name="id"/>
@@ -187,7 +187,7 @@
                             </group>
 
                             <!-- Return Photo Gallery -->
-                            <group string="📷 Return Photo Gallery" invisible="not return_photo_ids">
+                            <group string="📷 Return Photo Gallery">
                                 <field name="return_photo_ids" nolabel="1" readonly="1">
                                     <kanban class="o_kanban_mobile">
                                         <field name="id"/>
@@ -240,8 +240,7 @@
                         </page>
 
                         <!-- 🔍 PHOTO COMPARISON TAB -->
-                        <page string="🔍 Photo Comparison" name="photo_comparison" 
-                              invisible="not handover_photo_ids or not return_photo_ids">
+                        <page string="🔍 Photo Comparison" name="photo_comparison">
                             <div class="alert alert-info" role="alert">
                                 <strong>🔍 Photo Comparison:</strong> Compare handover and return photos side by side.
                             </div>
