@@ -102,8 +102,8 @@
     'price': 0.0,
     'currency': 'USD',
     
-    # Odoo 18 specific metadata
-    'post_init_hook': '_post_init_hook',
-    'uninstall_hook': '_uninstall_hook',
-    'pre_init_hook': '_pre_init_hook',
+    # Odoo 18 specific metadata with hooks
+    'post_init_hook': 'hooks._post_init_hook',
+    'uninstall_hook': 'hooks._uninstall_hook', 
+    'pre_init_hook': 'hooks._pre_init_hook',
 }
