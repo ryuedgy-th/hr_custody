@@ -284,6 +284,36 @@ class HrCustody(models.Model):
         compute='_compute_is_read_only'
     )
 
+    # ===== 📸 PHOTO AUTO-ASSIGNMENT METHODS =====
+    
+    # 🔧 NEW: OnChange method to auto-assign photo types
+    @api.onchange('attachment_ids')
+    def _onchange_attachment_ids(self):
+        """🔧 NEW: Auto-assign photo types when attachments change"""
+        if self.attachment_ids:
+            # Find new attachments without photo type
+            new_attachments = self.attachment_ids.filtered(
+                lambda att: (
+                    att.mimetype and 
+                    att.mimetype.startswith('image/') and 
+                    not att.custody_photo_type
+                )
+            )
+            
+            if new_attachments:
+                # Determine default photo type based on state
+                if self.state == 'returned':
+                    default_type = 'return_overall'
+                elif self.state in ['approved']:
+                    default_type = 'handover_overall'
+                else:
+                    default_type = 'handover_overall'
+                
+                # Update new attachments
+                for attachment in new_attachments:
+                    attachment.custody_photo_type = default_type
+                    attachment.res_field = 'attachment_ids'
+
     # ===== 📸 PHOTO COMPUTED METHODS =====
     
     @api.depends('attachment_ids', 'attachment_ids.custody_photo_type')
