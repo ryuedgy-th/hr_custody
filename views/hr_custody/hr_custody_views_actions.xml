@@ -162,20 +162,6 @@
         </field>
     </record>
 
-    <!-- 🤖 NEW: Auto Assignment Helper Actions -->
-    <record id="hr_custody_auto_assignment_action" model="ir.actions.act_window">
-        <field name="name">Auto Assignment Helper</field>
-        <field name="res_model">hr.custody.auto.assignment</field>
-        <field name="view_mode">form</field>
-        <field name="target">new</field>
-        <field name="help" type="html">
-            <p class="oe_view_nocontent_create">
-                Auto-assign photo types to custody attachments.
-            </p>
-            <p>This tool helps assign photo types to uploaded photos automatically.</p>
-        </field>
-    </record>
-
     <!-- MENU STRUCTURE -->
     
     <!-- Main Menu -->
@@ -290,11 +276,11 @@
               sequence="30"
               groups="base.group_system"/>
 
-    <!-- 🤖 NEW: Auto Assignment Helper Menu -->
-    <menuitem action="hr_custody_auto_assignment_action"
+    <!-- 🤖 NEW: Auto Assignment Helper Menu (Updated reference) -->
+    <menuitem action="hr_custody_auto_assignment_action_form"
               id="hr_custody_menu_auto_assignment"
               parent="hr_custody_menu_configuration"
-              name="Auto Assignment Helper"
+              name="🤖 Auto Assignment Helper"
               sequence="31"
               groups="hr.group_hr_manager"/>
 
