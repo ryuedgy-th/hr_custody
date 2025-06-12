@@ -245,6 +245,9 @@
                             <p style="color: #6c757d; margin: 0;">Drag and drop photos here or click to browse</p>
                         </div>
                         
+                        <!-- 🔧 TRIGGER AUTO-ASSIGNMENT: Add hidden field to track changes -->
+                        <field name="id" invisible="1"/>
+                        
                         <field name="handover_photo_ids" 
                                widget="many2many_binary"
                                string=""
@@ -330,6 +333,9 @@
                             <h4 style="color: #28a745; margin-bottom: 8px; font-weight: 600;">Upload Return Photos</h4>
                             <p style="color: #6c757d; margin: 0;">Drag and drop photos here or click to browse</p>
                         </div>
+                        
+                        <!-- 🔧 TRIGGER AUTO-ASSIGNMENT: Add hidden field to track changes -->
+                        <field name="id" invisible="1"/>
                         
                         <field name="return_photo_ids" 
                                widget="many2many_binary"
