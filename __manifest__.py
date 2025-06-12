@@ -1,13 +1,13 @@
 {
     'name': 'Advanced HR Custody Management',
-    'version': '18.0.1.4.0',  # 🔄 BACK TO STABLE: Photo Management System (Testing Suite Removed)
+    'version': '18.0.2.0.0',  # 📁 REFACTORED: Split XML Files for Better Maintainability
     'category': 'Human Resources',
-    'summary': """Modern enterprise-grade custody management with photo documentation and smart workflows""",
+    'summary': """Modern enterprise-grade custody management with modular architecture and photo documentation""",
     'description': """
         🚀 Advanced HR Custody Management - Odoo 18.0
 
         A comprehensive solution for managing company assets and property custody with 
-        advanced approval workflows, photo documentation, real-time tracking, and modern UX design.
+        advanced approval workflows, photo documentation, real-time tracking, and modular architecture.
 
         ✨ KEY FEATURES:
         • 📸 Complete Photo Management System (inspired by hr_expense)
@@ -16,7 +16,14 @@
         • Advanced Multi-Level Approval System
         • Comprehensive Tracking with overdue detection
         • Modern responsive UX with smart filters
-        • Real-time notifications and analytics
+        • Modular XML architecture for better maintainability
+
+        📁 IMPROVED ARCHITECTURE:
+        • Modular file structure for better code organization
+        • Separated concerns (basic forms, photos, search, actions)
+        • Easier maintenance and debugging
+        • Better team collaboration with reduced merge conflicts
+        • Improved performance with focused file loading
 
         📸 PHOTO MANAGEMENT SYSTEM:
         • 📸 Handover Photos - Document initial condition
@@ -24,9 +31,7 @@
         • 🔍 Photo Comparison - Side-by-side view
         • 📊 Quality Analysis - Automatic quality scoring
         • 🏷️ Photo Categorization - By type and purpose
-        • 📱 Mobile Upload - Camera integration
         • 🎨 Gallery View - Beautiful photo browsing
-        • 🧙‍♂️ Bulk Operations - Mass photo management
 
         🎯 SMART FILTERS & WORKFLOW:
         • 🔔 Waiting My Approval (priority view)
@@ -35,68 +40,80 @@
         • ⚠️ Overdue Items
         • 🕐 Due This Week
         • 📸 Photo Status filters
-        • 📊 Comprehensive status and date filters
-
-        🏗️ ENTERPRISE FEATURES:
-        • Hierarchical category organization
-        • Property-specific and category-default approvers
-        • Flexible return management (fixed/flexible/term-end)
-        • Complete audit trail and approval history
-        • Mobile-responsive design
-        • Multi-company support
-        • Complete photo documentation workflow
-        • Advanced photo analytics and reporting
 
         Based on the original Open HRMS Custody module by Cybrosys Techno Solutions,
-        extensively redesigned and enhanced for modern enterprise requirements.
+        extensively redesigned for modern enterprise requirements with modular architecture.
     """,
     'author': 'Enhanced by ryuedgy-th',
     'company': 'Based on Cybrosys Techno Solutions',
     'maintainer': 'ryuedgy-th',
     'website': "https://github.com/ryuedgy-th/hr_custody",
     'depends': ['hr', 'mail', 'base'],
+    
+    # 📁 MODULAR DATA FILES - Organized by Feature
     'data': [
-        # Security files first
+        # 🔐 Security & Access Control
         'security/custody_security.xml',
         'security/ir.model.access.csv',
 
-        # Data files
+        # 📊 Core Data & Sequences
         'data/custody_sequence_data.xml',
         'data/ir_cron_data.xml',
         'data/mail_custody_notification_data.xml',
 
-        # Wizard views (must be before other views that reference them)
+        # 🧙‍♂️ Wizards (must be loaded before views that reference them)
         'wizard/property_return_reason_views.xml',
         'wizard/property_return_date_views.xml',
-        'views/custody_photo_wizard_views.xml',  # 📸 Photo management wizards
+        'views/custody_photo_wizard_views.xml',
 
-        # 🔧 PERFECT DEPENDENCY ORDER - External ID resolution
-        # 1. Main menu structure FIRST (creates all parent menus)
-        'views/hr_custody_menu_structure.xml',  # Creates: hr_custody_main_menu, hr_custody_menu_management, hr_custody_menu_config
+        # 📋 HR CUSTODY VIEWS (Modular Structure)
+        'views/hr_custody/hr_custody_views_basic.xml',     # Core form & list views
+        'views/hr_custody/hr_custody_views_photo.xml',     # Photo management system
+        'views/hr_custody/hr_custody_views_search.xml',    # Search & filters
+        'views/hr_custody/hr_custody_views_actions.xml',   # Actions & menus
         
-        # 2. Base actions and views (no external menu dependencies)  
-        'views/custody_property_views.xml',     # Creates: custody_property_action
-        'views/property_category_views.xml',   # Creates: property_category_action, references hr_custody_menu_config
+        # 🏢 Property Management
+        'views/property/custody_property_views.xml',
+        'views/property/property_category_views.xml',
         
-        # 3. Main views that reference the above actions
-        'views/hr_custody_views.xml',          # References: custody_property_action, hr_custody_menu_management
+        # 📎 Attachment & Photo Management
+        'views/attachment/ir_attachment_custody_views.xml',
+        
+        # 👤 Employee Integration
         'views/hr_employee_views.xml',
         
-        # 📸 4. Photo Management Views
-        'views/ir_attachment_custody_views.xml', # Photo management system
-        
-        # Reports last
+        # 📊 Reports & Analytics
         'reports/report_custody_views.xml',
     ],
+    
+    # 🎨 Assets (CSS/JS)
+    'assets': {
+        'web.assets_backend': [
+            'hr_custody/static/src/css/custody_styles.css',
+            'hr_custody/static/src/css/photo_gallery.css',
+            'hr_custody/static/src/js/custody_widgets.js',
+        ],
+    },
+    
+    # 📦 Demo Data
     'demo': ['data/demo_data.xml'],
+    
+    # 🖼️ Images & Branding
     'images': ['static/description/banner.jpg'],
+    
+    # ⚙️ Configuration
     'license': 'LGPL-3',
     'installable': True,
     'auto_install': False,
     'application': True,
+    'sequence': 85,
+    
+    # 🔧 Dependencies
     'external_dependencies': {
         'python': [],
     },
+    
+    # 📞 Support & Info
     'support': 'https://github.com/ryuedgy-th/hr_custody/issues',
     'live_test_url': False,
     'price': 0.0,

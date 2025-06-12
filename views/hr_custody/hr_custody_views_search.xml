@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 🔍 HR CUSTODY SEARCH & FILTERS - Dedicated File -->
+    
+    <!-- Enhanced Search View with Smart Filters -->
+    <record id="hr_custody_view_search" model="ir.ui.view">
+        <field name="name">hr.custody.search</field>
+        <field name="model">hr.custody</field>
+        <field name="arch" type="xml">
+            <search string="Custody Requests">
+                
+                <!-- Basic Search Fields -->
+                <field name="name" string="Code"/>
+                <field name="employee_id"/>
+                <field name="custody_property_id"/>
+                <field name="purpose"/>
+                <field name="property_approver_ids"/>
+                <field name="approved_by_id"/>
+                <field name="state"/>
+                <field name="return_type"/>
+
+                <!-- 🔥 PRIORITY FILTERS -->
+                <filter string="🔔 Waiting My Approval" name="waiting_my_approval"
+                        domain="[('property_approver_ids', 'in', [uid]), ('state', '=', 'to_approve')]"
+                        help="Requests waiting for your approval"/>
+                
+                <filter string="📋 My Requests" name="my_requests"
+                        domain="[('employee_id.user_id', '=', uid)]"
+                        help="Requests created by me"/>
+                
+                <filter string="✅ Approved by Me" name="approved_by_me"
+                        domain="[('approved_by_id', '=', uid)]"
+                        help="Requests I have approved"/>
+
+                <separator/>
+
+                <!-- 🚨 URGENT FILTERS -->
+                <filter string="⚠️ Overdue Items" name="overdue"
+                        domain="[('is_overdue', '=', True)]"
+                        help="Items that are overdue for return"/>
+
+                <filter string="🕐 Due This Week" name="due_this_week"
+                        domain="[('return_date', '&lt;=', (context_today() + datetime.timedelta(days=7)).strftime('%Y-%m-%d')), ('return_date', '&gt;=', context_today().strftime('%Y-%m-%d')), ('state', '=', 'approved')]"
+                        help="Items due for return within 7 days"/>
+
+                <separator/>
+
+                <!-- 📸 PHOTO STATUS FILTERS -->
+                <filter string="📸 Has Handover Photos" name="has_handover_photos"
+                        domain="[('has_handover_photos', '=', True)]"
+                        help="Items with handover photos"/>
+
+                <filter string="📦 Has Return Photos" name="has_return_photos"
+                        domain="[('has_return_photos', '=', True)]"
+                        help="Items with return photos"/>
+
+                <filter string="📊 Complete Documentation" name="photos_complete"
+                        domain="[('photos_complete', '=', True)]"
+                        help="Items with complete photo documentation"/>
+
+                <filter string="⚠️ Missing Photos" name="missing_photos"
+                        domain="[('state', 'in', ['approved', 'returned']), ('photos_complete', '=', False)]"
+                        help="Items missing photo documentation"/>
+
+                <separator/>
+
+                <!-- 📊 STATUS FILTERS -->
+                <filter string="📝 Draft" name="draft"
+                        domain="[('state', '=', 'draft')]"/>
+                <filter string="⏳ Waiting Approval" name="to_approve"
+                        domain="[('state', '=', 'to_approve')]"/>
+                <filter string="✅ Approved" name="approved"
+                        domain="[('state', '=', 'approved')]"/>
+                <filter string="📦 Returned" name="returned"
+                        domain="[('state', '=', 'returned')]"/>
+                <filter string="❌ Rejected" name="rejected"
+                        domain="[('state', '=', 'rejected')]"/>
+
+                <separator/>
+
+                <!-- 📅 DATE FILTERS -->
+                <filter string="📅 Returned This Week" name="returned_this_week"
+                        domain="[('actual_return_date', '&gt;=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <filter string="📅 Returned This Month" name="returned_this_month"
+                        domain="[('actual_return_date', '&gt;=', (context_today().replace(day=1)).strftime('%Y-%m-%d'))]"/>
+
+                <separator/>
+
+                <!-- 🔄 RETURN TYPE FILTERS -->
+                <filter string="📅 Fixed Return Date" name="fixed_date"
+                        domain="[('return_type', '=', 'date')]"/>
+                <filter string="🔄 Flexible Return" name="flexible"
+                        domain="[('return_type', '=', 'flexible')]"/>
+                <filter string="🎓 Term End Return" name="term_end"
+                        domain="[('return_type', '=', 'term_end')]"/>
+
+                <separator/>
+
+                <!-- 📊 GROUP BY OPTIONS -->
+                <group expand="0" string="Group By">
+                    <filter string="📊 Status" name="group_status"
+                            context="{'group_by':'state'}"/>
+                    <filter string="👤 Employee" name="group_employee"
+                            context="{'group_by':'employee_id'}"/>
+                    <filter string="✅ Approved By" name="group_approved_by"
+                            context="{'group_by':'approved_by_id'}"/>
+                    <filter string="⚠️ Return Status" name="group_return_status"
+                            context="{'group_by':'is_overdue'}"/>
+                    <filter string="📸 Photo Status" name="group_photo_status"
+                            context="{'group_by':'photos_complete'}"/>
+                    <filter string="📅 Request Date" name="group_request_date"
+                            context="{'group_by':'date_request'}"/>
+                    <filter string="🔄 Return Type" name="group_return_type"
+                            context="{'group_by':'return_type'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Saved Filters for Quick Access -->
+    <record id="filter_my_urgent_requests" model="ir.filters">
+        <field name="name">🚨 My Urgent Requests</field>
+        <field name="model_id">hr.custody</field>
+        <field name="domain">[('employee_id.user_id', '=', uid), '|', ('is_overdue', '=', True), ('state', '=', 'to_approve')]</field>
+        <field name="user_id" eval="False"/>
+        <field name="is_default">False</field>
+    </record>
+
+    <record id="filter_pending_approvals" model="ir.filters">
+        <field name="name">📋 Pending My Approval</field>
+        <field name="model_id">hr.custody</field>
+        <field name="domain">[('property_approver_ids', 'in', [uid]), ('state', '=', 'to_approve')]</field>
+        <field name="user_id" eval="False"/>
+        <field name="is_default">False</field>
+    </record>
+
+    <record id="filter_missing_photos" model="ir.filters">
+        <field name="name">📸 Missing Photo Documentation</field>
+        <field name="model_id">hr.custody</field>
+        <field name="domain">[('state', 'in', ['approved', 'returned']), ('photos_complete', '=', False)]</field>
+        <field name="user_id" eval="False"/>
+        <field name="is_default">False</field>
+    </record>
+
+    <record id="filter_overdue_items" model="ir.filters">
+        <field name="name">⚠️ Overdue Returns</field>
+        <field name="model_id">hr.custody</field>
+        <field name="domain">[('is_overdue', '=', True), ('state', '=', 'approved')]</field>
+        <field name="user_id" eval="False"/>
+        <field name="is_default">False</field>
+    </record>
+</odoo>

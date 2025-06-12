@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 🎯 HR CUSTODY ACTIONS & MENUS - Dedicated File -->
+    
+    <!-- Main Custody Action with Smart Defaults -->
+    <record id="hr_custody_action" model="ir.actions.act_window">
+        <field name="name">Custody Requests</field>
+        <field name="res_model">hr.custody</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="hr_custody.hr_custody_view_search"/>
+        <field name="context">{
+            'search_default_waiting_my_approval': 1,
+        }</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Click to Create a New Custody Request.
+            </p>
+            <p>
+                <strong>🔥 Smart Filters Available:</strong><br/>
+                • <strong>🔔 Waiting My Approval</strong> - See requests needing your approval<br/>
+                • <strong>📋 My Requests</strong> - View your own requests<br/>
+                • <strong>⚠️ Overdue Items</strong> - Critical items past return date<br/>
+                • <strong>🕐 Due This Week</strong> - Items due soon<br/>
+                • <strong>📸 Photo Status</strong> - Track photo documentation
+            </p>
+        </field>
+    </record>
+
+    <!-- Action for My Requests -->
+    <record id="hr_custody_action_my_requests" model="ir.actions.act_window">
+        <field name="name">My Custody Requests</field>
+        <field name="res_model">hr.custody</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="hr_custody.hr_custody_view_search"/>
+        <field name="domain">[('employee_id.user_id', '=', uid)]</field>
+        <field name="context">{
+            'search_default_my_requests': 1,
+        }</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Click to Create a New Custody Request.
+            </p>
+            <p>Here you can see all your custody requests and their current status.</p>
+        </field>
+    </record>
+
+    <!-- Action for Pending Approvals -->
+    <record id="hr_custody_action_pending_approvals" model="ir.actions.act_window">
+        <field name="name">Pending Approvals</field>
+        <field name="res_model">hr.custody</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="hr_custody.hr_custody_view_search"/>
+        <field name="domain">[('property_approver_ids', 'in', [uid]), ('state', '=', 'to_approve')]</field>
+        <field name="context">{
+            'search_default_waiting_my_approval': 1,
+        }</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                No requests waiting for your approval.
+            </p>
+            <p>When custody requests need your approval, they will appear here.</p>
+        </field>
+    </record>
+
+    <!-- Action for Overdue Items -->
+    <record id="hr_custody_action_overdue" model="ir.actions.act_window">
+        <field name="name">Overdue Returns</field>
+        <field name="res_model">hr.custody</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="hr_custody.hr_custody_view_search"/>
+        <field name="domain">[('is_overdue', '=', True), ('state', '=', 'approved')]</field>
+        <field name="context">{
+            'search_default_overdue': 1,
+        }</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                No overdue items found.
+            </p>
+            <p>Items that are past their return date will appear here for follow-up action.</p>
+        </field>
+    </record>
+
+    <!-- Action for Photo Documentation Review -->
+    <record id="hr_custody_action_photo_review" model="ir.actions.act_window">
+        <field name="name">Photo Documentation Review</field>
+        <field name="res_model">hr.custody</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="hr_custody.hr_custody_view_search"/>
+        <field name="domain">[('state', 'in', ['approved', 'returned']), ('photos_complete', '=', False)]</field>
+        <field name="context">{
+            'search_default_missing_photos': 1,
+        }</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                All items have complete photo documentation.
+            </p>
+            <p>Items missing handover or return photos will appear here for follow-up.</p>
+        </field>
+    </record>
+
+    <!-- Property Management Actions -->
+    <record id="custody_property_action" model="ir.actions.act_window">
+        <field name="name">Properties</field>
+        <field name="res_model">custody.property</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Click to Create a New Property.
+            </p>
+            <p>Manage properties that can be assigned to employees for custody.</p>
+        </field>
+    </record>
+
+    <!-- Property Categories Action -->
+    <record id="property_category_action" model="ir.actions.act_window">
+        <field name="name">Property Categories</field>
+        <field name="res_model">property.category</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Click to Create a New Property Category.
+            </p>
+            <p>Organize properties into categories for better management.</p>
+        </field>
+    </record>
+
+    <!-- Attachment Management Action -->
+    <record id="ir_attachment_custody_action" model="ir.actions.act_window">
+        <field name="name">Custody Photos</field>
+        <field name="res_model">ir.attachment</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('res_model', '=', 'hr.custody'), ('mimetype', 'like', 'image%')]</field>
+        <field name="context">{'default_res_model': 'hr.custody'}</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                No custody photos found.
+            </p>
+            <p>All photos related to custody requests will appear here.</p>
+        </field>
+    </record>
+
+    <!-- 📊 MENU STRUCTURE -->
+    
+    <!-- Main Menu -->
+    <menuitem id="hr_custody_menu_management" 
+              name="Custody Management" 
+              web_icon="hr_custody,static/description/icon.png"
+              sequence="85"/>
+
+    <!-- Primary Menu Items -->
+    <menuitem action="hr_custody_action"
+              id="hr_custody_menu_unified"
+              parent="hr_custody_menu_management"
+              name="📋 Custody Requests"
+              sequence="1"/>
+
+    <menuitem action="hr_custody_action_my_requests"
+              id="hr_custody_menu_my_requests"
+              parent="hr_custody_menu_management"
+              name="📋 My Requests"
+              sequence="2"/>
+
+    <menuitem action="hr_custody_action_pending_approvals"
+              id="hr_custody_menu_pending_approvals"
+              parent="hr_custody_menu_management"
+              name="🔔 Pending Approvals"
+              sequence="3"
+              groups="hr.group_hr_user,hr.group_hr_manager"/>
+
+    <!-- Properties Menu -->
+    <menuitem action="custody_property_action"
+              id="hr_property_menu"
+              parent="hr_custody_menu_management"
+              name="🏢 Properties"
+              sequence="10"
+              groups="hr.group_hr_manager"/>
+
+    <menuitem action="property_category_action"
+              id="property_category_menu"
+              parent="hr_custody_menu_management"
+              name="📂 Property Categories"
+              sequence="11"
+              groups="hr.group_hr_manager"/>
+
+    <!-- Management Menu Section -->
+    <menuitem id="hr_custody_menu_management_section"
+              parent="hr_custody_menu_management"
+              name="📊 Management"
+              sequence="20"
+              groups="hr.group_hr_manager"/>
+
+    <menuitem action="hr_custody_action_overdue"
+              id="hr_custody_menu_overdue"
+              parent="hr_custody_menu_management_section"
+              name="⚠️ Overdue Returns"
+              sequence="21"
+              groups="hr.group_hr_manager"/>
+
+    <menuitem action="hr_custody_action_photo_review"
+              id="hr_custody_menu_photo_review"
+              parent="hr_custody_menu_management_section"
+              name="📸 Photo Review"
+              sequence="22"
+              groups="hr.group_hr_manager"/>
+
+    <menuitem action="ir_attachment_custody_action"
+              id="ir_attachment_custody_menu"
+              parent="hr_custody_menu_management_section"
+              name="📷 All Photos"
+              sequence="23"
+              groups="hr.group_hr_manager"/>
+
+    <!-- Configuration Menu Section -->
+    <menuitem id="hr_custody_menu_configuration"
+              parent="hr_custody_menu_management"
+              name="⚙️ Configuration"
+              sequence="30"
+              groups="base.group_system"/>
+
+    <!-- Server Actions for Bulk Operations -->
+    <record id="action_bulk_approve_custody" model="ir.actions.server">
+        <field name="name">Bulk Approve Selected</field>
+        <field name="model_id" ref="model_hr_custody"/>
+        <field name="binding_model_id" ref="model_hr_custody"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+for record in records:
+    if record.state == 'to_approve' and env.user in record.property_approver_ids:
+        record.approve()
+        </field>
+        <field name="groups_id" eval="[(4, ref('hr.group_hr_manager'))]"/>
+    </record>
+
+    <record id="action_bulk_return_custody" model="ir.actions.server">
+        <field name="name">Bulk Return Selected</field>
+        <field name="model_id" ref="model_hr_custody"/>
+        <field name="binding_model_id" ref="model_hr_custody"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+for record in records:
+    if record.state == 'approved':
+        record.set_to_return()
+        </field>
+        <field name="groups_id" eval="[(4, ref('hr.group_hr_manager'))]"/>
+    </record>
+
+    <!-- Scheduled Actions for Automation -->
+    <record id="ir_cron_custody_overdue_reminder" model="ir.cron">
+        <field name="name">Custody Overdue Reminder</field>
+        <field name="model_id" ref="model_hr_custody"/>
+        <field name="state">code</field>
+        <field name="code">model.send_overdue_reminders()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="active" eval="True"/>
+    </record>
+
+    <!-- URL Actions for Quick Access -->
+    <record id="action_quick_create_custody" model="ir.actions.act_url">
+        <field name="name">Quick Create Custody</field>
+        <field name="url">/web#action=hr_custody.hr_custody_action&amp;view_type=form&amp;mode=edit</field>
+        <field name="target">current</field>
+    </record>
+
+    <!-- QWeb Reports -->
+    <record id="action_custody_report" model="ir.actions.report">
+        <field name="name">Custody Report</field>
+        <field name="model">hr.custody</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">hr_custody.custody_report_template</field>
+        <field name="report_file">hr_custody.custody_report_template</field>
+        <field name="binding_model_id" ref="model_hr_custody"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Dashboard Action -->
+    <record id="hr_custody_dashboard_action" model="ir.actions.client">
+        <field name="name">Custody Dashboard</field>
+        <field name="tag">hr_custody_dashboard</field>
+        <field name="target">current</field>
+    </record>
+
+    <menuitem action="hr_custody_dashboard_action"
+              id="hr_custody_menu_dashboard"
+              parent="hr_custody_menu_management"
+              name="📊 Dashboard"
+              sequence="0"
+              groups="hr.group_hr_user,hr.group_hr_manager"/>
+</odoo>
