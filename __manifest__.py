@@ -1,40 +1,39 @@
 {
     'name': 'Advanced HR Custody Management',
-    'version': '18.0.1.3.0',  # 🚀 MAJOR RELEASE: Complete UX redesign and feature enhancement
+    'version': '18.0.1.2.0',  # 🔄 RESTORED: Pre-refactor stable version
     'category': 'Human Resources',
-    'summary': """Modern enterprise-grade custody management with smart workflows and hierarchical categories""",
+    'summary': """Complete HR custody management with professional photo documentation""",
     'description': """
-        🚀 Advanced HR Custody Management - Odoo 18.0
+        🚀 Advanced HR Custody Management - Odoo 18.0 (Pre-Refactor Stable)
 
         A comprehensive solution for managing company assets and property custody with 
-        advanced approval workflows, real-time tracking, and modern UX design.
+        advanced photo documentation, approval workflows, and professional UI/UX.
 
-        ✨ KEY FEATURES:
-        • Smart Workflow Management with unified interface
-        • Hierarchical Property Categories with inheritance
-        • Advanced Multi-Level Approval System
-        • Comprehensive Tracking with overdue detection
-        • Modern responsive UX with smart filters
-        • Real-time notifications and analytics
-
-        🎯 SMART FILTERS & WORKFLOW:
-        • 🔔 Waiting My Approval (priority view)
-        • 📋 My Requests
-        • ✅ Approved by Me  
-        • ⚠️ Overdue Items
-        • 🕐 Due This Week
-        • 📊 Comprehensive status and date filters
-
-        🏗️ ENTERPRISE FEATURES:
-        • Hierarchical category organization
-        • Property-specific and category-default approvers
-        • Flexible return management (fixed/flexible/term-end)
-        • Complete audit trail and approval history
+        ✨ KEY FEATURES (WORKING STABLE VERSION):
+        • Complete Photo Management System with professional galleries
+        • Smart photo type assignment (handover/return with 7 categories)
+        • Professional UI/UX with working image URLs (raw_value fix applied)
+        • Multi-level approval workflow system
+        • Real-time photo upload and gallery display
         • Mobile-responsive design
-        • Multi-company support
 
-        Based on the original Open HRMS Custody module by Cybrosys Techno Solutions,
-        extensively redesigned and enhanced for modern enterprise requirements.
+        📸 PHOTO MANAGEMENT:
+        • Professional photo galleries with thumbnails and badges
+        • Photo categorization: handover_overall, handover_detail, handover_serial
+        • Return photos: return_overall, return_detail, return_damage, maintenance
+        • Quality scoring and analytics
+        • Side-by-side photo comparison
+        • Manual photo type assignment buttons
+
+        🔧 TECHNICAL STATUS:
+        • Odoo 18.0 compatibility verified
+        • URL comma issue fixed (using raw_value)
+        • XML syntax errors resolved
+        • All photo features working correctly
+        • No module loading errors
+
+        This is the stable version before modular refactoring, containing the complete
+        working photo management system in a single, well-tested codebase.
     """,
     'author': 'Enhanced by ryuedgy-th',
     'company': 'Based on Cybrosys Techno Solutions',
@@ -55,19 +54,13 @@
         'wizard/property_return_reason_views.xml',
         'wizard/property_return_date_views.xml',
 
-        # 🔧 PERFECT DEPENDENCY ORDER - External ID resolution
-        # 1. Main menu structure FIRST (creates all parent menus)
-        'views/hr_custody_menu_structure.xml',  # Creates: hr_custody_main_menu, hr_custody_menu_management, hr_custody_menu_config
-        
-        # 2. Base actions and views (no external menu dependencies)  
-        'views/custody_property_views.xml',     # Creates: custody_property_action
-        'views/property_category_views.xml',   # Creates: property_category_action, references hr_custody_menu_config
-        
-        # 3. Main views that reference the above actions
-        'views/hr_custody_views.xml',          # References: custody_property_action, hr_custody_menu_management
+        # Core models and views (working stable version)
+        'views/hr_custody_views_complete.xml',          # Main monolithic view file (pre-refactor)
+        'views/custody_property_views.xml',
+        'views/property_category_views.xml',
         'views/hr_employee_views.xml',
         
-        # Reports last
+        # Reports
         'reports/report_custody_views.xml',
     ],
     'demo': ['data/demo_data.xml'],
