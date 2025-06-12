@@ -245,9 +245,6 @@
                             <p style="color: #6c757d; margin: 0;">Drag and drop photos here or click to browse</p>
                         </div>
                         
-                        <!-- 🔧 TRIGGER AUTO-ASSIGNMENT: Add hidden field to track changes -->
-                        <field name="id" invisible="1"/>
-                        
                         <field name="handover_photo_ids" 
                                widget="many2many_binary"
                                string=""
@@ -258,6 +255,16 @@
                                }"
                                readonly="state == 'returned'"
                                groups="hr.group_hr_user,hr.group_hr_manager"/>
+                        
+                        <!-- 🔧 NEW: Button to assign photo types -->
+                        <div class="text-center" style="margin-top: 15px;">
+                            <button string="🏷️ Assign Photo Types" 
+                                    type="object" 
+                                    name="action_assign_handover_photo_types"
+                                    class="btn btn-primary btn-sm"
+                                    groups="hr.group_hr_user,hr.group_hr_manager"
+                                    help="Click to automatically assign photo types to uploaded images"/>
+                        </div>
                     </div>
 
                     <!-- Photo Gallery -->
@@ -334,9 +341,6 @@
                             <p style="color: #6c757d; margin: 0;">Drag and drop photos here or click to browse</p>
                         </div>
                         
-                        <!-- 🔧 TRIGGER AUTO-ASSIGNMENT: Add hidden field to track changes -->
-                        <field name="id" invisible="1"/>
-                        
                         <field name="return_photo_ids" 
                                widget="many2many_binary"
                                string=""
@@ -346,6 +350,16 @@
                                    'max_upload_size': 5242880
                                }"
                                groups="hr.group_hr_user,hr.group_hr_manager"/>
+                        
+                        <!-- 🔧 NEW: Button to assign photo types -->
+                        <div class="text-center" style="margin-top: 15px;">
+                            <button string="🏷️ Assign Photo Types" 
+                                    type="object" 
+                                    name="action_assign_return_photo_types"
+                                    class="btn btn-success btn-sm"
+                                    groups="hr.group_hr_user,hr.group_hr_manager"
+                                    help="Click to automatically assign photo types to uploaded images"/>
+                        </div>
                     </div>
 
                     <!-- Return Photo Gallery -->
