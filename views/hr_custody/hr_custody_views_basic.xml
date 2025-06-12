@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- HR CUSTODY BASIC FORM VIEW - Simplified & Clean -->
+    <!-- SUPER SIMPLE HR CUSTODY FORM VIEW -->
     
-    <!-- Main Custody Form View -->
+    <!-- Main Form View -->
     <record id="hr_custody_view_form" model="ir.ui.view">
         <field name="name">hr.custody.form</field>
         <field name="model">hr.custody</field>
@@ -26,119 +26,43 @@
                     <button string="Set to Draft" type="object"
                             name="set_to_draft"
                             invisible="state != 'rejected'"/>
+                            
                     <button string="Return" type="object"
                             name="set_to_return"
                             groups="hr.group_hr_manager"
                             invisible="state != 'approved'"/>
+                            
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,to_approve,approved,returned"/>
                 </header>
+                
                 <sheet>
-                    <!-- Alert Messages -->
-                    <div class="alert alert-danger" role="alert" invisible="not is_overdue or state == 'returned'">
-                        <strong>⚠️ OVERDUE:</strong> This item is <field name="days_overdue" nolabel="1"/> days overdue!
-                    </div>
-
-                    <div class="alert alert-info" role="alert" invisible="state != 'to_approve'">
-                        <strong>🔔 Waiting for approval from any of these users:</strong><br/>
-                        <field name="property_approver_ids" widget="many2many_tags" readonly="1"/>
-                    </div>
-
-                    <div class="alert alert-warning" role="alert" invisible="state != 'to_approve' or uid not in property_approver_ids">
-                        <strong>⚡ This request is waiting for YOUR approval!</strong>
-                    </div>
-
-                    <div class="alert alert-success" role="alert" invisible="state not in ['approved', 'returned']">
-                        <strong>✅ Approved by:</strong>
-                        <field name="approved_by_id" readonly="1" nolabel="1"/>
-                        <strong>on</strong>
-                        <field name="approved_date" readonly="1" nolabel="1"/>
-                    </div>
-
-                    <div class="alert alert-success" role="alert" invisible="state != 'returned'">
-                        <strong>📦 Returned:</strong>
-                        Equipment returned on <field name="actual_return_date" readonly="1" nolabel="1"/>
-                        by <field name="returned_by_id" readonly="1" nolabel="1"/>
-                    </div>
-
-                    <!-- Title -->
                     <h1>
                         <field name="name" readonly="1" nolabel="1"/>
                     </h1>
                     
-                    <!-- Main Form Fields -->
                     <group>
                         <group>
                             <field name="employee_id"/>
-                            <field name="custody_property_id"
-                                   readonly="state != 'draft'"
-                                   domain="[('property_status', '=', 'available')]"/>
-                            <field name="purpose" readonly="state != 'draft'"/>
+                            <field name="custody_property_id"/>
+                            <field name="purpose"/>
                         </group>
                         <group>
-                            <field name="date_request" readonly="state != 'draft'"/>
-                            <field name="return_type" readonly="state != 'draft'" widget="radio"/>
-                            <field name="return_date" readonly="state != 'draft'"
-                                   invisible="return_type != 'date'"
-                                   string="Expected Return Date"/>
-                            <field name="expected_return_period" readonly="state != 'draft'"
-                                   invisible="return_type == 'date'"/>
-                            <field name="return_status_display" readonly="1"/>
-                            <field name="rejected_reason"
-                                   invisible="state != 'rejected'"/>
-
-                            <!-- Approval Information -->
-                            <field name="approved_by_id"
-                                   invisible="state not in ['approved', 'returned']"/>
-                            <field name="approved_date"
-                                   invisible="state not in ['approved', 'returned']"/>
-
-                            <!-- Return Information -->
-                            <field name="actual_return_date"
-                                   invisible="state != 'returned'"/>
-                            <field name="returned_by_id"
-                                   invisible="state != 'returned'"/>
-
-                            <field name="company_id"
-                                   options="{'no_create': True}"/>
+                            <field name="date_request"/>
+                            <field name="return_type" widget="radio"/>
+                            <field name="return_date" invisible="return_type != 'date'"/>
+                            <field name="expected_return_period" invisible="return_type == 'date'"/>
+                            <field name="return_status_display"/>
                         </group>
                     </group>
 
-                    <!-- Hidden fields for computed values -->
-                    <field name="property_approver_ids" invisible="1"/>
-                    <field name="is_overdue" invisible="1"/>
-                    <field name="days_overdue" invisible="1"/>
-
-                    <!-- Notebook for additional tabs -->
                     <notebook>
                         <page string="Notes">
                             <field name="notes"/>
                         </page>
-
-                        <!-- Approval Information Tab -->
-                        <page string="Approval Info" invisible="state == 'draft'">
-                            <group>
-                                <group string="Available Approvers">
-                                    <field name="property_approver_ids" widget="many2many_tags" readonly="1"/>
-                                </group>
-                                <group string="Approval Details" invisible="state not in ['approved', 'returned']">
-                                    <field name="approved_by_id" readonly="1"/>
-                                    <field name="approved_date" readonly="1"/>
-                                </group>
-                            </group>
-                            <group string="Return Details" invisible="state != 'returned'">
-                                <group>
-                                    <field name="actual_return_date" readonly="1"/>
-                                    <field name="returned_by_id" readonly="1"/>
-                                </group>
-                                <group>
-                                    <field name="return_notes" readonly="1"/>
-                                </group>
-                            </group>
-                        </page>
                     </notebook>
                 </sheet>
-                <!-- Chatter -->
+                
                 <div class="oe_chatter">
                     <field name="message_follower_ids"/>
                     <field name="message_ids"/>
@@ -147,7 +71,7 @@
         </field>
     </record>
 
-    <!-- Clean List/Tree View -->
+    <!-- List View -->
     <record id="hr_custody_view_tree" model="ir.ui.view">
         <field name="name">hr.custody.list</field>
         <field name="model">hr.custody</field>
@@ -157,26 +81,9 @@
                 <field name="employee_id"/>
                 <field name="custody_property_id"/>
                 <field name="purpose"/>
-
-                <!-- Approvers & Approved By Columns -->
-                <field name="property_approver_ids" widget="many2many_tags" string="Approvers"/>
-                <field name="approved_by_id" string="Approved By"/>
-
                 <field name="date_request"/>
-                <field name="return_type"/>
-                <field name="return_date" string="Expected Return"/>
-                <field name="actual_return_date" string="Actual Return"/>
-                <field name="return_status_display"/>
-
-                <!-- Hidden fields for decorations -->
-                <field name="is_overdue" invisible="1"/>
-                <field name="days_overdue" invisible="1"/>
-
-                <field name="state" widget="badge"
-                       decoration-success="state == 'approved'"
-                       decoration-info="state == 'to_approve'"
-                       decoration-muted="state == 'returned'"
-                       decoration-danger="state == 'rejected' or is_overdue"/>
+                <field name="return_date"/>
+                <field name="state" widget="badge"/>
             </list>
         </field>
     </record>
