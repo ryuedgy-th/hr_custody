@@ -60,10 +60,10 @@
                             <!-- Image Display Area -->
                             <div class="o_image_box" style="position: relative; text-align: center; margin-bottom: 10px;">
                                 <t t-if="record.mimetype.value and record.mimetype.value.startsWith('image/')">
-                                    <a t-attf-href="/web/image/ir.attachment/#{record.id.value}/datas" target="_blank" 
+                                    <a t-attf-href="/web/image/#{record.id.value}?field=datas" target="_blank" 
                                        style="display: block; position: relative;">
                                         <img class="o_image" 
-                                             t-attf-src="/web/image/ir.attachment/#{record.id.value}/datas"
+                                             t-attf-src="/web/image/#{record.id.value}?field=datas"
                                              style="width: 200px; height: 150px; object-fit: cover; 
                                                     border-radius: 8px; cursor: pointer;"
                                              t-att-alt="record.name.value"
@@ -155,13 +155,13 @@
                                 
                                 <!-- Action Buttons -->
                                 <div class="text-center">
-                                    <a t-attf-href="/web/image/ir.attachment/#{record.id.value}/datas" 
+                                    <a t-attf-href="/web/image/#{record.id.value}?field=datas" 
                                        target="_blank"
                                        class="btn btn-sm btn-outline-primary" 
                                        style="margin-right: 5px;">
                                         🔍 View Full Size
                                     </a>
-                                    <a t-attf-href="/web/content/ir.attachment/#{record.id.value}/datas?download=true" 
+                                    <a t-attf-href="/web/content/#{record.id.value}?download=true" 
                                        target="_blank"
                                        class="btn btn-sm btn-outline-secondary">
                                         📥 Download
@@ -264,256 +264,4 @@
                     <!-- Photo Gallery -->
                     <div invisible="not handover_photo_count">
                         <div style="display: flex; align-items: center; justify-content: space-between; 
-                                    margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #e9ecef;">
-                            <h4 style="color: #007bff; margin: 0; font-weight: 600; display: flex; align-items: center;">
-                                <span style="background: #007bff; color: white; width: 32px; height: 32px; 
-                                             border-radius: 50%; display: inline-flex; align-items: center; 
-                                             justify-content: center; margin-right: 12px; font-size: 16px;">📸</span>
-                                Handover Photo Gallery
-                            </h4>
-                            <span style="background: #e3f2fd; color: #1976d2; padding: 6px 12px; 
-                                         border-radius: 20px; font-size: 14px; font-weight: 500;">
-                                <field name="handover_photo_count" nolabel="1"/> photos
-                            </span>
-                        </div>
-                        
-                        <field name="handover_photo_ids" 
-                               mode="kanban"
-                               nolabel="1"
-                               kanban_view_ref="hr_custody.ir_attachment_custody_view_kanban"/>
-                    </div>
-
-                    <!-- Empty State -->
-                    <div invisible="handover_photo_count" 
-                         style="text-align: center; padding: 60px 20px; background: #f8f9fa; 
-                                border-radius: 16px; border: 2px dashed #dee2e6;">
-                        <div style="font-size: 64px; color: #dee2e6; margin-bottom: 20px;">📸</div>
-                        <h4 style="color: #6c757d; margin-bottom: 12px;">No Handover Photos Yet</h4>
-                        <p style="color: #adb5bd; margin: 0;">Upload photos using the area above to document the handover condition</p>
-                    </div>
-                </page>
-
-                <!-- 📦 Return Photos Tab -->
-                <page string="📦 Return Photos" 
-                      invisible="state != 'returned'">
-                    
-                    <!-- Guidelines Banner -->
-                    <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); 
-                                color: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; 
-                                box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-                        <div class="row">
-                            <div class="col-md-8">
-                                <h4 style="margin: 0 0 12px 0; font-weight: 600;">📦 Return Photo Guidelines</h4>
-                                <div class="row" style="font-size: 13px; line-height: 1.6;">
-                                    <div class="col-md-6">
-                                        • Document the condition when returned<br/>
-                                        • Show any damage or wear clearly<br/>
-                                        • Compare with handover condition
-                                    </div>
-                                    <div class="col-md-6">
-                                        • Include any missing accessories<br/>
-                                        • Take photos from same angles as handover<br/>
-                                        • Note any changes or issues
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4 text-right">
-                                <div style="font-size: 48px; opacity: 0.7;">📦</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Upload Section -->
-                    <div style="background: #f8f9fa; border: 2px dashed #dee2e6; 
-                                border-radius: 16px; padding: 24px; margin-bottom: 24px; 
-                                transition: all 0.3s ease;">
-                        <div class="text-center" style="margin-bottom: 20px;">
-                            <div style="background: #28a745; color: white; width: 60px; height: 60px; 
-                                        border-radius: 50%; display: inline-flex; align-items: center; 
-                                        justify-content: center; margin-bottom: 12px; font-size: 24px;">📦</div>
-                            <h4 style="color: #28a745; margin-bottom: 8px; font-weight: 600;">Upload Return Photos</h4>
-                            <p style="color: #6c757d; margin: 0;">Drag and drop photos here or click to browse</p>
-                        </div>
-                        
-                        <field name="return_photo_ids" 
-                               widget="many2many_binary"
-                               string=""
-                               nolabel="1"
-                               options="{
-                                   'accepted_file_extensions': 'image/*',
-                                   'max_upload_size': 5242880
-                               }"
-                               context="{
-                                   'default_custody_photo_type': 'return_overall',
-                                   'default_res_model': 'hr.custody'
-                               }"
-                               groups="hr.group_hr_user,hr.group_hr_manager"/>
-                    </div>
-
-                    <!-- Return Photo Gallery -->
-                    <div invisible="not return_photo_count">
-                        <div style="display: flex; align-items: center; justify-content: space-between; 
-                                    margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #e9ecef;">
-                            <h4 style="color: #28a745; margin: 0; font-weight: 600; display: flex; align-items: center;">
-                                <span style="background: #28a745; color: white; width: 32px; height: 32px; 
-                                             border-radius: 50%; display: inline-flex; align-items: center; 
-                                             justify-content: center; margin-right: 12px; font-size: 16px;">📦</span>
-                                Return Photo Gallery
-                            </h4>
-                            <span style="background: #e8f5e8; color: #2e7d32; padding: 6px 12px; 
-                                         border-radius: 20px; font-size: 14px; font-weight: 500;">
-                                <field name="return_photo_count" nolabel="1"/> photos
-                            </span>
-                        </div>
-                        
-                        <field name="return_photo_ids" 
-                               mode="kanban"
-                               nolabel="1"
-                               kanban_view_ref="hr_custody.ir_attachment_custody_view_kanban"/>
-                    </div>
-
-                    <!-- Empty State -->
-                    <div invisible="return_photo_count" 
-                         style="text-align: center; padding: 60px 20px; background: #f8f9fa; 
-                                border-radius: 16px; border: 2px dashed #dee2e6;">
-                        <div style="font-size: 64px; color: #dee2e6; margin-bottom: 20px;">📦</div>
-                        <h4 style="color: #6c757d; margin-bottom: 12px;">No Return Photos Yet</h4>
-                        <p style="color: #adb5bd; margin: 0;">Upload photos using the area above to document the return condition</p>
-                    </div>
-                </page>
-
-                <!-- 🔍 Photo Comparison Tab -->
-                <page string="🔍 Photo Comparison" 
-                      invisible="state != 'returned' or not has_handover_photos or not has_return_photos">
-                    
-                    <!-- Comparison Header -->
-                    <div style="background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%); 
-                                color: white; border-radius: 12px; padding: 20px; margin-bottom: 24px; 
-                                box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-                        <div class="row">
-                            <div class="col-md-8">
-                                <h4 style="margin: 0 0 8px 0; font-weight: 600;">🔍 Photo Comparison Analysis</h4>
-                                <p style="margin: 0; opacity: 0.9;">Compare handover vs return condition side by side</p>
-                            </div>
-                            <div class="col-md-4 text-right">
-                                <div style="font-size: 48px; opacity: 0.7;">🔍</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); 
-                                        border-radius: 12px; padding: 16px; margin-bottom: 16px;">
-                                <h4 style="color: #1976d2; margin: 0; font-weight: 600;">📸 Handover Condition</h4>
-                            </div>
-                            <field name="handover_photo_ids" 
-                                   mode="kanban"
-                                   nolabel="1"
-                                   kanban_view_ref="hr_custody.ir_attachment_custody_view_kanban"/>
-                        </div>
-                        <div class="col-md-6">
-                            <div style="background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%); 
-                                        border-radius: 12px; padding: 16px; margin-bottom: 16px;">
-                                <h4 style="color: #2e7d32; margin: 0; font-weight: 600;">📦 Return Condition</h4>
-                            </div>
-                            <field name="return_photo_ids" 
-                                   mode="kanban"
-                                   nolabel="1"
-                                   kanban_view_ref="hr_custody.ir_attachment_custody_view_kanban"/>
-                        </div>
-                    </div>
-
-                    <!-- Documentation Summary -->
-                    <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); 
-                                border-radius: 12px; padding: 20px; margin-top: 24px;">
-                        <h5 style="color: #495057; margin-bottom: 16px; font-weight: 600;">📊 Documentation Summary</h5>
-                        <div class="row">
-                            <div class="col-md-3">
-                                <div style="text-align: center; padding: 12px;">
-                                    <div style="font-size: 24px; font-weight: 700; color: #007bff;">
-                                        <field name="handover_photo_count" nolabel="1"/>
-                                    </div>
-                                    <div style="font-size: 12px; color: #6c757d; text-transform: uppercase; letter-spacing: 1px;">
-                                        Handover Photos
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div style="text-align: center; padding: 12px;">
-                                    <div style="font-size: 24px; font-weight: 700; color: #28a745;">
-                                        <field name="return_photo_count" nolabel="1"/>
-                                    </div>
-                                    <div style="font-size: 12px; color: #6c757d; text-transform: uppercase; letter-spacing: 1px;">
-                                        Return Photos
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div style="text-align: center; padding: 12px;">
-                                    <div style="font-size: 24px; font-weight: 700; color: #6f42c1;">
-                                        <field name="total_photo_count" nolabel="1"/>
-                                    </div>
-                                    <div style="font-size: 12px; color: #6c757d; text-transform: uppercase; letter-spacing: 1px;">
-                                        Total Photos
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div style="text-align: center; padding: 12px;">
-                                    <div style="font-size: 20px;">
-                                        <span style="color: #28a745;" invisible="not photos_complete">✅ Complete</span>
-                                        <span style="color: #ffc107;" invisible="photos_complete">⚠️ Incomplete</span>
-                                    </div>
-                                    <div style="font-size: 12px; color: #6c757d; text-transform: uppercase; letter-spacing: 1px;">
-                                        Documentation
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </page>
-            </notebook>
-        </field>
-    </record>
-
-    <!-- Photo Comparison Popup View -->
-    <record id="hr_custody_photo_comparison_view_form" model="ir.ui.view">
-        <field name="name">hr.custody.photo.comparison.form</field>
-        <field name="model">hr.custody</field>
-        <field name="arch" type="xml">
-            <form string="Photo Comparison" create="false" edit="false">
-                <sheet>
-                    <h2>🔍 Photo Comparison: <field name="name" nolabel="1" readonly="1"/></h2>
-                    <group>
-                        <group>
-                            <field name="employee_id" readonly="1"/>
-                            <field name="custody_property_id" readonly="1"/>
-                        </group>
-                        <group>
-                            <field name="approved_date" readonly="1"/>
-                            <field name="actual_return_date" readonly="1"/>
-                        </group>
-                    </group>
-                    
-                    <div class="row mt16">
-                        <div class="col-md-6">
-                            <h3>📸 Handover Condition</h3>
-                            <field name="handover_photo_ids" 
-                                   mode="kanban"
-                                   nolabel="1"
-                                   kanban_view_ref="hr_custody.ir_attachment_custody_view_kanban"/>
-                        </div>
-                        <div class="col-md-6">
-                            <h3>📦 Return Condition</h3>
-                            <field name="return_photo_ids" 
-                                   mode="kanban"
-                                   nolabel="1"
-                                   kanban_view_ref="hr_custody.ir_attachment_custody_view_kanban"/>
-                        </div>
-                    </div>
-                </sheet>
-            </form>
-        </field>
-    </record>
-</odoo>
+                                    margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px soli
