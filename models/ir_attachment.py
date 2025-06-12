@@ -171,6 +171,66 @@ class IrAttachment(models.Model):
                 attachment.quality_score = 0
                 attachment.is_high_quality = False
 
+    # ===== 🔧 AUTO-ASSIGNMENT METHODS =====
+    
+    @api.model_create_multi  
+    def create(self, vals_list):
+        """🔧 NEW: Auto-assign photo types for new custody attachments"""
+        # Create attachments first
+        attachments = super(IrAttachment, self).create(vals_list)
+        
+        # Process auto-assignment for custody attachments
+        for attachment in attachments:
+            if (attachment.res_model == 'hr.custody' and 
+                attachment.res_id and 
+                attachment.mimetype and 
+                attachment.mimetype.startswith('image/') and
+                not attachment.custody_photo_type):
+                
+                # Get the custody record
+                custody_record = self.env['hr.custody'].browse(attachment.res_id)
+                if custody_record.exists():
+                    # Auto-assign photo type based on custody state
+                    default_type = 'handover_overall'
+                    if custody_record.state == 'returned':
+                        default_type = 'return_overall'
+                    elif custody_record.state in ['approved']:
+                        default_type = 'handover_overall'
+                    
+                    # Update attachment with photo type and res_field
+                    attachment.write({
+                        'custody_photo_type': default_type,
+                        'res_field': 'attachment_ids'  # Set proper res_field
+                    })
+                    
+                    # Log auto-assignment
+                    photo_type_label = dict(attachment._fields['custody_photo_type'].selection)[default_type]
+                    custody_record.message_post(
+                        body=_('📸 Auto-assigned photo type "%s" to uploaded photo: %s') % (
+                            photo_type_label, 
+                            attachment.name
+                        )
+                    )
+        
+        return attachments
+
+    def write(self, vals):
+        """🔧 NEW: Handle custody photo type updates"""
+        result = super(IrAttachment, self).write(vals)
+        
+        # Handle photo type changes
+        if 'custody_photo_type' in vals:
+            for attachment in self:
+                if (attachment.res_model == 'hr.custody' and 
+                    attachment.custody_id and 
+                    attachment.custody_photo_type):
+                    
+                    # Trigger recomputation on custody record
+                    attachment.custody_id._compute_photo_counts()
+                    attachment.custody_id._compute_photo_status()
+        
+        return result
+
     # ===== 🎯 BUSINESS METHODS =====
     
     def action_set_photo_type(self, photo_type):
