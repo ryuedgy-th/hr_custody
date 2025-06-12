@@ -1,6 +1,6 @@
 {
     'name': 'Advanced HR Custody Management',
-    'version': '18.0.2.0.0',  # 📁 REFACTORED: Split XML Files for Better Maintainability
+    'version': '18.0.2.0.1',  # 🚨 HOTFIX: Fixed file path references in manifest
     'category': 'Human Resources',
     'summary': """Modern enterprise-grade custody management with modular architecture and photo documentation""",
     'description': """
@@ -50,7 +50,7 @@
     'website': "https://github.com/ryuedgy-th/hr_custody",
     'depends': ['hr', 'mail', 'base'],
     
-    # 📁 MODULAR DATA FILES - Organized by Feature
+    # 📁 MODULAR DATA FILES - Fixed File Paths
     'data': [
         # 🔐 Security & Access Control
         'security/custody_security.xml',
@@ -72,12 +72,12 @@
         'views/hr_custody/hr_custody_views_search.xml',    # Search & filters
         'views/hr_custody/hr_custody_views_actions.xml',   # Actions & menus
         
-        # 🏢 Property Management
-        'views/property/custody_property_views.xml',
-        'views/property/property_category_views.xml',
+        # 🏢 Property Management - FIXED PATHS
+        'views/custody_property_views.xml',
+        'views/property_category_views.xml',
         
-        # 📎 Attachment & Photo Management
-        'views/attachment/ir_attachment_custody_views.xml',
+        # 📎 Attachment & Photo Management - FIXED PATHS
+        'views/ir_attachment_custody_views.xml',
         
         # 👤 Employee Integration
         'views/hr_employee_views.xml',
