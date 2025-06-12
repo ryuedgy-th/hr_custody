@@ -1,23 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- SUPER SIMPLE PHOTO MANAGEMENT -->
-    
-    <!-- Add Photos Tab to Main Form -->
-    <record id="hr_custody_photo_tabs" model="ir.ui.view">
-        <field name="name">hr.custody.photo.tabs</field>
-        <field name="model">hr.custody</field>
-        <field name="inherit_id" ref="hr_custody.hr_custody_view_form"/>
-        <field name="arch" type="xml">
-            <notebook position="inside">
-                <page string="📸 Photos" invisible="state not in ['approved', 'returned']">
-                    <group string="Upload Photos">
-                        <field name="attachment_ids" 
-                               widget="many2many_binary"
-                               nolabel="1"
-                               options="{'accepted_file_extensions': 'image/*'}"/>
-                    </group>
-                </page>
-            </notebook>
-        </field>
-    </record>
+    <!-- EMPTY FILE - Photo management is now integrated in basic view -->
 </odoo>
