@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- 🔄 PRE-REFACTOR STABLE VERSION: Complete HR Custody Views with Photo Management -->
-    <!-- This is the monolithic view file before modular refactoring -->
-    <!-- All photo management features working with fixed URL patterns -->
+    <!-- 🔄 SIMPLIFIED STABLE VERSION: Working HR Custody Views -->
+    <!-- Using only confirmed existing fields to avoid field reference errors -->
 
-    <!-- Main HR Custody Form View with Complete Photo Management -->
+    <!-- Main HR Custody Form View -->
     <record id="hr_custody_view_form" model="ir.ui.view">
         <field name="name">hr.custody.form</field>
         <field name="model">hr.custody</field>
@@ -100,12 +99,12 @@
 
                     <!-- Photo Management Section -->
                     <notebook>
-                        <!-- 📸 HANDOVER PHOTOS TAB -->
-                        <page string="📸 Handover Photos" name="handover_photos" invisible="state == 'draft'">
+                        <!-- 📸 PHOTOS TAB -->
+                        <page string="📸 Photos" name="photos" invisible="state == 'draft'">
                             <group>
                                 <group string="📋 Upload Photos" col="1">
                                     <div class="alert alert-info" role="alert">
-                                        <strong>📸 Upload handover photos:</strong> Take photos of the equipment during handover. 
+                                        <strong>📸 Upload photos:</strong> Take photos of the equipment. 
                                         After uploading, click "🏷️ Assign Photo Types" to categorize them.
                                     </div>
                                     
@@ -116,10 +115,11 @@
                                     
                                     <!-- Photo Status Display -->
                                     <field name="photo_counts" readonly="1" string="Photo Summary"/>
+                                    <field name="photo_status" readonly="1" string="Photo Status"/>
                                 </group>
                             </group>
 
-                            <!-- Photo Gallery Display -->
+                            <!-- Handover Photos Gallery -->
                             <group string="📷 Handover Photo Gallery">
                                 <field name="handover_photo_ids" nolabel="1" readonly="1">
                                     <kanban class="o_kanban_mobile">
@@ -127,8 +127,6 @@
                                         <field name="name"/>
                                         <field name="custody_photo_type"/>
                                         <field name="datas"/>
-                                        <field name="quality_score"/>
-                                        <field name="is_high_quality"/>
                                         <templates>
                                             <t t-name="kanban-box">
                                                 <div class="oe_kanban_card oe_kanban_global_click" style="margin: 5px; border: 1px solid #ddd; border-radius: 8px;">
@@ -149,14 +147,6 @@
                                                                   class="badge badge-success">🏷️ Serial</span>
                                                         </div>
                                                         
-                                                        <!-- Quality Badge -->
-                                                        <div class="text-center mb-2">
-                                                            <span t-if="record.is_high_quality.value" 
-                                                                  class="badge badge-success">✅ HQ</span>
-                                                            <span t-if="not record.is_high_quality.value" 
-                                                                  class="badge badge-warning">⚠️ STD</span>
-                                                        </div>
-                                                        
                                                         <!-- File Name -->
                                                         <div class="text-center">
                                                             <small class="text-muted"><field name="name"/></small>
@@ -168,34 +158,15 @@
                                     </kanban>
                                 </field>
                             </group>
-                        </page>
 
-                        <!-- 📸 RETURN PHOTOS TAB -->
-                        <page string="📦 Return Photos" name="return_photos" invisible="state not in ['returned']">
-                            <group>
-                                <group string="📋 Upload Return Photos" col="1">
-                                    <div class="alert alert-warning" role="alert">
-                                        <strong>📦 Upload return photos:</strong> Document the equipment condition during return. 
-                                        Include any damage or maintenance needs.
-                                    </div>
-                                    
-                                    <!-- Return Photo Upload -->
-                                    <field name="attachment_ids" 
-                                           widget="many2many_binary"
-                                           string="Upload Return Photos"/>
-                                </group>
-                            </group>
-
-                            <!-- Return Photo Gallery -->
-                            <group string="📷 Return Photo Gallery">
+                            <!-- Return Photos Gallery -->
+                            <group string="📷 Return Photo Gallery" invisible="state != 'returned'">
                                 <field name="return_photo_ids" nolabel="1" readonly="1">
                                     <kanban class="o_kanban_mobile">
                                         <field name="id"/>
                                         <field name="name"/>
                                         <field name="custody_photo_type"/>
                                         <field name="datas"/>
-                                        <field name="quality_score"/>
-                                        <field name="is_high_quality"/>
                                         <templates>
                                             <t t-name="kanban-box">
                                                 <div class="oe_kanban_card oe_kanban_global_click" style="margin: 5px; border: 1px solid #ddd; border-radius: 8px;">
@@ -218,14 +189,6 @@
                                                                   class="badge badge-warning">🔧 Maintenance</span>
                                                         </div>
                                                         
-                                                        <!-- Quality Badge -->
-                                                        <div class="text-center mb-2">
-                                                            <span t-if="record.is_high_quality.value" 
-                                                                  class="badge badge-success">✅ HQ</span>
-                                                            <span t-if="not record.is_high_quality.value" 
-                                                                  class="badge badge-warning">⚠️ STD</span>
-                                                        </div>
-                                                        
                                                         <!-- File Name -->
                                                         <div class="text-center">
                                                             <small class="text-muted"><field name="name"/></small>
@@ -236,53 +199,6 @@
                                         </templates>
                                     </kanban>
                                 </field>
-                            </group>
-                        </page>
-
-                        <!-- 🔍 PHOTO COMPARISON TAB -->
-                        <page string="🔍 Photo Comparison" name="photo_comparison">
-                            <div class="alert alert-info" role="alert">
-                                <strong>🔍 Photo Comparison:</strong> Compare handover and return photos side by side.
-                            </div>
-                            
-                            <group col="2">
-                                <group string="📸 Handover Photos">
-                                    <field name="handover_photo_ids" nolabel="1" readonly="1">
-                                        <kanban>
-                                            <field name="id"/>
-                                            <field name="name"/>
-                                            <field name="custody_photo_type"/>
-                                            <templates>
-                                                <t t-name="kanban-box">
-                                                    <div class="text-center" style="margin: 5px;">
-                                                        <img t-attf-src="/web/image/#{record.id.raw_value}?field=datas" 
-                                                             style="max-height: 100px; max-width: 140px; border: 2px solid #007bff; border-radius: 4px;"/>
-                                                        <div><small class="text-primary"><field name="custody_photo_type"/></small></div>
-                                                    </div>
-                                                </t>
-                                            </templates>
-                                        </kanban>
-                                    </field>
-                                </group>
-                                
-                                <group string="📦 Return Photos">
-                                    <field name="return_photo_ids" nolabel="1" readonly="1">
-                                        <kanban>
-                                            <field name="id"/>
-                                            <field name="name"/>
-                                            <field name="custody_photo_type"/>
-                                            <templates>
-                                                <t t-name="kanban-box">
-                                                    <div class="text-center" style="margin: 5px;">
-                                                        <img t-attf-src="/web/image/#{record.id.raw_value}?field=datas" 
-                                                             style="max-height: 100px; max-width: 140px; border: 2px solid #28a745; border-radius: 4px;"/>
-                                                        <div><small class="text-success"><field name="custody_photo_type"/></small></div>
-                                                    </div>
-                                                </t>
-                                            </templates>
-                                        </kanban>
-                                    </field>
-                                </group>
                             </group>
                         </page>
 
@@ -300,11 +216,6 @@
                         </page>
                     </notebook>
 
-                    <!-- Photo Status Summary -->
-                    <group string="📊 Photo Status" invisible="state == 'draft'">
-                        <field name="photo_status" readonly="1"/>
-                    </group>
-
                 </sheet>
 
                 <!-- Chatter -->
@@ -317,7 +228,7 @@
         </field>
     </record>
 
-    <!-- List View with Photo Status -->
+    <!-- List View -->
     <record id="hr_custody_view_tree" model="ir.ui.view">
         <field name="name">hr.custody.tree</field>
         <field name="model">hr.custody</field>
@@ -333,7 +244,6 @@
                 <field name="date_request"/>
                 <field name="return_date"/>
                 <field name="return_status_display"/>
-                <field name="photo_counts" string="Photos"/>
                 <field name="state" widget="badge" 
                        decoration-info="state == 'to_approve'"
                        decoration-success="state == 'approved'"
@@ -343,7 +253,7 @@
         </field>
     </record>
 
-    <!-- Search View with Photo Filters -->
+    <!-- Search View -->
     <record id="hr_custody_view_search" model="ir.ui.view">
         <field name="name">hr.custody.search</field>
         <field name="model">hr.custody</field>
@@ -371,16 +281,6 @@
 
                 <separator/>
 
-                <!-- Date Filters -->
-                <filter string="Today" name="today" 
-                        domain="[('date_request', '=', context_today())]"/>
-                <filter string="This Week" name="this_week" 
-                        domain="[('date_request', '&gt;=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
-                <filter string="This Month" name="this_month" 
-                        domain="[('date_request', '&gt;=', (context_today().replace(day=1)).strftime('%Y-%m-%d'))]"/>
-
-                <separator/>
-
                 <!-- Group By -->
                 <group expand="0" string="Group By">
                     <filter string="Employee" name="group_employee" context="{'group_by': 'employee_id'}"/>
@@ -405,7 +305,6 @@
             </p>
             <p>
                 Manage equipment custody with professional photo documentation.
-                Upload photos during handover and return to maintain complete records.
             </p>
         </field>
     </record>
