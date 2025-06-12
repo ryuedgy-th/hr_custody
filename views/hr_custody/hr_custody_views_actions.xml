@@ -257,11 +257,11 @@ for record in records:
         <field name="active" eval="True"/>
     </record>
 
-    <!-- URL Actions for Quick Access -->
+    <!-- URL Actions for Quick Access - FIXED for Odoo 18.0 -->
     <record id="action_quick_create_custody" model="ir.actions.act_url">
         <field name="name">Quick Create Custody</field>
         <field name="url">/web#action=hr_custody.hr_custody_action&amp;view_type=form&amp;mode=edit</field>
-        <field name="target">current</field>
+        <field name="target">new</field>
     </record>
 
     <!-- QWeb Reports -->
