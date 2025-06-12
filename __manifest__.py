@@ -1,16 +1,17 @@
 {
     'name': 'Advanced HR Custody Management',
-    'version': '18.0.2.0.2',  # 🚨 HOTFIX: Fixed asset file references
+    'version': '18.0.2.1.0',  # 🤖 NEW: Auto-assignment functionality
     'category': 'Human Resources',
-    'summary': """Modern enterprise-grade custody management with modular architecture and photo documentation""",
+    'summary': """Modern enterprise-grade custody management with automated photo type assignment""",
     'description': """
         🚀 Advanced HR Custody Management - Odoo 18.0
 
         A comprehensive solution for managing company assets and property custody with 
-        advanced approval workflows, photo documentation, real-time tracking, and modular architecture.
+        advanced approval workflows, photo documentation, real-time tracking, and automated processing.
 
         ✨ KEY FEATURES:
         • 📸 Complete Photo Management System (inspired by hr_expense)
+        • 🤖 Automated Photo Type Assignment with cron jobs
         • Smart Workflow Management with unified interface
         • Hierarchical Property Categories with inheritance
         • Advanced Multi-Level Approval System
@@ -32,6 +33,14 @@
         • 📊 Quality Analysis - Automatic quality scoring
         • 🏷️ Photo Categorization - By type and purpose
         • 🎨 Gallery View - Beautiful photo browsing
+        • 🤖 Auto-Assignment - Intelligent photo type detection
+
+        🤖 AUTOMATION FEATURES:
+        • ⚡ Automatic photo type assignment on upload
+        • 🕐 Hourly cron job for recent uploads
+        • 📊 Statistics dashboard for monitoring
+        • 🔧 Manual processing tools for administrators
+        • 📝 Automatic chatter logging
 
         🎯 SMART FILTERS & WORKFLOW:
         • 🔔 Waiting My Approval (priority view)
@@ -71,6 +80,9 @@
         'views/hr_custody/hr_custody_views_photo.xml',     # Photo management system
         'views/hr_custody/hr_custody_views_search.xml',    # Search & filters
         'views/hr_custody/hr_custody_views_actions.xml',   # Actions & menus
+        
+        # 🤖 Auto-Assignment Helper Views
+        'views/hr_custody_auto_assignment_views.xml',      # Auto-assignment helper
         
         # 🏢 Property Management - FIXED PATHS
         'views/custody_property_views.xml',
