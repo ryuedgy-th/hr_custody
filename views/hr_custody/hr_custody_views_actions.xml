@@ -213,6 +213,34 @@
               sequence="11"
               groups="hr.group_hr_manager"/>
 
+    <!-- Reports Menu Section -->
+    <menuitem id="hr_custody_menu_reports"
+              parent="hr_custody_menu_management"
+              name="📊 Reports & Analytics"
+              sequence="15"
+              groups="hr.group_hr_manager"/>
+
+    <menuitem action="action_report_custody"
+              id="custody_report_menu_analysis"
+              parent="hr_custody_menu_reports"
+              name="📈 Custody Analysis"
+              sequence="1"
+              groups="hr.group_hr_manager"/>
+
+    <menuitem action="action_report_custody_performance"
+              id="custody_report_menu_performance"
+              parent="hr_custody_menu_reports"
+              name="📊 Return Performance"
+              sequence="2"
+              groups="hr.group_hr_manager"/>
+
+    <menuitem action="action_report_custody_approver_performance"
+              id="custody_report_menu_approver"
+              parent="hr_custody_menu_reports"
+              name="👥 Approver Performance"
+              sequence="3"
+              groups="hr.group_hr_manager"/>
+
     <!-- Management Menu Section -->
     <menuitem id="hr_custody_menu_management_section"
               parent="hr_custody_menu_management"
