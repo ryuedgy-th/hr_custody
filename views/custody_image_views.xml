@@ -217,7 +217,7 @@
     <record id="hr_custody_form_view_images" model="ir.ui.view">
         <field name="name">hr.custody.form.images</field>
         <field name="model">hr.custody</field>
-        <field name="inherit_id" ref="hr_custody_view_form"/>
+        <field name="inherit_id" ref="hr_custody.hr_custody_view_form"/>
         <field name="arch" type="xml">
             <!-- Add button_box if not exists, then add Image buttons -->
             <xpath expr="//sheet" position="inside">
@@ -332,11 +332,8 @@
         </field>
     </record>
 
-    <!-- Add Image History Menu -->
-    <menuitem id="custody_image_menu"
-              name="📸 Image History"
-              parent="hr_custody_menu_management"
-              action="custody_image_action"
-              sequence="10"
-              groups="hr.group_hr_user"/>
+    <!-- ===== MENU ITEMS - REMOVED TO PREVENT CONFLICTS ===== -->
+    <!-- Image History menu is now defined in hr_custody_views_actions.xml -->
+    <!-- This prevents External ID conflicts and centralizes menu management -->
+
 </odoo>
