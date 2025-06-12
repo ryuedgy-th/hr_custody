@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- 🔄 SIMPLIFIED STABLE VERSION: Working HR Custody Views -->
-    <!-- Using only confirmed existing fields to avoid field reference errors -->
+    <!-- 🔄 ODOO 18 COMPLIANT: Working HR Custody Views -->
+    <!-- Updated for Odoo 18 compatibility with <list> instead of <tree> -->
 
     <!-- Main HR Custody Form View -->
     <record id="hr_custody_view_form" model="ir.ui.view">
@@ -228,12 +228,12 @@
         </field>
     </record>
 
-    <!-- List View -->
+    <!-- ✅ ODOO 18 FIX: List View using <list> instead of <tree> -->
     <record id="hr_custody_view_tree" model="ir.ui.view">
-        <field name="name">hr.custody.tree</field>
+        <field name="name">hr.custody.list</field>
         <field name="model">hr.custody</field>
         <field name="arch" type="xml">
-            <tree string="Custody Requests" 
+            <list string="Custody Requests" 
                   decoration-info="state == 'to_approve'"
                   decoration-success="state == 'approved'"
                   decoration-muted="state == 'returned'"
@@ -249,7 +249,7 @@
                        decoration-success="state == 'approved'"
                        decoration-muted="state == 'returned'"
                        decoration-danger="state == 'rejected'"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -296,7 +296,7 @@
     <record id="hr_custody_action" model="ir.actions.act_window">
         <field name="name">Custody Requests</field>
         <field name="res_model">hr.custody</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="hr_custody_view_search"/>
         <field name="context">{'search_default_to_approve': 1}</field>
         <field name="help" type="html">
