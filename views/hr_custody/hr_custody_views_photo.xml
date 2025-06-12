@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- 📸 HR CUSTODY PHOTO MANAGEMENT SYSTEM - URL COMMA FIX -->
+    <!-- 📸 HR CUSTODY PHOTO MANAGEMENT SYSTEM - FIXED CONTEXT LINKING -->
     
     <!-- ===== ATTACHMENT MODEL EXTENSIONS ===== -->
     
@@ -255,7 +255,8 @@
                                }"
                                context="{
                                    'default_custody_photo_type': 'handover_overall',
-                                   'default_res_model': 'hr.custody'
+                                   'default_res_model': 'hr.custody',
+                                   'default_res_id': active_id
                                }"
                                readonly="state == 'returned'"
                                groups="hr.group_hr_user,hr.group_hr_manager"/>
@@ -345,7 +346,8 @@
                                }"
                                context="{
                                    'default_custody_photo_type': 'return_overall',
-                                   'default_res_model': 'hr.custody'
+                                   'default_res_model': 'hr.custody',
+                                   'default_res_id': active_id
                                }"
                                groups="hr.group_hr_user,hr.group_hr_manager"/>
                     </div>
