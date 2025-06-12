@@ -286,10 +286,10 @@ class HrCustody(models.Model):
 
     # ===== 📸 PHOTO AUTO-ASSIGNMENT METHODS =====
     
-    # 🔧 NEW: OnChange method to auto-assign photo types
+    # 🔧 ENHANCED: OnChange method to auto-assign photo types with context detection
     @api.onchange('attachment_ids')
     def _onchange_attachment_ids(self):
-        """🔧 NEW: Auto-assign photo types when attachments change"""
+        """🔧 ENHANCED: Auto-assign photo types when attachments change"""
         if self.attachment_ids:
             # Find new attachments without photo type
             new_attachments = self.attachment_ids.filtered(
@@ -301,8 +301,21 @@ class HrCustody(models.Model):
             )
             
             if new_attachments:
-                # Determine default photo type based on state
-                if self.state == 'returned':
+                # 🔧 NEW: Check context for upload type hints
+                context = self.env.context
+                upload_category = None
+                
+                if context.get('handover_upload'):
+                    upload_category = 'handover'
+                elif context.get('return_upload'):
+                    upload_category = 'return'
+                
+                # Determine default photo type based on context or state
+                if upload_category == 'handover':
+                    default_type = 'handover_overall'
+                elif upload_category == 'return':
+                    default_type = 'return_overall'
+                elif self.state == 'returned':
                     default_type = 'return_overall'
                 elif self.state in ['approved']:
                     default_type = 'handover_overall'
@@ -468,9 +481,9 @@ class HrCustody(models.Model):
             }
         return summary
 
-    # 🔧 NEW: Method to auto-assign photo types for attachments
+    # 🔧 ENHANCED: Method to auto-assign photo types for attachments with context awareness
     def _auto_assign_photo_types(self, photo_category='auto'):
-        """🔧 NEW: Auto-assign photo types to uploaded attachments"""
+        """🔧 ENHANCED: Auto-assign photo types to uploaded attachments with context awareness"""
         for record in self:
             # Find image attachments without photo type
             untyped_photos = record.attachment_ids.filtered(
@@ -482,10 +495,17 @@ class HrCustody(models.Model):
             )
             
             if untyped_photos:
-                # Determine appropriate photo type based on category or record state
+                # 🔧 ENHANCED: Check context for upload type hints
+                context = self.env.context
+                
+                # Determine appropriate photo type based on multiple factors
                 if photo_category == 'handover':
                     default_type = 'handover_overall'
                 elif photo_category == 'return':
+                    default_type = 'return_overall'
+                elif context.get('handover_upload'):
+                    default_type = 'handover_overall'
+                elif context.get('return_upload'):
                     default_type = 'return_overall'
                 elif record.state == 'returned':
                     # For returned state, assign as return photos
@@ -666,10 +686,10 @@ class HrCustody(models.Model):
                         % property_obj.name
                     )
 
-    # 🔧 FIXED: Single create method that handles everything properly
+    # 🔧 ENHANCED: Create method with context-aware photo assignment
     @api.model_create_multi
     def create(self, vals_list):
-        """🔧 FIXED: Create method with proper photo type assignment"""
+        """🔧 ENHANCED: Create method with context-aware photo type assignment"""
         for vals in vals_list:
             # Generate sequence name if needed
             if not vals.get('name'):
@@ -680,13 +700,13 @@ class HrCustody(models.Model):
         
         # Process photo assignments for each new record
         for record in records:
-            # Auto-assign photo types for any existing attachments
+            # Auto-assign photo types for any existing attachments with context awareness
             record._auto_assign_photo_types()
             
         return records
 
     def write(self, vals):
-        """🔧 FIXED: Override write to handle attachment sync and state changes"""
+        """🔧 ENHANCED: Override write to handle attachment sync and state changes with context awareness"""
         # Store old state for comparison
         old_states = {record.id: record.state for record in self}
         
@@ -709,7 +729,7 @@ class HrCustody(models.Model):
                     body=_('Custody state changed to %s') % dict(record._fields['state'].selection)[record.state]
                 )
             
-            # Auto-assign photo types if needed
+            # Auto-assign photo types if needed with context awareness
             if should_assign_photos:
                 record._auto_assign_photo_types()
         
