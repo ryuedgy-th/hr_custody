@@ -61,24 +61,6 @@
                         by <field name="returned_by_id" readonly="1" nolabel="1"/>
                     </div>
 
-                    <!-- Simplified Smart Buttons -->
-                    <div class="oe_button_box" name="button_box">
-                        <button name="%(base.action_attachment)d" 
-                                type="action" 
-                                class="oe_stat_button" 
-                                icon="fa-camera"
-                                invisible="state not in ['approved', 'returned']"
-                                context="{'default_res_model': 'hr.custody', 'default_res_id': id}"
-                                groups="hr.group_hr_user,hr.group_hr_manager">
-                            <div class="o_field_widget o_stat_info">
-                                <span class="o_stat_value">
-                                    <field name="attachment_ids" widget="statinfo" nolabel="1"/>
-                                </span>
-                                <span class="o_stat_text">Photos</span>
-                            </div>
-                        </button>
-                    </div>
-
                     <!-- Title -->
                     <h1>
                         <field name="name" readonly="1" nolabel="1"/>
@@ -185,9 +167,6 @@
                 <field name="return_date" string="Expected Return"/>
                 <field name="actual_return_date" string="Actual Return"/>
                 <field name="return_status_display"/>
-
-                <!-- Simplified Photo Count -->
-                <field name="attachment_ids" string="📸 Photos" widget="integer"/>
 
                 <!-- Hidden fields for decorations -->
                 <field name="is_overdue" invisible="1"/>
