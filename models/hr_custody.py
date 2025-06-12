@@ -168,7 +168,7 @@ class HrCustody(models.Model):
         store=False
     )
 
-    # ✅ FIX: Add missing handover_photo_count field
+    # ✅ FIX: Add missing photo count fields
     handover_photo_count = fields.Integer(
         string='Handover Photo Count',
         compute='_compute_handover_photo_count',
@@ -176,12 +176,19 @@ class HrCustody(models.Model):
         help='Count of handover photos for this custody'
     )
 
-    # Add return photo count for consistency
     return_photo_count = fields.Integer(
         string='Return Photo Count',
         compute='_compute_return_photo_count',
         store=False,
         help='Count of return photos for this custody'
+    )
+
+    # ✅ FIX: Add missing total_photo_count field
+    total_photo_count = fields.Integer(
+        string='Total Photo Count',
+        compute='_compute_total_photo_count',
+        store=False,
+        help='Total count of all photos for this custody'
     )
 
     # 🔧 COMPUTED METHODS FOR PHOTO MANAGEMENT
@@ -234,6 +241,16 @@ class HrCustody(models.Model):
         """Compute count of return photos"""
         for record in self:
             record.return_photo_count = len(record.return_photo_ids)
+
+    @api.depends('attachment_ids')
+    def _compute_total_photo_count(self):
+        """Compute total count of all photos"""
+        for record in self:
+            # Count only image attachments for this custody
+            image_attachments = record.attachment_ids.filtered(
+                lambda a: a.mimetype and a.mimetype.startswith('image/')
+            )
+            record.total_photo_count = len(image_attachments)
 
     @api.depends('attachment_ids', 'state')
     def _compute_photo_status(self):
