@@ -1,0 +1,439 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 🔄 PRE-REFACTOR STABLE VERSION: Complete HR Custody Views with Photo Management -->
+    <!-- This is the monolithic view file before modular refactoring -->
+    <!-- All photo management features working with fixed URL patterns -->
+
+    <!-- Main HR Custody Form View with Complete Photo Management -->
+    <record id="hr_custody_view_form" model="ir.ui.view">
+        <field name="name">hr.custody.form</field>
+        <field name="model">hr.custody</field>
+        <field name="arch" type="xml">
+            <form string="Custody Request">
+                <header>
+                    <!-- Workflow Buttons -->
+                    <button string="Send for Approval" 
+                            name="sent" 
+                            type="object" 
+                            invisible="state != 'draft'"
+                            class="btn-primary"/>
+                    
+                    <button string="✅ Approve" 
+                            name="approve" 
+                            type="object" 
+                            invisible="state != 'to_approve'"
+                            class="btn-success"/>
+                    
+                    <button string="❌ Refuse with Reason" 
+                            name="refuse_with_reason" 
+                            type="object" 
+                            invisible="state != 'to_approve'"
+                            class="btn-danger"/>
+                    
+                    <button string="📦 Return Equipment" 
+                            name="set_to_return" 
+                            type="object" 
+                            invisible="state != 'approved'"
+                            class="btn-warning"/>
+                    
+                    <button string="🔄 Reset to Draft" 
+                            name="set_to_draft" 
+                            type="object" 
+                            invisible="state not in ['rejected', 'to_approve']"
+                            class="btn-secondary"/>
+
+                    <!-- Photo Management Buttons -->
+                    <button string="🏷️ Assign Handover Photo Types" 
+                            name="action_assign_handover_photo_types" 
+                            type="object" 
+                            invisible="state != 'approved'"
+                            class="btn-info"/>
+                    
+                    <button string="🏷️ Assign Return Photo Types" 
+                            name="action_assign_return_photo_types" 
+                            type="object" 
+                            invisible="state != 'returned'"
+                            class="btn-info"/>
+
+                    <field name="state" widget="statusbar" 
+                           statusbar_visible="draft,to_approve,approved,returned"/>
+                </header>
+
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Request Details">
+                            <field name="employee_id"/>
+                            <field name="date_request"/>
+                            <field name="custody_property_id"/>
+                            <field name="purpose"/>
+                        </group>
+                        <group string="Return Information">
+                            <field name="return_type"/>
+                            <field name="return_date" invisible="return_type != 'date'"/>
+                            <field name="expected_return_period" invisible="return_type == 'date'"/>
+                            <field name="return_status_display"/>
+                        </group>
+                    </group>
+
+                    <!-- Approval Information -->
+                    <group string="Approval Information" invisible="state in ['draft', 'to_approve']">
+                        <group>
+                            <field name="approved_by_id" readonly="1"/>
+                            <field name="approved_date" readonly="1"/>
+                        </group>
+                        <group invisible="state != 'returned'">
+                            <field name="actual_return_date" readonly="1"/>
+                            <field name="returned_by_id" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <!-- Rejection Information -->
+                    <group string="Rejection Information" invisible="state != 'rejected'">
+                        <field name="rejected_reason" readonly="1"/>
+                    </group>
+
+                    <!-- Photo Management Section -->
+                    <notebook>
+                        <!-- 📸 HANDOVER PHOTOS TAB -->
+                        <page string="📸 Handover Photos" name="handover_photos" invisible="state == 'draft'">
+                            <group>
+                                <group string="📋 Upload Photos" col="1">
+                                    <div class="alert alert-info" role="alert">
+                                        <strong>📸 Upload handover photos:</strong> Take photos of the equipment during handover. 
+                                        After uploading, click "🏷️ Assign Photo Types" to categorize them.
+                                    </div>
+                                    
+                                    <!-- Photo Upload Widget -->
+                                    <field name="attachment_ids" 
+                                           widget="many2many_binary"
+                                           string="Upload Photos"/>
+                                    
+                                    <!-- Photo Status Display -->
+                                    <field name="photo_counts" readonly="1" string="Photo Summary"/>
+                                </group>
+                            </group>
+
+                            <!-- Photo Gallery Display -->
+                            <group string="📷 Handover Photo Gallery" invisible="not handover_photo_ids">
+                                <field name="handover_photo_ids" nolabel="1" readonly="1">
+                                    <kanban class="o_kanban_mobile">
+                                        <field name="id"/>
+                                        <field name="name"/>
+                                        <field name="custody_photo_type"/>
+                                        <field name="datas"/>
+                                        <field name="quality_score"/>
+                                        <field name="is_high_quality"/>
+                                        <templates>
+                                            <t t-name="kanban-box">
+                                                <div class="oe_kanban_card oe_kanban_global_click" style="margin: 5px; border: 1px solid #ddd; border-radius: 8px;">
+                                                    <div class="o_kanban_image">
+                                                        <!-- ✅ FIXED: Use raw_value to prevent comma in URL -->
+                                                        <img t-attf-src="/web/image/#{record.id.raw_value}?field=datas" 
+                                                             style="max-height: 120px; max-width: 160px; object-fit: cover; border-radius: 4px;"
+                                                             title="Click to view full size"/>
+                                                    </div>
+                                                    <div class="oe_kanban_details" style="padding: 8px;">
+                                                        <!-- Photo Type Badge -->
+                                                        <div class="text-center mb-2">
+                                                            <span t-if="record.custody_photo_type.raw_value == 'handover_overall'" 
+                                                                  class="badge badge-primary">📸 Overall</span>
+                                                            <span t-if="record.custody_photo_type.raw_value == 'handover_detail'" 
+                                                                  class="badge badge-info">🔍 Detail</span>
+                                                            <span t-if="record.custody_photo_type.raw_value == 'handover_serial'" 
+                                                                  class="badge badge-success">🏷️ Serial</span>
+                                                        </div>
+                                                        
+                                                        <!-- Quality Badge -->
+                                                        <div class="text-center mb-2">
+                                                            <span t-if="record.is_high_quality.value" 
+                                                                  class="badge badge-success">✅ HQ</span>
+                                                            <span t-if="not record.is_high_quality.value" 
+                                                                  class="badge badge-warning">⚠️ STD</span>
+                                                        </div>
+                                                        
+                                                        <!-- File Name -->
+                                                        <div class="text-center">
+                                                            <small class="text-muted"><field name="name"/></small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </templates>
+                                    </kanban>
+                                </field>
+                            </group>
+                        </page>
+
+                        <!-- 📸 RETURN PHOTOS TAB -->
+                        <page string="📦 Return Photos" name="return_photos" invisible="state not in ['returned']">
+                            <group>
+                                <group string="📋 Upload Return Photos" col="1">
+                                    <div class="alert alert-warning" role="alert">
+                                        <strong>📦 Upload return photos:</strong> Document the equipment condition during return. 
+                                        Include any damage or maintenance needs.
+                                    </div>
+                                    
+                                    <!-- Return Photo Upload -->
+                                    <field name="attachment_ids" 
+                                           widget="many2many_binary"
+                                           string="Upload Return Photos"/>
+                                </group>
+                            </group>
+
+                            <!-- Return Photo Gallery -->
+                            <group string="📷 Return Photo Gallery" invisible="not return_photo_ids">
+                                <field name="return_photo_ids" nolabel="1" readonly="1">
+                                    <kanban class="o_kanban_mobile">
+                                        <field name="id"/>
+                                        <field name="name"/>
+                                        <field name="custody_photo_type"/>
+                                        <field name="datas"/>
+                                        <field name="quality_score"/>
+                                        <field name="is_high_quality"/>
+                                        <templates>
+                                            <t t-name="kanban-box">
+                                                <div class="oe_kanban_card oe_kanban_global_click" style="margin: 5px; border: 1px solid #ddd; border-radius: 8px;">
+                                                    <div class="o_kanban_image">
+                                                        <!-- ✅ FIXED: Use raw_value to prevent comma in URL -->
+                                                        <img t-attf-src="/web/image/#{record.id.raw_value}?field=datas" 
+                                                             style="max-height: 120px; max-width: 160px; object-fit: cover; border-radius: 4px;"
+                                                             title="Click to view full size"/>
+                                                    </div>
+                                                    <div class="oe_kanban_details" style="padding: 8px;">
+                                                        <!-- Photo Type Badge -->
+                                                        <div class="text-center mb-2">
+                                                            <span t-if="record.custody_photo_type.raw_value == 'return_overall'" 
+                                                                  class="badge badge-primary">📦 Overall</span>
+                                                            <span t-if="record.custody_photo_type.raw_value == 'return_detail'" 
+                                                                  class="badge badge-info">🔍 Detail</span>
+                                                            <span t-if="record.custody_photo_type.raw_value == 'return_damage'" 
+                                                                  class="badge badge-danger">⚠️ Damage</span>
+                                                            <span t-if="record.custody_photo_type.raw_value == 'maintenance'" 
+                                                                  class="badge badge-warning">🔧 Maintenance</span>
+                                                        </div>
+                                                        
+                                                        <!-- Quality Badge -->
+                                                        <div class="text-center mb-2">
+                                                            <span t-if="record.is_high_quality.value" 
+                                                                  class="badge badge-success">✅ HQ</span>
+                                                            <span t-if="not record.is_high_quality.value" 
+                                                                  class="badge badge-warning">⚠️ STD</span>
+                                                        </div>
+                                                        
+                                                        <!-- File Name -->
+                                                        <div class="text-center">
+                                                            <small class="text-muted"><field name="name"/></small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </templates>
+                                    </kanban>
+                                </field>
+                            </group>
+                        </page>
+
+                        <!-- 🔍 PHOTO COMPARISON TAB -->
+                        <page string="🔍 Photo Comparison" name="photo_comparison" 
+                              invisible="not handover_photo_ids or not return_photo_ids">
+                            <div class="alert alert-info" role="alert">
+                                <strong>🔍 Photo Comparison:</strong> Compare handover and return photos side by side.
+                            </div>
+                            
+                            <group col="2">
+                                <group string="📸 Handover Photos">
+                                    <field name="handover_photo_ids" nolabel="1" readonly="1">
+                                        <kanban>
+                                            <field name="id"/>
+                                            <field name="name"/>
+                                            <field name="custody_photo_type"/>
+                                            <templates>
+                                                <t t-name="kanban-box">
+                                                    <div class="text-center" style="margin: 5px;">
+                                                        <img t-attf-src="/web/image/#{record.id.raw_value}?field=datas" 
+                                                             style="max-height: 100px; max-width: 140px; border: 2px solid #007bff; border-radius: 4px;"/>
+                                                        <div><small class="text-primary"><field name="custody_photo_type"/></small></div>
+                                                    </div>
+                                                </t>
+                                            </templates>
+                                        </kanban>
+                                    </field>
+                                </group>
+                                
+                                <group string="📦 Return Photos">
+                                    <field name="return_photo_ids" nolabel="1" readonly="1">
+                                        <kanban>
+                                            <field name="id"/>
+                                            <field name="name"/>
+                                            <field name="custody_photo_type"/>
+                                            <templates>
+                                                <t t-name="kanban-box">
+                                                    <div class="text-center" style="margin: 5px;">
+                                                        <img t-attf-src="/web/image/#{record.id.raw_value}?field=datas" 
+                                                             style="max-height: 100px; max-width: 140px; border: 2px solid #28a745; border-radius: 4px;"/>
+                                                        <div><small class="text-success"><field name="custody_photo_type"/></small></div>
+                                                    </div>
+                                                </t>
+                                            </templates>
+                                        </kanban>
+                                    </field>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- 📋 NOTES TAB -->
+                        <page string="📋 Notes" name="notes">
+                            <group>
+                                <field name="notes" nolabel="1" placeholder="Additional notes and comments..."/>
+                                
+                                <!-- Return Notes (if returned) -->
+                                <field name="return_notes" 
+                                       string="Return Notes" 
+                                       invisible="state != 'returned'"
+                                       readonly="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+
+                    <!-- Photo Status Summary -->
+                    <group string="📊 Photo Status" invisible="state == 'draft'">
+                        <field name="photo_status" readonly="1"/>
+                    </group>
+
+                </sheet>
+
+                <!-- Chatter -->
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- List View with Photo Status -->
+    <record id="hr_custody_view_tree" model="ir.ui.view">
+        <field name="name">hr.custody.tree</field>
+        <field name="model">hr.custody</field>
+        <field name="arch" type="xml">
+            <tree string="Custody Requests" 
+                  decoration-info="state == 'to_approve'"
+                  decoration-success="state == 'approved'"
+                  decoration-muted="state == 'returned'"
+                  decoration-danger="state == 'rejected'">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="custody_property_id"/>
+                <field name="date_request"/>
+                <field name="return_date"/>
+                <field name="return_status_display"/>
+                <field name="photo_counts" string="Photos"/>
+                <field name="state" widget="badge" 
+                       decoration-info="state == 'to_approve'"
+                       decoration-success="state == 'approved'"
+                       decoration-muted="state == 'returned'"
+                       decoration-danger="state == 'rejected'"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Search View with Photo Filters -->
+    <record id="hr_custody_view_search" model="ir.ui.view">
+        <field name="name">hr.custody.search</field>
+        <field name="model">hr.custody</field>
+        <field name="arch" type="xml">
+            <search string="Search Custody">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="custody_property_id"/>
+                <field name="purpose"/>
+
+                <!-- Status Filters -->
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Waiting Approval" name="to_approve" domain="[('state', '=', 'to_approve')]"/>
+                <filter string="Approved" name="approved" domain="[('state', '=', 'approved')]"/>
+                <filter string="Returned" name="returned" domain="[('state', '=', 'returned')]"/>
+                <filter string="Rejected" name="rejected" domain="[('state', '=', 'rejected')]"/>
+
+                <separator/>
+
+                <!-- Photo Filters -->
+                <filter string="Has Photos" name="has_photos" 
+                        domain="[('attachment_ids', '!=', False)]"/>
+                <filter string="No Photos" name="no_photos" 
+                        domain="[('attachment_ids', '=', False)]"/>
+
+                <separator/>
+
+                <!-- Date Filters -->
+                <filter string="Today" name="today" 
+                        domain="[('date_request', '=', context_today())]"/>
+                <filter string="This Week" name="this_week" 
+                        domain="[('date_request', '&gt;=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <filter string="This Month" name="this_month" 
+                        domain="[('date_request', '&gt;=', (context_today().replace(day=1)).strftime('%Y-%m-%d'))]"/>
+
+                <separator/>
+
+                <!-- Group By -->
+                <group expand="0" string="Group By">
+                    <filter string="Employee" name="group_employee" context="{'group_by': 'employee_id'}"/>
+                    <filter string="Property" name="group_property" context="{'group_by': 'custody_property_id'}"/>
+                    <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Request Date" name="group_date" context="{'group_by': 'date_request'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Actions -->
+    <record id="hr_custody_action" model="ir.actions.act_window">
+        <field name="name">Custody Requests</field>
+        <field name="res_model">hr.custody</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="hr_custody_view_search"/>
+        <field name="context">{'search_default_to_approve': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_create">
+                Click to create a new custody request.
+            </p>
+            <p>
+                Manage equipment custody with professional photo documentation.
+                Upload photos during handover and return to maintain complete records.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Items -->
+    <menuitem id="hr_custody_main_menu"
+              name="HR Custody"
+              sequence="10"
+              web_icon="hr_custody,static/description/icon.png"
+              groups="hr.group_hr_user"/>
+
+    <menuitem id="hr_custody_menu_management"
+              name="Management"
+              parent="hr_custody_main_menu"
+              sequence="10"/>
+
+    <menuitem id="hr_custody_menu_custody"
+              name="Custody Requests"
+              parent="hr_custody_menu_management"
+              action="hr_custody_action"
+              sequence="10"/>
+
+    <!-- Configuration Menu -->
+    <menuitem id="hr_custody_menu_configuration"
+              name="Configuration"
+              parent="hr_custody_main_menu"
+              sequence="90"
+              groups="hr.group_hr_manager"/>
+
+</odoo>
