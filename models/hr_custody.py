@@ -5,7 +5,7 @@ from odoo.exceptions import UserError, ValidationError
 
 class HrCustody(models.Model):
     """
-        Hr custody contract creation model.
+        Simple Hr custody contract creation model.
     """
     _name = 'hr.custody'
     _description = 'Hr Custody Management'
@@ -13,11 +13,10 @@ class HrCustody(models.Model):
     _order = 'date_request desc'
     _rec_name = 'name'
 
-    # Field definitions - Updated for Odoo 18
+    # Basic Field definitions
     name = fields.Char(
         string='Code',
         copy=False,
-        help='A unique code assigned to this record.',
         readonly=True
     )
 
@@ -25,29 +24,19 @@ class HrCustody(models.Model):
         'res.company',
         string='Company',
         readonly=True,
-        help='The company associated with this record.',
         default=lambda self: self.env.company
     )
 
     rejected_reason = fields.Text(
         string='Rejected Reason',
         copy=False,
-        readonly=True,
-        help="Reason for the rejection"
-    )
-
-    renew_rejected_reason = fields.Text(
-        string='Renew Rejected Reason',
-        copy=False,
-        readonly=True,
-        help="Renew rejected reason"
+        readonly=True
     )
 
     date_request = fields.Date(
         string='Requested Date',
         required=True,
         tracking=True,
-        help='The date when the request was made',
         default=fields.Date.today
     )
 
@@ -55,146 +44,85 @@ class HrCustody(models.Model):
         'hr.employee',
         string='Employee',
         required=True,
-        help='The employee associated with this record.',
         default=lambda self: self.env.user.employee_id
     )
 
     purpose = fields.Char(
         string='Reason',
         tracking=True,
-        required=True,
-        help='The reason or purpose of the custody'
+        required=True
     )
 
     custody_property_id = fields.Many2one(
         'custody.property',
         string='Property',
-        required=True,
-        help='The property associated with this custody record'
+        required=True
     )
 
-    # ⭐ NEW: Related field for property approvers
-    property_approver_ids = fields.Many2many(
-        related='custody_property_id.approver_ids',
-        string='Available Approvers',
-        readonly=True,
-        help='Users who can approve this request based on the selected property'
-    )
-
-    # ⭐ NEW: Approval tracking
+    # Approval tracking
     approved_by_id = fields.Many2one(
         'res.users',
         string='Approved By',
         readonly=True,
-        tracking=True,
-        help='User who approved this request'
+        tracking=True
     )
 
     approved_date = fields.Datetime(
         string='Approved Date',
-        readonly=True,
-        help='When this request was approved'
+        readonly=True
     )
 
-    # New fields for flexible return date management
+    # Return date management
     return_type = fields.Selection([
         ('date', 'Fixed Return Date'),
         ('flexible', 'No Fixed Return Date'),
         ('term_end', 'Return at Term/Project End')
-    ], string='Return Type', default='date', required=True, tracking=True,
-    help='Select the type of return date arrangement')
+    ], string='Return Type', default='date', required=True, tracking=True)
 
     return_date = fields.Date(
         string='Expected Return Date',
-        tracking=True,
-        help='The date when the custody is expected to be returned (for fixed date only)'
+        tracking=True
     )
 
     expected_return_period = fields.Char(
-        string='Expected Return Period',
-        help='E.g. "End of Term 1/2024", "When project finished", "As needed"'
+        string='Expected Return Period'
     )
 
     return_status_display = fields.Char(
         string='Return Status',
         compute='_compute_return_status_display',
-        store=False,
-        help='Display return status in readable format'
+        store=False
     )
 
-    # ===== RETURN TRACKING FIELDS =====
+    # Return tracking
     actual_return_date = fields.Date(
         string='Actual Return Date',
         readonly=True,
-        tracking=True,
-        help='The actual date when the property was returned'
+        tracking=True
     )
 
     returned_by_id = fields.Many2one(
         'res.users',
         string='Returned By',
         readonly=True,
-        tracking=True,
-        help='User who processed the return'
+        tracking=True
     )
 
     return_notes = fields.Text(
         string='Return Notes',
-        readonly=True,
-        help='Notes about the return condition and process'
+        readonly=True
     )
 
-    # ===== 📸 SIMPLIFIED PHOTO MANAGEMENT =====
-    
-    # Simple attachment field for photos and documents
+    # Simple attachment field
     attachment_ids = fields.One2many(
         'ir.attachment',
         'res_id',
         string='Photos & Documents',
-        domain=[('res_model', '=', 'hr.custody')],
-        help='Photos and documents related to this custody'
-    )
-
-    # ✅ Basic computed fields with store=True for search compatibility
-    is_overdue = fields.Boolean(
-        string='Is Overdue',
-        compute='_compute_overdue_status',
-        store=True,
-        help='True if return is overdue (for fixed date returns)'
-    )
-
-    days_overdue = fields.Integer(
-        string='Days Overdue',
-        compute='_compute_overdue_status',
-        store=True,
-        help='Number of days overdue (negative if not due yet)'
-    )
-
-    renew_date = fields.Date(
-        string='Renewed Return Date',
-        tracking=True,
-        help="Return date for the renewal",
-        readonly=True,
-        copy=False
+        domain=[('res_model', '=', 'hr.custody')]
     )
 
     notes = fields.Html(
-        string='Notes',
-        help='Note for Custody'
-    )
-
-    is_renew_return_date = fields.Boolean(
-        string='Is Renewal Rejected',
-        default=False,
-        copy=False,
-        help='Rejected Renew Date'
-    )
-
-    is_renew_reject = fields.Boolean(
-        string='Renewal Rejected',
-        default=False,
-        copy=False,
-        help='Indicates whether the renewal is rejected or not.'
+        string='Notes'
     )
 
     state = fields.Selection([
@@ -206,37 +134,17 @@ class HrCustody(models.Model):
     ],
     string='Status',
     default='draft',
-    tracking=True,
-    help='Custody states visible in statusbar'
+    tracking=True
     )
 
-    is_mail_send = fields.Boolean(
-        string="Mail Send",
-        help='Indicates whether an email has been sent or not.'
-    )
-
-    is_read_only = fields.Boolean(
-        string="Check Field",
-        compute='_compute_is_read_only'
-    )
-
-    # ===== SIMPLIFIED COMPUTED METHODS =====
-
-    # Computed Fields (existing)
+    # Simple computed method
     @api.depends('return_type', 'return_date', 'expected_return_period', 'state', 'actual_return_date')
     def _compute_return_status_display(self):
-        """Compute return status display in readable format"""
+        """Compute return status display"""
         for record in self:
             if record.state == 'returned':
                 if record.actual_return_date:
-                    return_str = f'Returned: {record.actual_return_date.strftime("%d/%m/%Y")}'
-                    # Check if returned late
-                    if (record.return_type == 'date' and
-                        record.return_date and
-                        record.actual_return_date > record.return_date):
-                        days_late = (record.actual_return_date - record.return_date).days
-                        return_str += f' ({days_late} days late)'
-                    record.return_status_display = return_str
+                    record.return_status_display = f'Returned: {record.actual_return_date.strftime("%d/%m/%Y")}'
                 else:
                     record.return_status_display = 'Returned'
             elif record.return_type == 'date' and record.return_date:
@@ -250,78 +158,14 @@ class HrCustody(models.Model):
             else:
                 record.return_status_display = 'Pending'
 
-    @api.depends('return_type', 'return_date', 'actual_return_date', 'state')
-    def _compute_overdue_status(self):
-        """Compute overdue status for fixed date returns"""
-        today = fields.Date.today()
-
-        for record in self:
-            if (record.return_type == 'date' and
-                record.return_date and
-                record.state != 'returned'):
-
-                # Calculate days difference
-                delta = (today - record.return_date).days
-                record.days_overdue = delta
-                record.is_overdue = delta > 0
-            else:
-                record.days_overdue = 0
-                record.is_overdue = False
-
-    @api.depends('employee_id')
-    def _compute_is_read_only(self):
-        """ Use this function to check whether
-        the user has the permission
-        to change the employee"""
-        for record in self:
-            res_user = self.env.user
-            if res_user.has_group('hr.group_hr_user'):
-                record.is_read_only = True
-            else:
-                record.is_read_only = False
-
-    # Constraint and validation methods
-    @api.constrains('return_type', 'return_date', 'expected_return_period', 'date_request')
-    def _check_return_requirements(self):
-        """Validate required fields based on return type"""
-        for record in self:
-            if record.return_type == 'date':
-                if not record.return_date:
-                    raise ValidationError('Please specify return date when selecting "Fixed Return Date"')
-                if record.return_date < record.date_request:
-                    raise ValidationError('Return date must not be before request date')
-            elif record.return_type in ['flexible', 'term_end']:
-                if not record.expected_return_period:
-                    raise ValidationError('Please specify expected return period')
-
-    @api.constrains('custody_property_id')
-    def _check_property_availability(self):
-        """Check if property is available for custody"""
-        for record in self:
-            if record.custody_property_id:
-                property_obj = record.custody_property_id
-                if property_obj.property_status != 'available':
-                    status_name = dict(property_obj._fields['property_status'].selection)[property_obj.property_status]
-                    raise ValidationError(
-                        _('Cannot request custody for %s. Property status is: %s. Only Available properties can be requested.')
-                        % (property_obj.name, status_name)
-                    )
-                if not property_obj.approver_ids:
-                    raise ValidationError(
-                        _('Property "%s" has no approvers assigned. Please contact administrator to set up approvers for this property.')
-                        % property_obj.name
-                    )
-
-    # Standard create/write methods
+    # Standard create method
     @api.model_create_multi
     def create(self, vals_list):
         """Create method with sequence generation"""
         for vals in vals_list:
-            # Generate sequence name if needed
             if not vals.get('name'):
                 vals['name'] = self.env['ir.sequence'].next_by_code('hr.custody') or 'New'
         
-        # Create the records
         records = super(HrCustody, self).create(vals_list)
         return records
 
@@ -329,7 +173,6 @@ class HrCustody(models.Model):
         """Override write to handle state changes"""
         result = super(HrCustody, self).write(vals)
         
-        # Handle state change messages
         if 'state' in vals:
             for record in self:
                 record.message_post(
@@ -349,26 +192,13 @@ class HrCustody(models.Model):
     def sent(self):
         """Move the current record to the 'to_approve' state."""
         self.state = 'to_approve'
-        approver_names = ', '.join(self.property_approver_ids.mapped('name'))
         self.message_post(
-            body=_('Custody request sent for approval to: %s') % approver_names,
+            body=_('Custody request sent for approval'),
             message_type='notification'
         )
 
     def approve(self):
         """Approve custody request"""
-        if (self.env.user not in self.custody_property_id.approver_ids and
-            not self.env.user.has_group('hr.group_hr_manager')):
-            allowed_names = ', '.join(self.custody_property_id.approver_ids.mapped('name'))
-            raise UserError(_("Only these users can approve this request: %s") % allowed_names)
-
-        for custody in self.env['hr.custody'].search([
-            ('custody_property_id', '=', self.custody_property_id.id),
-            ('id', '!=', self.id)
-        ]):
-            if custody.state == "approved":
-                raise UserError(_("Custody is not available now"))
-
         self.approved_by_id = self.env.user
         self.approved_date = fields.Datetime.now()
 
@@ -413,48 +243,13 @@ class HrCustody(models.Model):
         self.returned_by_id = self.env.user
         self.state = 'returned'
 
-        message_body = _('📦 Equipment returned on %s by %s') % (
-            self.actual_return_date.strftime('%d/%m/%Y'),
-            self.env.user.name
+        self.message_post(
+            body=_('📦 Equipment returned on %s by %s') % (
+                self.actual_return_date.strftime('%d/%m/%Y'),
+                self.env.user.name
+            ),
+            message_type='notification'
         )
-
-        if (self.return_type == 'date' and
-            self.return_date and
-            self.actual_return_date > self.return_date):
-            days_late = (self.actual_return_date - self.return_date).days
-            message_body += _(' ⚠️ Returned %d days late.') % days_late
-
-        self.message_post(body=message_body, message_type='notification')
-
-    # Helper methods
-    @api.model
-    def get_pending_approvals(self, user_id=None):
-        """Get custody requests pending approval for specific user"""
-        if not user_id:
-            user_id = self.env.user.id
-        return self.search([
-            ('custody_property_id.approver_ids', 'in', [user_id]),
-            ('state', '=', 'to_approve')
-        ])
-
-    @api.model
-    def name_search(self, name='', args=None, operator='ilike', limit=100):
-        """Override name_search to search in multiple fields"""
-        if args is None:
-            args = []
-        if name:
-            domain = [
-                '|', '|', '|', '|', '|',
-                ('name', operator, name),
-                ('employee_id.name', operator, name),
-                ('custody_property_id.name', operator, name),
-                ('purpose', operator, name),
-                ('custody_property_id.property_code', operator, name),
-                ('approved_by_id.name', operator, name)
-            ]
-            records = self.search(domain + args, limit=limit)
-            return records.name_get()
-        return super(HrCustody, self).name_search(name, args, operator, limit)
 
     def name_get(self):
         """Enhanced name display"""
