@@ -22,3 +22,5 @@ access_custody_photo_notes_wizard_manager,custody.photo.notes.wizard.manager,mod
 access_custody_photo_bulk_categorize_wizard_user,custody.photo.bulk.categorize.wizard.user,model_custody_photo_bulk_categorize_wizard,hr.group_hr_user,1,1,1,1
 access_custody_photo_bulk_categorize_wizard_manager,custody.photo.bulk.categorize.wizard.manager,model_custody_photo_bulk_categorize_wizard,hr.group_hr_manager,1,1,1,1
 access_custody_photo_quality_analysis_wizard_manager,custody.photo.quality.analysis.wizard.manager,model_custody_photo_quality_analysis_wizard,hr.group_hr_manager,1,1,1,1
+access_hr_custody_auto_assignment_user,hr.custody.auto.assignment.user,model_hr_custody_auto_assignment,hr.group_hr_user,1,1,1,1
+access_hr_custody_auto_assignment_manager,hr.custody.auto.assignment.manager,model_hr_custody_auto_assignment,hr.group_hr_manager,1,1,1,1
