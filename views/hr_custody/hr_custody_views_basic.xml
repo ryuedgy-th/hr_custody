@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- 📋 HR CUSTODY BASIC FORM VIEW - Core Fields & Layout -->
+    <!-- 📋 HR CUSTODY BASIC FORM VIEW - Simplified & Clean ---->
     
     <!-- Main Custody Form View -->
     <record id="hr_custody_view_form" model="ir.ui.view">
@@ -61,70 +61,20 @@
                         by <field name="returned_by_id" readonly="1" nolabel="1"/>
                     </div>
 
-                    <!-- Photo Status Banner -->
-                    <div class="alert alert-info" role="alert" invisible="state not in ['approved', 'returned']">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <strong>📸 Handover Photos:</strong>
-                                <field name="handover_photo_count" nolabel="1"/> photos
-                                <span class="badge badge-success" invisible="not has_handover_photos">✓</span>
-                                <span class="badge badge-warning" invisible="has_handover_photos">⚠</span>
-                            </div>
-                            <div class="col-md-4" invisible="state != 'returned'">
-                                <strong>📦 Return Photos:</strong>
-                                <field name="return_photo_count" nolabel="1"/> photos
-                                <span class="badge badge-success" invisible="not has_return_photos">✓</span>
-                                <span class="badge badge-warning" invisible="has_return_photos">⚠</span>
-                            </div>
-                            <div class="col-md-4" invisible="state != 'returned'">
-                                <strong>📊 Status:</strong>
-                                <span class="badge badge-success" invisible="not photos_complete">Complete</span>
-                                <span class="badge badge-warning" invisible="photos_complete">Incomplete</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Smart Buttons -->
+                    <!-- Simplified Smart Buttons -->
                     <div class="oe_button_box" name="button_box">
-                        <button name="action_view_handover_photos" 
-                                type="object" 
+                        <button name="%(base.action_attachment)d" 
+                                type="action" 
                                 class="oe_stat_button" 
                                 icon="fa-camera"
                                 invisible="state not in ['approved', 'returned']"
+                                context="{'default_res_model': 'hr.custody', 'default_res_id': id}"
                                 groups="hr.group_hr_user,hr.group_hr_manager">
                             <div class="o_field_widget o_stat_info">
                                 <span class="o_stat_value">
-                                    <field name="handover_photo_count" widget="integer"/>
+                                    <field name="attachment_ids" widget="statinfo" nolabel="1"/>
                                 </span>
-                                <span class="o_stat_text">Handover Photos</span>
-                            </div>
-                        </button>
-
-                        <button name="action_view_return_photos" 
-                                type="object" 
-                                class="oe_stat_button" 
-                                icon="fa-archive"
-                                invisible="state != 'returned'"
-                                groups="hr.group_hr_user,hr.group_hr_manager">
-                            <div class="o_field_widget o_stat_info">
-                                <span class="o_stat_value">
-                                    <field name="return_photo_count" widget="integer"/>
-                                </span>
-                                <span class="o_stat_text">Return Photos</span>
-                            </div>
-                        </button>
-
-                        <button name="action_compare_photos" 
-                                type="object" 
-                                class="oe_stat_button" 
-                                icon="fa-exchange"
-                                invisible="state != 'returned' or not has_handover_photos or not has_return_photos"
-                                groups="hr.group_hr_user,hr.group_hr_manager">
-                            <div class="o_field_widget o_stat_info">
-                                <span class="o_stat_value">
-                                    <field name="total_photo_count" widget="integer"/>
-                                </span>
-                                <span class="o_stat_text">Compare Photos</span>
+                                <span class="o_stat_text">Photos</span>
                             </div>
                         </button>
                     </div>
@@ -176,9 +126,6 @@
                     <field name="property_approver_ids" invisible="1"/>
                     <field name="is_overdue" invisible="1"/>
                     <field name="days_overdue" invisible="1"/>
-                    <field name="has_handover_photos" invisible="1"/>
-                    <field name="has_return_photos" invisible="1"/>
-                    <field name="photos_complete" invisible="1"/>
 
                     <!-- Notebook for additional tabs -->
                     <notebook>
@@ -209,11 +156,16 @@
                         </page>
                     </notebook>
                 </sheet>
+                <!-- Chatter -->
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </div>
             </form>
         </field>
     </record>
 
-    <!-- List/Tree View -->
+    <!-- Simplified List/Tree View -->
     <record id="hr_custody_view_tree" model="ir.ui.view">
         <field name="name">hr.custody.list</field>
         <field name="model">hr.custody</field>
@@ -234,16 +186,12 @@
                 <field name="actual_return_date" string="Actual Return"/>
                 <field name="return_status_display"/>
 
-                <!-- Photo Status Columns -->
-                <field name="handover_photo_count" string="📸 Handover"/>
-                <field name="return_photo_count" string="📦 Return"/> 
-                <field name="photos_complete" string="📊 Complete"/>
+                <!-- Simplified Photo Count -->
+                <field name="attachment_ids" string="📸 Photos" widget="integer"/>
 
                 <!-- Hidden fields for decorations -->
                 <field name="is_overdue" invisible="1"/>
                 <field name="days_overdue" invisible="1"/>
-                <field name="has_handover_photos" invisible="1"/>
-                <field name="has_return_photos" invisible="1"/>
 
                 <field name="state" widget="badge"
                        decoration-success="state == 'approved'"
