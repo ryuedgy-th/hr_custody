@@ -438,7 +438,46 @@ class HrCustody(models.Model):
             }
         return summary
 
-    # 🔧 NEW: Method to ensure photo type is set correctly
+    # 🔧 NEW: Method to auto-assign photo types for attachments
+    def _auto_assign_photo_types(self):
+        """🔧 NEW: Auto-assign photo types to uploaded attachments"""
+        for record in self:
+            # Find image attachments without photo type
+            untyped_photos = record.attachment_ids.filtered(
+                lambda att: (
+                    att.mimetype and 
+                    att.mimetype.startswith('image/') and 
+                    not att.custody_photo_type
+                )
+            )
+            
+            if untyped_photos:
+                # Determine appropriate photo type based on record state
+                if record.state == 'returned':
+                    # For returned state, assign as return photos
+                    default_type = 'return_overall'
+                elif record.state in ['approved']:
+                    # For approved state, assign as handover photos
+                    default_type = 'handover_overall'
+                else:
+                    # For other states, assign as handover photos
+                    default_type = 'handover_overall'
+                
+                # Update photo type for untyped photos
+                untyped_photos.write({
+                    'custody_photo_type': default_type
+                })
+                
+                # Log the auto-assignment
+                if len(untyped_photos) > 0:
+                    record.message_post(
+                        body=_('📸 Auto-assigned photo type "%s" to %d uploaded photos') % (
+                            dict(self.env['ir.attachment']._fields['custody_photo_type'].selection)[default_type],
+                            len(untyped_photos)
+                        )
+                    )
+
+    # 🔧 NEW: Override create to handle attachment sync
     @api.model
     def create(self, vals):
         """🔧 FIXED: Override create to handle attachment sync"""
@@ -447,6 +486,9 @@ class HrCustody(models.Model):
         # Generate sequence if needed
         if not record.name or record.name == 'New':
             record.name = self.env['ir.sequence'].next_by_code('hr.custody') or 'New'
+        
+        # Auto-assign photo types for any existing attachments
+        record._auto_assign_photo_types()
             
         return record
 
@@ -456,15 +498,9 @@ class HrCustody(models.Model):
         
         # Handle attachment updates
         if 'attachment_ids' in vals:
-            # Ensure photo type is set for new attachments
+            # Auto-assign photo types after attachment update
             for record in self:
-                for attachment in record.attachment_ids:
-                    if not attachment.custody_photo_type and attachment.mimetype and attachment.mimetype.startswith('image/'):
-                        # Auto-assign photo type based on state
-                        if record.state in ['approved', 'returned']:
-                            attachment.custody_photo_type = 'handover_overall'
-                        elif record.state == 'returned':
-                            attachment.custody_photo_type = 'return_overall'
+                record._auto_assign_photo_types()
         
         # Handle computed field updates  
         if any(field in vals for field in ['return_date', 'return_type', 'state', 'actual_return_date', 'attachment_ids']):
