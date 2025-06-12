@@ -44,7 +44,7 @@
         </field>
     </record>
 
-    <!-- 📸 Custody Photo Gallery View - SIMPLIFIED APPROACH -->
+    <!-- 📸 Custody Photo Gallery View - COMPLETELY FIXED -->
     <record id="ir_attachment_custody_view_kanban" model="ir.ui.view">
         <field name="name">ir.attachment.custody.kanban</field>
         <field name="model">ir.attachment</field>
@@ -70,14 +70,14 @@
                         <div class="oe_kanban_card o_attachment_wrap" style="margin: 10px; padding: 10px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background: white;">
                             <!-- 📸 Photo Display -->
                             <div class="o_image_box" style="position: relative; text-align: center; margin-bottom: 10px;">
-                                <t t-if="record.mimetype.value and record.mimetype.value.startswith('image/')">
+                                <t t-if="record.mimetype.value and record.mimetype.value.startsWith('image/')">
                                     <!-- Real Image Display with Clickable Link -->
-                                    <a t-att-href="'/web/image/' + record.id.value" target="_blank" style="display: block; position: relative;">
+                                    <a t-attf-href="/web/image/#{record.id.value}" target="_blank" style="display: block; position: relative;">
                                         <img class="o_image" 
-                                             t-att-src="'/web/image/' + record.id.value + '?unique=' + record.checksum.value" 
+                                             t-attf-src="/web/image/#{record.id.value}?unique=#{record.checksum.value}" 
                                              style="width: 200px; height: 150px; object-fit: cover; border-radius: 8px; cursor: pointer;"
                                              t-att-alt="record.name.value"
-                                             t-att-title="Click to view full size"/>
+                                             title="Click to view full size"/>
                                         
                                         <!-- Quality Badge -->
                                         <t t-if="record.is_high_quality.value">
@@ -98,7 +98,7 @@
                                         <div class="text-center text-muted">
                                             <i class="fa fa-file fa-3x mb-2"/>
                                             <br/>
-                                            <small t-esc="record.name.value"/>
+                                            <small><t t-esc="record.name.value"/></small>
                                         </div>
                                     </div>
                                 </t>
@@ -157,13 +157,13 @@
                                 
                                 <!-- Action Links -->
                                 <div class="text-center">
-                                    <a t-att-href="'/web/image/' + record.id.value" 
+                                    <a t-attf-href="/web/image/#{record.id.value}" 
                                        target="_blank" 
                                        class="btn btn-sm btn-outline-primary"
                                        style="margin-right: 5px;">
                                         🔍 View Full Size
                                     </a>
-                                    <a t-att-href="'/web/content/' + record.id.value + '?download=true'" 
+                                    <a t-attf-href="/web/content/#{record.id.value}?download=true" 
                                        target="_blank"
                                        class="btn btn-sm btn-outline-secondary">
                                         📥 Download
