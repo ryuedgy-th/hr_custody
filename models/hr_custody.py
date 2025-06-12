@@ -531,7 +531,27 @@ class HrCustody(models.Model):
                 raise UserError(_('You cannot delete approved or returned custody records'))
         return super().unlink()
 
-    # 🎯 WORKFLOW METHODS - Enhanced
+    # 🎯 WORKFLOW METHODS - Enhanced & Backward Compatible
+
+    def sent(self) -> None:
+        """Legacy method name for backward compatibility with views"""
+        return self.action_send_for_approval()
+
+    def approve(self) -> None:
+        """Legacy method name for backward compatibility with views"""
+        return self.action_approve()
+
+    def refuse_with_reason(self) -> Dict[str, Any]:
+        """Legacy method name for backward compatibility with views"""
+        return self.action_refuse_with_reason()
+
+    def set_to_draft(self) -> None:
+        """Legacy method name for backward compatibility with views"""
+        return self.action_set_to_draft()
+
+    def set_to_return(self) -> None:
+        """Legacy method name for backward compatibility with views"""
+        return self.action_return_equipment()
 
     def action_send_for_approval(self) -> None:
         """Send custody request for approval"""
