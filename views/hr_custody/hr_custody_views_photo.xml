@@ -60,14 +60,14 @@
                             <!-- Image Display Area -->
                             <div class="o_image_box" style="position: relative; text-align: center; margin-bottom: 10px;">
                                 <t t-if="record.mimetype.value and record.mimetype.value.startsWith('image/')">
-                                    <a t-attf-href="/web/image/#{record.id.value}" target="_blank" 
+                                    <a t-attf-href="/web/image/ir.attachment/#{record.id.value}/datas" target="_blank" 
                                        style="display: block; position: relative;">
                                         <img class="o_image" 
-                                             t-attf-src="/web/image/#{record.id.value}?unique=#{record.checksum.value}"
+                                             t-attf-src="/web/image/ir.attachment/#{record.id.value}/datas"
                                              style="width: 200px; height: 150px; object-fit: cover; 
                                                     border-radius: 8px; cursor: pointer;"
                                              t-att-alt="record.name.value"
-                                             t-att-title="record.name.value"
+                                             title="Click to view full size"
                                              loading="lazy"/>
                                         
                                         <!-- Quality Badge -->
@@ -155,13 +155,13 @@
                                 
                                 <!-- Action Buttons -->
                                 <div class="text-center">
-                                    <a t-attf-href="/web/image/#{record.id.value}" 
+                                    <a t-attf-href="/web/image/ir.attachment/#{record.id.value}/datas" 
                                        target="_blank"
                                        class="btn btn-sm btn-outline-primary" 
                                        style="margin-right: 5px;">
                                         🔍 View Full Size
                                     </a>
-                                    <a t-attf-href="/web/content/#{record.id.value}?download=true" 
+                                    <a t-attf-href="/web/content/ir.attachment/#{record.id.value}/datas?download=true" 
                                        target="_blank"
                                        class="btn btn-sm btn-outline-secondary">
                                         📥 Download
