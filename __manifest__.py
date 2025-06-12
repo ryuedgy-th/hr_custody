@@ -1,6 +1,6 @@
 {
     'name': 'Advanced HR Custody Management',
-    'version': '18.0.2.0.1',  # 🚨 HOTFIX: Fixed file path references in manifest
+    'version': '18.0.2.0.2',  # 🚨 HOTFIX: Fixed asset file references
     'category': 'Human Resources',
     'summary': """Modern enterprise-grade custody management with modular architecture and photo documentation""",
     'description': """
@@ -86,12 +86,11 @@
         'reports/report_custody_views.xml',
     ],
     
-    # 🎨 Assets (CSS/JS)
+    # 🎨 Assets (CSS/JS) - FIXED ASSET PATHS
     'assets': {
         'web.assets_backend': [
-            'hr_custody/static/src/css/custody_styles.css',
-            'hr_custody/static/src/css/photo_gallery.css',
-            'hr_custody/static/src/js/custody_widgets.js',
+            'hr_custody/static/src/css/custody_image_upload.css',
+            'hr_custody/static/src/js/custody_image_upload.js',
         ],
     },
     
