@@ -162,6 +162,20 @@
         </field>
     </record>
 
+    <!-- 🤖 NEW: Auto Assignment Helper Actions -->
+    <record id="hr_custody_auto_assignment_action" model="ir.actions.act_window">
+        <field name="name">Auto Assignment Helper</field>
+        <field name="res_model">hr.custody.auto.assignment</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Auto-assign photo types to custody attachments.
+            </p>
+            <p>This tool helps assign photo types to uploaded photos automatically.</p>
+        </field>
+    </record>
+
     <!-- MENU STRUCTURE -->
     
     <!-- Main Menu -->
@@ -276,6 +290,14 @@
               sequence="30"
               groups="base.group_system"/>
 
+    <!-- 🤖 NEW: Auto Assignment Helper Menu -->
+    <menuitem action="hr_custody_auto_assignment_action"
+              id="hr_custody_menu_auto_assignment"
+              parent="hr_custody_menu_configuration"
+              name="Auto Assignment Helper"
+              sequence="31"
+              groups="hr.group_hr_manager"/>
+
     <!-- Server Actions for Bulk Operations -->
     <record id="action_bulk_approve_custody" model="ir.actions.server">
         <field name="name">Bulk Approve Selected</field>
@@ -305,6 +327,20 @@ for record in records:
         <field name="groups_id" eval="[(4, ref('hr.group_hr_manager'))]"/>
     </record>
 
+    <!-- 🤖 NEW: Auto Assignment Server Action -->
+    <record id="action_auto_assign_photo_types" model="ir.actions.server">
+        <field name="name">🤖 Auto-Assign Photo Types</field>
+        <field name="model_id" ref="model_hr_custody_auto_assignment"/>
+        <field name="state">code</field>
+        <field name="code">
+# Process all untyped attachments
+helper = env['hr.custody.auto.assignment'].create({})
+result = helper.process_untyped_attachments()
+action = result
+        </field>
+        <field name="groups_id" eval="[(4, ref('hr.group_hr_manager'))]"/>
+    </record>
+
     <!-- Scheduled Actions for Automation - FIXED for Odoo 18.0 -->
     <record id="ir_cron_custody_overdue_reminder" model="ir.cron">
         <field name="name">Custody Overdue Reminder</field>
@@ -313,6 +349,17 @@ for record in records:
         <field name="code">model.send_overdue_reminders()</field>
         <field name="interval_number">1</field>
         <field name="interval_type">days</field>
+        <field name="active" eval="True"/>
+    </record>
+
+    <!-- 🤖 NEW: Auto Assignment Cron Job -->
+    <record id="ir_cron_auto_assign_photo_types" model="ir.cron">
+        <field name="name">🤖 Auto-Assign Photo Types Hourly</field>
+        <field name="model_id" ref="model_hr_custody_auto_assignment"/>
+        <field name="state">code</field>
+        <field name="code">model.auto_assign_recent_photos(hours=1)</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
         <field name="active" eval="True"/>
     </record>
 
