@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- 🎯 HR CUSTODY ACTIONS & MENUS - Dedicated File -->
+    <!-- HR CUSTODY ACTIONS AND MENUS - Dedicated File -->
     
     <!-- Main Custody Action with Smart Defaults -->
     <record id="hr_custody_action" model="ir.actions.act_window">
@@ -16,12 +16,12 @@
                 Click to Create a New Custody Request.
             </p>
             <p>
-                <strong>🔥 Smart Filters Available:</strong><br/>
-                • <strong>🔔 Waiting My Approval</strong> - See requests needing your approval<br/>
-                • <strong>📋 My Requests</strong> - View your own requests<br/>
-                • <strong>⚠️ Overdue Items</strong> - Critical items past return date<br/>
-                • <strong>🕐 Due This Week</strong> - Items due soon<br/>
-                • <strong>📸 Photo Status</strong> - Track photo documentation
+                <strong>Smart Filters Available:</strong><br/>
+                • <strong>Waiting My Approval</strong> - See requests needing your approval<br/>
+                • <strong>My Requests</strong> - View your own requests<br/>
+                • <strong>Overdue Items</strong> - Critical items past return date<br/>
+                • <strong>Due This Week</strong> - Items due soon<br/>
+                • <strong>Photo Status</strong> - Track photo documentation
             </p>
         </field>
     </record>
@@ -112,7 +112,7 @@
                 Click to Create a New Custody Request.
             </p>
             <p>
-                <strong>📊 Dashboard Overview:</strong><br/>
+                <strong>Dashboard Overview:</strong><br/>
                 • View all custody requests by status<br/>
                 • Quick access to pending approvals<br/>
                 • Monitor overdue returns<br/>
@@ -162,7 +162,7 @@
         </field>
     </record>
 
-    <!-- 📊 MENU STRUCTURE -->
+    <!-- MENU STRUCTURE -->
     
     <!-- Main Menu -->
     <menuitem id="hr_custody_menu_management" 
@@ -174,7 +174,7 @@
     <menuitem action="hr_custody_dashboard_action_v2"
               id="hr_custody_menu_dashboard"
               parent="hr_custody_menu_management"
-              name="📊 Dashboard"
+              name="Dashboard"
               sequence="0"
               groups="hr.group_hr_user,hr.group_hr_manager"/>
 
@@ -182,19 +182,19 @@
     <menuitem action="hr_custody_action"
               id="hr_custody_menu_unified"
               parent="hr_custody_menu_management"
-              name="📋 All Requests"
+              name="All Requests"
               sequence="1"/>
 
     <menuitem action="hr_custody_action_my_requests"
               id="hr_custody_menu_my_requests"
               parent="hr_custody_menu_management"
-              name="📋 My Requests"
+              name="My Requests"
               sequence="2"/>
 
     <menuitem action="hr_custody_action_pending_approvals"
               id="hr_custody_menu_pending_approvals"
               parent="hr_custody_menu_management"
-              name="🔔 Pending Approvals"
+              name="Pending Approvals"
               sequence="3"
               groups="hr.group_hr_user,hr.group_hr_manager"/>
 
@@ -202,77 +202,77 @@
     <menuitem action="custody_property_action"
               id="hr_property_menu"
               parent="hr_custody_menu_management"
-              name="🏢 Properties"
+              name="Properties"
               sequence="10"
               groups="hr.group_hr_manager"/>
 
     <menuitem action="property_category_action"
               id="property_category_menu"
               parent="hr_custody_menu_management"
-              name="📂 Property Categories"
+              name="Property Categories"
               sequence="11"
               groups="hr.group_hr_manager"/>
 
     <!-- Reports Menu Section -->
     <menuitem id="hr_custody_menu_reports"
               parent="hr_custody_menu_management"
-              name="📊 Reports & Analytics"
+              name="Reports and Analytics"
               sequence="15"
               groups="hr.group_hr_manager"/>
 
     <menuitem action="action_report_custody"
               id="custody_report_menu_analysis"
               parent="hr_custody_menu_reports"
-              name="📈 Custody Analysis"
+              name="Custody Analysis"
               sequence="1"
               groups="hr.group_hr_manager"/>
 
     <menuitem action="action_report_custody_performance"
               id="custody_report_menu_performance"
               parent="hr_custody_menu_reports"
-              name="📊 Return Performance"
+              name="Return Performance"
               sequence="2"
               groups="hr.group_hr_manager"/>
 
     <menuitem action="action_report_custody_approver_performance"
               id="custody_report_menu_approver"
               parent="hr_custody_menu_reports"
-              name="👥 Approver Performance"
+              name="Approver Performance"
               sequence="3"
               groups="hr.group_hr_manager"/>
 
     <!-- Management Menu Section -->
     <menuitem id="hr_custody_menu_management_section"
               parent="hr_custody_menu_management"
-              name="📊 Management"
+              name="Management"
               sequence="20"
               groups="hr.group_hr_manager"/>
 
     <menuitem action="hr_custody_action_overdue"
               id="hr_custody_menu_overdue"
               parent="hr_custody_menu_management_section"
-              name="⚠️ Overdue Returns"
+              name="Overdue Returns"
               sequence="21"
               groups="hr.group_hr_manager"/>
 
     <menuitem action="hr_custody_action_photo_review"
               id="hr_custody_menu_photo_review"
               parent="hr_custody_menu_management_section"
-              name="📸 Photo Review"
+              name="Photo Review"
               sequence="22"
               groups="hr.group_hr_manager"/>
 
     <menuitem action="ir_attachment_custody_action"
               id="ir_attachment_custody_menu"
               parent="hr_custody_menu_management_section"
-              name="📷 All Photos"
+              name="All Photos"
               sequence="23"
               groups="hr.group_hr_manager"/>
 
     <!-- Configuration Menu Section -->
     <menuitem id="hr_custody_menu_configuration"
               parent="hr_custody_menu_management"
-              name="⚙️ Configuration"
+              name="Configuration"
               sequence="30"
               groups="base.group_system"/>
 
