@@ -98,7 +98,8 @@
                         <page string="Images &amp; Condition">
                             <div class="oe_button_box" name="image_button_box">
                                 <button class="oe_stat_button" type="object" name="action_view_images"
-                                        context="{'default_image_type': 'checkout'}" icon="fa-camera">
+                                        context="{'default_image_type': 'checkout'}" icon="fa-camera"
+                                        style="margin-right: 10px;">
                                     <div class="o_field_widget o_stat_info">
                                         <span class="o_stat_value">
                                             <field name="checkout_image_count"/>
@@ -107,7 +108,8 @@
                                     </div>
                                 </button>
                                 <button class="oe_stat_button" type="object" name="action_view_images"
-                                        context="{'default_image_type': 'return'}" icon="fa-camera">
+                                        context="{'default_image_type': 'return'}" icon="fa-camera"
+                                        style="margin-right: 10px;">
                                     <div class="o_field_widget o_stat_info">
                                         <span class="o_stat_value">
                                             <field name="return_image_count"/>
@@ -119,21 +121,20 @@
                                 <!-- Button for Multiple Images Upload Wizard -->
                                 <button class="oe_highlight" type="object" name="action_add_multiple_images"
                                         string="Upload Multiple Images" icon="fa-upload"
-                                        invisible="state in ['rejected', 'returned']"/>
+                                        invisible="state in ['rejected', 'returned']"
+                                        style="margin-right: 10px;"/>
                                 
-                                <!-- NEW: Button for Manage Multiple Images (list view) -->
+                                <!-- Button for Manage Multiple Images (list view) -->
                                 <button class="oe_highlight" type="object" name="action_manage_multiple_images"
                                         string="Manage Multiple Images" icon="fa-list"
-                                        help="View, select and delete multiple images at once"/>
+                                        help="View, select and delete multiple images at once"
+                                        style="margin-right: 10px;"/>
                                 
+                                <!-- Keep only the checkout image button, remove return image button -->
                                 <button class="oe_stat_button" type="object" name="action_add_image"
                                         context="{'default_image_type': 'checkout'}" 
                                         icon="fa-plus" string="Add Checkout Image"
                                         invisible="state not in ['draft', 'to_approve']"/>
-                                <button class="oe_stat_button" type="object" name="action_add_image"
-                                        context="{'default_image_type': 'return'}" 
-                                        icon="fa-plus" string="Add Return Image"
-                                        invisible="state != 'approved'"/>
                             </div>
                             
                             <!-- ซ่อนส่วนเก่าที่ไม่ได้ใช้งานแล้ว -->
@@ -176,7 +177,6 @@
                                 <h3>Return Instructions:</h3>
                                 <ul>
                                     <li>Upload images of the equipment at the time of return using the "Upload Multiple Images" button</li>
-                                    <li>Use the "Add Return Image" button to add individual images</li>
                                     <li>Add notes about any new damages or condition changes</li>
                                     <li>Both employee and manager should verify the return condition</li>
                                 </ul>
