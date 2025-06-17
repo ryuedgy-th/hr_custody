@@ -690,3 +690,26 @@ class HrCustody(models.Model):
             'default_image_type': self.state == 'approved' and 'return' or 'checkout',
         }
         return action
+        
+    def action_manage_multiple_images(self):
+        """Open list view to manage multiple images for this custody"""
+        self.ensure_one()
+        
+        # Use list view first for multi-selection/deletion
+        return {
+            'name': _('Manage Images - %s') % self.name,
+            'type': 'ir.actions.act_window',
+            'res_model': 'custody.image',
+            'view_mode': 'list,kanban,form',
+            'domain': [('custody_id', '=', self.id)],
+            'context': {
+                'default_custody_id': self.id,
+                'search_default_custody_id': self.id,
+                'strict_custody_filter': self.id,
+                'create': True,
+                'edit': True,
+                'delete': True
+            },
+            'help': '<p class="o_view_nocontent_smiling_face">No images found</p>'
+                   '<p>You can select multiple images and delete them at once.</p>'
+        }

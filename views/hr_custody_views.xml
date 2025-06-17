@@ -121,6 +121,11 @@
                                         string="Upload Multiple Images" icon="fa-upload"
                                         invisible="state in ['rejected', 'returned']"/>
                                 
+                                <!-- NEW: Button for Manage Multiple Images (list view) -->
+                                <button class="oe_highlight" type="object" name="action_manage_multiple_images"
+                                        string="Manage Multiple Images" icon="fa-list"
+                                        help="View, select and delete multiple images at once"/>
+                                
                                 <button class="oe_stat_button" type="object" name="action_add_image"
                                         context="{'default_image_type': 'checkout'}" 
                                         icon="fa-plus" string="Add Checkout Image"
@@ -327,6 +332,13 @@
               name="Properties"
               sequence="5"
               groups="hr.group_hr_manager"/>
+
+    <!-- Images Management menu - เพิ่มเมนูสำหรับจัดการรูปภาพหลายรูป -->
+    <menuitem action="hr_custody.action_custody_image_list"
+              id="hr_custody_images_menu"
+              parent="hr_custody_menu_management"
+              name="Manage Images"
+              sequence="6"/>
 
     <!-- Image Comparison Form View -->
     <record id="hr_custody_view_image_comparison" model="ir.ui.view">
