@@ -146,9 +146,10 @@ class CustodyImage(models.Model):
             'form_view_initial_mode': 'readonly',
             'no_breadcrumbs': True,
             'default_custody_id': self.custody_id.id,
-            'modal_full_screen': True,  # ให้แสดงเต็มหน้าจอ
-            'create': False,  # ปิดไม่ให้สร้างใหม่
-            'edit': False     # ปิดไม่ให้แก้ไข
+            'force_detailed_view': True,  # Forces the full-sized image view
+            'modal_full_screen': True,
+            'create': False,
+            'edit': False
         })
         
         # สร้างชื่อที่มีความหมายมากขึ้น
@@ -169,6 +170,7 @@ class CustodyImage(models.Model):
                 'no_breadcrumbs': True,
                 'hasSearchView': False,
                 'hasSidebar': False,
-                'headless': True  # ไม่แสดง header ทำให้รูปภาพมีพื้นที่มากขึ้น
+                'headless': True,
+                'fullscreen': True  # Add fullscreen flag for better display
             }
         }
