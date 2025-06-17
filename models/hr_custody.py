@@ -136,6 +136,45 @@ class HrCustody(models.Model):
         help='Note for Custody'
     )
 
+    # Image fields for documenting equipment condition
+    checkout_image = fields.Image(
+        string="Checkout Image",
+        help="Image of the equipment when checked out to the employee",
+        attachment=True,
+        max_width=1920,
+        max_height=1920
+    )
+    
+    checkout_image_date = fields.Datetime(
+        string="Checkout Image Date",
+        readonly=True,
+        help="Date and time when the checkout image was captured"
+    )
+    
+    checkout_condition_notes = fields.Text(
+        string="Checkout Condition Notes",
+        help="Notes about the condition of the equipment when checked out"
+    )
+    
+    return_image = fields.Image(
+        string="Return Image",
+        help="Image of the equipment when returned by the employee",
+        attachment=True,
+        max_width=1920,
+        max_height=1920
+    )
+    
+    return_image_date = fields.Datetime(
+        string="Return Image Date",
+        readonly=True,
+        help="Date and time when the return image was captured"
+    )
+    
+    return_condition_notes = fields.Text(
+        string="Return Condition Notes",
+        help="Notes about the condition of the equipment when returned"
+    )
+
     is_renew_return_date = fields.Boolean(
         default=False,
         copy=False,
@@ -209,6 +248,18 @@ class HrCustody(models.Model):
             self.return_date = False
         if self.return_type == 'date':
             self.expected_return_period = False
+            
+    @api.onchange('checkout_image')
+    def _onchange_checkout_image(self):
+        """Update checkout image timestamp when image uploaded"""
+        if self.checkout_image:
+            self.checkout_image_date = fields.Datetime.now()
+    
+    @api.onchange('return_image')
+    def _onchange_return_image(self):
+        """Update return image timestamp when image uploaded"""
+        if self.return_image:
+            self.return_image_date = fields.Datetime.now()
 
     # Constraint Methods
     @api.constrains('return_type', 'return_date', 'expected_return_period', 'date_request')
@@ -392,6 +443,10 @@ class HrCustody(models.Model):
         # ⭐ NEW: บันทึกว่าใครอนุมัติ
         self.approved_by_id = self.env.user
         self.approved_date = fields.Datetime.now()
+        
+        # Update checkout image date if image exists but date not set
+        if self.checkout_image and not self.checkout_image_date:
+            self.checkout_image_date = fields.Datetime.now()
 
         # Update property status to 'in_use' when approved
         if self.custody_property_id.property_status == 'available':
@@ -401,7 +456,7 @@ class HrCustody(models.Model):
 
         # Post message เพื่อ tracking
         self.message_post(
-            body=_('✅ Request approved by %s') % self.env.user.name,
+            body=_('Request approved by %s') % self.env.user.name,
             message_type='notification'
         )
 
@@ -423,6 +478,10 @@ class HrCustody(models.Model):
 
     def set_to_return(self):
         """The function used to set the current custody record to the 'returned' state"""
+        # Update return image date if image exists but date not set
+        if self.return_image and not self.return_image_date:
+            self.return_image_date = fields.Datetime.now()
+            
         # Update property status to 'available' when returned
         if self.custody_property_id.property_status == 'in_use':
             self.custody_property_id.property_status = 'available'
@@ -431,6 +490,16 @@ class HrCustody(models.Model):
         # Don't automatically set return_date for flexible returns
         if self.return_type == 'date':
             self.return_date = fields.Date.today()
+            
+        # Post message about return with condition notes if provided
+        message = _('Equipment returned')
+        if self.return_condition_notes:
+            message += _(' with notes: %s') % self.return_condition_notes
+            
+        self.message_post(
+            body=message,
+            message_type='notification'
+        )
 
     def unlink(self):
         """Override unlink to prevent deletion of approved records"""
@@ -491,3 +560,28 @@ class HrCustody(models.Model):
                 name += f" ({record.custody_property_id.name})"
             result.append((record.id, name))
         return result
+
+    def action_view_image_comparison(self):
+        """Open a wizard to compare checkout and return images side by side"""
+        self.ensure_one()
+        
+        # Check if both images exist
+        if not self.checkout_image or not self.return_image:
+            missing = []
+            if not self.checkout_image:
+                missing.append("checkout")
+            if not self.return_image:
+                missing.append("return")
+                
+            raise UserError(_("Cannot compare images. Missing %s image(s).") % (" and ".join(missing)))
+        
+        # Return action to open wizard
+        return {
+            'name': _('Image Comparison'),
+            'type': 'ir.actions.act_window',
+            'view_mode': 'form',
+            'res_model': 'hr.custody',
+            'res_id': self.id,
+            'target': 'new',
+            'context': {'form_view_ref': 'hr_custody.hr_custody_view_image_comparison'},
+        }
