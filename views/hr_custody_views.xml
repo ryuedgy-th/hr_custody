@@ -136,7 +136,8 @@
                                         invisible="state != 'approved'"/>
                             </div>
                             
-                            <group>
+                            <!-- ซ่อนส่วนเก่าที่ไม่ได้ใช้งานแล้ว -->
+                            <group invisible="1">
                                 <group string="Checkout Condition" name="checkout_images">
                                     <field name="checkout_image" widget="image" options="{'size': [300, 300], 'preview_image': 'checkout_image'}" 
                                            class="oe_avatar" nolabel="1"/>
@@ -156,25 +157,27 @@
                                 </group>
                             </group>
                             
-                            <!-- Compare Images Button -->
-                            <div invisible="state != 'returned'">
+                            <!-- Compare Images Button - ปรับให้ใช้ระบบใหม่ -->
+                            <div invisible="state != 'returned' or checkout_image_count == 0 or return_image_count == 0">
                                 <button string="Compare Images" type="object" name="action_view_image_comparison" 
-                                        class="oe_highlight" invisible="checkout_image == False or return_image == False"/>
+                                        class="oe_highlight"/>
                             </div>
                             
                             <div invisible="state in ['approved', 'returned']">
                                 <h3>Instructions:</h3>
                                 <ul>
-                                    <li>Upload an image of the equipment at the time of checkout</li>
-                                    <li>Describe any existing damages, scratches, or notable conditions</li>
-                                    <li>Both employee and manager should verify the image and condition</li>
+                                    <li>Upload images of the equipment at the time of checkout using the "Upload Multiple Images" button</li>
+                                    <li>Use the "Add Checkout Image" button to add individual images</li>
+                                    <li>Add notes about any existing damages, scratches, or notable conditions</li>
+                                    <li>Both employee and manager should verify the images and condition</li>
                                 </ul>
                             </div>
                             <div invisible="state != 'approved'">
                                 <h3>Return Instructions:</h3>
                                 <ul>
-                                    <li>Upload an image of the equipment at the time of return</li>
-                                    <li>Note any new damages or condition changes</li>
+                                    <li>Upload images of the equipment at the time of return using the "Upload Multiple Images" button</li>
+                                    <li>Use the "Add Return Image" button to add individual images</li>
+                                    <li>Add notes about any new damages or condition changes</li>
                                     <li>Both employee and manager should verify the return condition</li>
                                 </ul>
                             </div>
@@ -354,28 +357,62 @@
                     
                     <div class="o_custody_comparison_container">
                         <div class="o_custody_comparison_column">
-                            <h3 class="text-center">Checkout Image</h3>
+                            <h3 class="text-center">Checkout Images</h3>
                             <div class="o_custody_comparison_image_container">
-                                <field name="checkout_image" widget="image" readonly="1" options="{'size': [400, 400]}"/>
-                                <div>
-                                    <label for="checkout_image_date" string="Date:"/>
-                                    <field name="checkout_image_date" readonly="1" class="oe_inline"/>
-                                </div>
+                                <!-- แสดงรูปภาพ checkout จากระบบใหม่ -->
+                                <field name="image_ids" readonly="1" mode="kanban" 
+                                       domain="[('image_type', '=', 'checkout')]"
+                                       options="{'no_create': True, 'no_open': True}">
+                                    <kanban>
+                                        <field name="id"/>
+                                        <field name="name"/>
+                                        <field name="image"/>
+                                        <field name="image_date"/>
+                                        <templates>
+                                            <t t-name="kanban-box">
+                                                <div class="oe_kanban_global_click">
+                                                    <div class="o_kanban_image">
+                                                        <img t-att-src="kanban_image('custody.image', 'image', record.id.raw_value)" alt="Image"/>
+                                                    </div>
+                                                    <div class="oe_kanban_details">
+                                                        <strong><field name="name"/></strong>
+                                                        <div>Date: <field name="image_date"/></div>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </templates>
+                                    </kanban>
+                                </field>
                             </div>
-                            <h4>Checkout Condition Notes:</h4>
-                            <field name="checkout_condition_notes" readonly="1"/>
                         </div>
                         <div class="o_custody_comparison_column">
-                            <h3 class="text-center">Return Image</h3>
+                            <h3 class="text-center">Return Images</h3>
                             <div class="o_custody_comparison_image_container">
-                                <field name="return_image" widget="image" readonly="1" options="{'size': [400, 400]}"/>
-                                <div>
-                                    <label for="return_image_date" string="Date:"/>
-                                    <field name="return_image_date" readonly="1" class="oe_inline"/>
-                                </div>
+                                <!-- แสดงรูปภาพ return จากระบบใหม่ -->
+                                <field name="image_ids" readonly="1" mode="kanban" 
+                                       domain="[('image_type', '=', 'return')]"
+                                       options="{'no_create': True, 'no_open': True}">
+                                    <kanban>
+                                        <field name="id"/>
+                                        <field name="name"/>
+                                        <field name="image"/>
+                                        <field name="image_date"/>
+                                        <templates>
+                                            <t t-name="kanban-box">
+                                                <div class="oe_kanban_global_click">
+                                                    <div class="o_kanban_image">
+                                                        <img t-att-src="kanban_image('custody.image', 'image', record.id.raw_value)" alt="Image"/>
+                                                    </div>
+                                                    <div class="oe_kanban_details">
+                                                        <strong><field name="name"/></strong>
+                                                        <div>Date: <field name="image_date"/></div>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </templates>
+                                    </kanban>
+                                </field>
                             </div>
-                            <h4>Return Condition Notes:</h4>
-                            <field name="return_condition_notes" readonly="1"/>
                         </div>
                     </div>
                     

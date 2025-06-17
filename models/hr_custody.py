@@ -596,25 +596,45 @@ class HrCustody(models.Model):
         """Open a wizard to compare checkout and return images side by side"""
         self.ensure_one()
         
-        # Check if both images exist
-        if not self.checkout_image or not self.return_image:
+        # ตรวจสอบว่ามีภาพทั้งสองประเภทหรือไม่
+        checkout_images = self.env['custody.image'].search([
+            ('custody_id', '=', self.id),
+            ('image_type', '=', 'checkout')
+        ], limit=1)
+        
+        return_images = self.env['custody.image'].search([
+            ('custody_id', '=', self.id),
+            ('image_type', '=', 'return')
+        ], limit=1)
+        
+        # ถ้าไม่มีภาพใดภาพหนึ่ง ให้แสดงข้อความแจ้งเตือน
+        if not checkout_images or not return_images:
             missing = []
-            if not self.checkout_image:
+            if not checkout_images:
                 missing.append("checkout")
-            if not self.return_image:
+            if not return_images:
                 missing.append("return")
                 
-            raise UserError(_("Cannot compare images. Missing %s image(s).") % (" and ".join(missing)))
+            raise UserError(_("Cannot compare images. Missing %s image(s). Please upload images first.") % (" and ".join(missing)))
         
-        # Return action to open wizard
+        # สร้าง context สำหรับการเปิดมุมมองเปรียบเทียบ
+        context = self.env.context.copy()
+        context.update({
+            'default_checkout_images': checkout_images.ids,
+            'default_return_images': return_images.ids,
+            'no_breadcrumbs': True
+        })
+        
+        # เปิดมุมมองเปรียบเทียบ
         return {
-            'name': _('Image Comparison'),
+            'name': _('Image Comparison - %s') % self.name,
             'type': 'ir.actions.act_window',
             'view_mode': 'form',
             'res_model': 'hr.custody',
             'res_id': self.id,
             'target': 'new',
-            'context': {'form_view_ref': 'hr_custody.hr_custody_view_image_comparison'},
+            'view_id': self.env.ref('hr_custody.hr_custody_view_image_comparison').id,
+            'context': context,
         }
 
     def action_view_images(self, image_type=None):
