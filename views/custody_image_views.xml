@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- Custody Image Form View -->
+    <record id="view_custody_image_form" model="ir.ui.view">
+        <field name="name">custody.image.form</field>
+        <field name="model">custody.image</field>
+        <field name="arch" type="xml">
+            <form string="Custody Image">
+                <sheet>
+                    <field name="image" widget="image" class="oe_avatar" nolabel="1"/>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1><field name="name" placeholder="Image Title"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="custody_id" invisible="context.get('hide_custody_id', False)" 
+                                   options="{'no_create': True}"/>
+                            <field name="image_type" widget="radio"/>
+                            <field name="sequence"/>
+                        </group>
+                        <group>
+                            <field name="image_date"/>
+                            <field name="uploaded_by_id" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Notes">
+                        <field name="notes" nolabel="1" placeholder="Additional notes about the image..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Custody Image List View -->
+    <record id="view_custody_image_list" model="ir.ui.view">
+        <field name="name">custody.image.list</field>
+        <field name="model">custody.image</field>
+        <field name="arch" type="xml">
+            <list string="Custody Images">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="custody_id"/>
+                <field name="image_type"/>
+                <field name="image_date"/>
+                <field name="uploaded_by_id"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Custody Image Kanban View -->
+    <record id="view_custody_image_kanban" model="ir.ui.view">
+        <field name="name">custody.image.kanban</field>
+        <field name="model">custody.image</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="id"/>
+                <field name="name"/>
+                <field name="image"/>
+                <field name="image_date"/>
+                <field name="image_type"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click o_kanban_record_has_image_fill">
+                            <div class="o_kanban_image_fill_left d-none d-md-block" t-attf-style="background-image: url('#{kanban_image('custody.image', 'image', record.id.raw_value)}')"/>
+                            <div class="oe_kanban_details">
+                                <strong class="o_kanban_record_title">
+                                    <field name="name"/>
+                                </strong>
+                                <div class="o_kanban_tags_section">
+                                    <span class="badge badge-pill" 
+                                          t-attf-class="badge-#{record.image_type.raw_value == 'checkout' ? 'success' : record.image_type.raw_value == 'return' ? 'info' : 'secondary'}">
+                                        <field name="image_type"/>
+                                    </span>
+                                </div>
+                                <ul>
+                                    <li>Date: <field name="image_date"/></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Custody Image Search View -->
+    <record id="view_custody_image_search" model="ir.ui.view">
+        <field name="name">custody.image.search</field>
+        <field name="model">custody.image</field>
+        <field name="arch" type="xml">
+            <search string="Search Custody Images">
+                <field name="name"/>
+                <field name="custody_id"/>
+                <field name="image_type"/>
+                <field name="uploaded_by_id"/>
+                <separator/>
+                <filter string="Checkout Images" name="checkout_images" domain="[('image_type', '=', 'checkout')]"/>
+                <filter string="Return Images" name="return_images" domain="[('image_type', '=', 'return')]"/>
+                <filter string="Maintenance Images" name="maintenance_images" domain="[('image_type', '=', 'maintenance')]"/>
+                <filter string="Other Images" name="other_images" domain="[('image_type', '=', 'other')]"/>
+                <separator/>
+                <filter string="My Uploads" name="my_uploads" domain="[('uploaded_by_id', '=', uid)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Custody Record" name="custody_record" context="{'group_by': 'custody_id'}"/>
+                    <filter string="Image Type" name="image_type" context="{'group_by': 'image_type'}"/>
+                    <filter string="Uploaded By" name="uploaded_by" context="{'group_by': 'uploaded_by_id'}"/>
+                    <filter string="Date" name="date" context="{'group_by': 'image_date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Custody Image Action -->
+    <record id="action_custody_image" model="ir.actions.act_window">
+        <field name="name">Custody Images</field>
+        <field name="res_model">custody.image</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="context">{'search_default_group_by_custody_record': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Add images for custody records
+            </p>
+            <p>
+                Upload images to document the condition of equipment at checkout and return.
+            </p>
+        </field>
+    </record>
+</odoo> 

@@ -96,6 +96,35 @@
 
                         <!-- NEW: Equipment Images & Condition -->
                         <page string="Images &amp; Condition">
+                            <div class="oe_button_box" name="image_button_box">
+                                <button class="oe_stat_button" type="object" name="action_view_images"
+                                        context="{'default_image_type': 'checkout'}" icon="fa-camera">
+                                    <div class="o_field_widget o_stat_info">
+                                        <span class="o_stat_value">
+                                            <field name="checkout_image_count"/>
+                                        </span>
+                                        <span class="o_stat_text">Checkout Images</span>
+                                    </div>
+                                </button>
+                                <button class="oe_stat_button" type="object" name="action_view_images"
+                                        context="{'default_image_type': 'return'}" icon="fa-camera">
+                                    <div class="o_field_widget o_stat_info">
+                                        <span class="o_stat_value">
+                                            <field name="return_image_count"/>
+                                        </span>
+                                        <span class="o_stat_text">Return Images</span>
+                                    </div>
+                                </button>
+                                <button class="oe_stat_button" type="object" name="action_add_image"
+                                        context="{'default_image_type': 'checkout'}" 
+                                        icon="fa-plus" string="Add Checkout Image"
+                                        invisible="state not in ['draft', 'to_approve']"/>
+                                <button class="oe_stat_button" type="object" name="action_add_image"
+                                        context="{'default_image_type': 'return'}" 
+                                        icon="fa-plus" string="Add Return Image"
+                                        invisible="state != 'approved'"/>
+                            </div>
+                            
                             <group>
                                 <group string="Checkout Condition" name="checkout_images">
                                     <field name="checkout_image" widget="image" options="{'size': [300, 300], 'preview_image': 'checkout_image'}" 

@@ -210,6 +210,26 @@ class HrCustody(models.Model):
         compute='_compute_is_read_only'
     )
 
+    # Multiple images feature
+    image_ids = fields.One2many(
+        'custody.image',
+        'custody_id',
+        string='Additional Images',
+        help='Additional images for this custody record'
+    )
+    
+    checkout_image_count = fields.Integer(
+        string='Checkout Images',
+        compute='_compute_image_counts',
+        help='Number of checkout images'
+    )
+    
+    return_image_count = fields.Integer(
+        string='Return Images',
+        compute='_compute_image_counts',
+        help='Number of return images'
+    )
+
     # Computed Fields
     @api.depends('return_type', 'return_date', 'expected_return_period', 'state')
     def _compute_return_status_display(self):
@@ -239,6 +259,13 @@ class HrCustody(models.Model):
                 record.is_read_only = True
             else:
                 record.is_read_only = False
+
+    @api.depends('image_ids')
+    def _compute_image_counts(self):
+        """Compute the number of images for each type"""
+        for record in self:
+            record.checkout_image_count = len(record.image_ids.filtered(lambda i: i.image_type == 'checkout'))
+            record.return_image_count = len(record.image_ids.filtered(lambda i: i.image_type == 'return'))
 
     # Onchange Methods
     @api.onchange('return_type')
@@ -588,4 +615,54 @@ class HrCustody(models.Model):
             'res_id': self.id,
             'target': 'new',
             'context': {'form_view_ref': 'hr_custody.hr_custody_view_image_comparison'},
+        }
+
+    def action_view_images(self, image_type=None):
+        """Open a view to manage images of a specific type or all images"""
+        self.ensure_one()
+        
+        domain = [('custody_id', '=', self.id)]
+        context = {
+            'default_custody_id': self.id,
+        }
+        
+        if image_type:
+            domain.append(('image_type', '=', image_type))
+            context['default_image_type'] = image_type
+            if image_type == 'checkout':
+                title = _('Checkout Images')
+            elif image_type == 'return':
+                title = _('Return Images')
+            else:
+                title = _('Images')
+        else:
+            title = _('All Images')
+            
+        return {
+            'name': title,
+            'type': 'ir.actions.act_window',
+            'res_model': 'custody.image',
+            'view_mode': 'kanban,form',
+            'domain': domain,
+            'context': context,
+        }
+        
+    def action_add_image(self, image_type=None):
+        """Quick action to add a new image of a specific type"""
+        self.ensure_one()
+        
+        context = {
+            'default_custody_id': self.id,
+        }
+        
+        if image_type:
+            context['default_image_type'] = image_type
+            
+        return {
+            'name': _('Add Image'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'custody.image',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': context,
         }

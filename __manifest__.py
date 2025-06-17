@@ -24,6 +24,7 @@
         # Important: custody_property_views.xml must come before hr_custody_views.xml
         # because hr_custody_views.xml references custody_property_action
         'views/custody_property_views.xml',
+        'views/custody_image_views.xml',
         'views/hr_custody_views.xml',
         'views/hr_employee_views.xml',
         # Reports last
