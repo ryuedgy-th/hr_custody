@@ -111,4 +111,42 @@ class CustodyImage(models.Model):
                         # If any error occurs, just use the original image
                         pass
                         
-        return super().create(vals_list) 
+        return super().create(vals_list)
+        
+    def action_view_fullscreen(self):
+        """Open the image in fullscreen viewer"""
+        self.ensure_one()
+        return {
+            'name': self.name,
+            'type': 'ir.actions.act_window',
+            'res_model': 'custody.image',
+            'view_mode': 'form',
+            'res_id': self.id,
+            'view_id': self.env.ref('hr_custody.custody_image_view_fullscreen').id,
+            'target': 'new',
+            'flags': {'mode': 'readonly'},
+        }
+        
+    @api.model
+    def get_custody_images(self, custody_id, image_type=None):
+        """Get images for a specific custody record and optionally filter by image type"""
+        domain = [('custody_id', '=', custody_id)]
+        if image_type:
+            domain.append(('image_type', '=', image_type))
+            
+        return self.search(domain)
+        
+    def open_image_viewer(self):
+        """Open image in a larger viewer - used from kanban view"""
+        self.ensure_one()
+        return {
+            'name': _('Image: %s') % self.name,
+            'type': 'ir.actions.act_window',
+            'view_mode': 'form',
+            'res_model': 'custody.image',
+            'res_id': self.id,
+            'view_id': self.env.ref('hr_custody.custody_image_view_fullscreen').id,
+            'target': 'new',
+            'context': {'form_view_initial_mode': 'readonly', 'no_breadcrumbs': True},
+            'flags': {'mode': 'readonly', 'withControlPanel': False}
+        }

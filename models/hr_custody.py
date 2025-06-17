@@ -621,24 +621,32 @@ class HrCustody(models.Model):
         """Open a view to manage images of a specific type or all images"""
         self.ensure_one()
         
+        # Always strictly filter by custody_id to prevent mixing images
         domain = [('custody_id', '=', self.id)]
         context = {
             'default_custody_id': self.id,
-            'search_default_image_type': image_type,  # Use search filter instead of domain for better caching
+            'search_default_custody_id': self.id,  # Ensure filtering by current custody
+            'strict_custody_filter': self.id,  # Custom key to enforce strict filtering
+            'no_breadcrumbs': True,
         }
         
         if image_type:
             # Add domain filter but keep it minimal for better performance
             domain.append(('image_type', '=', image_type))
             context['default_image_type'] = image_type
+            context['search_default_' + image_type + '_images'] = 1  # Activate the relevant filter
+            
             if image_type == 'checkout':
-                title = _('Checkout Images')
+                title = _('Checkout Images - %s') % self.name
             elif image_type == 'return':
-                title = _('Return Images')
+                title = _('Return Images - %s') % self.name
             else:
-                title = _('Images')
+                title = _('Images - %s') % self.name
         else:
-            title = _('All Images')
+            title = _('All Images - %s') % self.name
+        
+        # Use a custodial ID in the key to ensure caching doesn't mix images
+        view_key = f'custody_images_{self.id}_{image_type or "all"}'
             
         return {
             'name': title,
@@ -647,7 +655,9 @@ class HrCustody(models.Model):
             'view_mode': 'kanban,form',
             'domain': domain,
             'context': context,
-            'limit': 20,  # Limit initial load for better performance
+            'target': 'current',
+            'key2': view_key,  # Use a unique key for this view
+            'help': '<p class="o_view_nocontent_smiling_face">No images found</p><p>Upload images for this custody record.</p>'
         }
         
     def action_add_image(self, image_type=None):
