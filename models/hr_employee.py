@@ -4,14 +4,14 @@ from odoo import api, fields, models, _
 class HrEmployee(models.Model):
     _inherit = 'hr.employee'
 
-    # Option A: แสดงเฉพาะ Active Custody
+    # Count only active custodies
     custody_count = fields.Integer(
         compute='_compute_custody_count',
         string='# Active Custody',
         help='Number of active custody requests'
     )
 
-    # เพิ่มฟิลด์ใหม่สำหรับประวัติทั้งหมด
+    # Track total custody history
     total_custody_count = fields.Integer(
         compute='_compute_total_custody_count',
         string='# Total Custody',
@@ -30,7 +30,7 @@ class HrEmployee(models.Model):
         for employee in self:
             active_custody = self.env['hr.custody'].search_count([
                 ('employee_id', '=', employee.id),
-                ('state', '=', 'approved')  # เฉพาะที่ approved
+                ('state', '=', 'approved')  # Only approved state
             ])
             employee.custody_count = active_custody
 
@@ -40,7 +40,7 @@ class HrEmployee(models.Model):
         for employee in self:
             total_custody = self.env['hr.custody'].search_count([
                 ('employee_id', '=', employee.id)
-                # ไม่กรอง state = ทุกสถานะ
+                # No filter on state = all states
             ])
             employee.total_custody_count = total_custody
 
@@ -50,10 +50,10 @@ class HrEmployee(models.Model):
         for employee in self:
             equipment_records = self.env['hr.custody'].search([
                 ('employee_id', '=', employee.id),
-                ('state', '=', 'approved')  # เฉพาะที่ approved
+                ('state', '=', 'approved')  # Only approved state
             ])
 
-            # นับ property ที่ unique (ไม่ซ้ำ)
+            # Count unique properties
             unique_properties = set()
             for custody in equipment_records:
                 unique_properties.add(custody.custody_property_id.id)

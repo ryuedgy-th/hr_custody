@@ -73,7 +73,7 @@ class HrCustody(models.Model):
         help='The property associated with this custody record'
     )
 
-    # ⭐ NEW: Related field for property approvers
+    # Related field for property approvers
     property_approver_ids = fields.Many2many(
         related='custody_property_id.approver_ids',
         string='Available Approvers',
@@ -81,7 +81,7 @@ class HrCustody(models.Model):
         help='Users who can approve this request based on the selected property'
     )
 
-    # ⭐ NEW: Approval tracking
+    # Approval tracking
     approved_by_id = fields.Many2one(
         'res.users',
         string='Approved By',
@@ -302,7 +302,7 @@ class HrCustody(models.Model):
                         % (property_obj.name, status_name)
                     )
 
-                # ⭐ NEW: Check if property has approvers
+                # Related field for property approvers
                 if not property_obj.approver_ids:
                     raise ValidationError(
                         _('Property "%s" has no approvers assigned. Please contact administrator to set up approvers for this property.')
@@ -423,8 +423,12 @@ class HrCustody(models.Model):
 
     # ⭐ UPDATED: Approve with Multiple Approvers Check
     def approve(self):
-        """The function used to approve the current custody record."""
-        # ⭐ NEW: ตรวจสอบสิทธิ์การอนุมัติ - เฉพาะคนที่อยู่ใน approvers หรือ HR Manager
+        """Approve the current custody record.
+        
+        Validates user permissions, checks property availability,
+        records approval metadata, and updates property status.
+        """
+        # Check approval permissions - only for users in approvers or HR Manager
         if (self.env.user not in self.custody_property_id.approver_ids and
             not self.env.user.has_group('hr.group_hr_manager')):
             allowed_names = ', '.join(self.custody_property_id.approver_ids.mapped('name'))
@@ -432,7 +436,7 @@ class HrCustody(models.Model):
                 _("Only these users can approve this request: %s") % allowed_names
             )
 
-        # ตรวจสอบ Property ว่างไหม
+        # Check property availability
         for custody in self.env['hr.custody'].search([
             ('custody_property_id', '=', self.custody_property_id.id),
             ('id', '!=', self.id)
@@ -440,7 +444,7 @@ class HrCustody(models.Model):
             if custody.state == "approved":
                 raise UserError(_("Custody is not available now"))
 
-        # ⭐ NEW: บันทึกว่าใครอนุมัติ
+        # Record approval information
         self.approved_by_id = self.env.user
         self.approved_date = fields.Datetime.now()
         
@@ -454,15 +458,15 @@ class HrCustody(models.Model):
 
         self.state = 'approved'
 
-        # Post message เพื่อ tracking
+        # Post message for tracking
         self.message_post(
             body=_('Request approved by %s') % self.env.user.name,
             message_type='notification'
         )
 
-    # ⭐ NEW: Refuse with reason
+    # Refuse with reason
     def refuse_with_reason(self):
-        """Refuse with reason - open wizard"""
+        """Open wizard to enter rejection reason."""
         return {
             'type': 'ir.actions.act_window',
             'name': _('Refuse Reason'),

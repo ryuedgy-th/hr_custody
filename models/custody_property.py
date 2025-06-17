@@ -73,7 +73,7 @@ class CustodyProperty(models.Model):
         help='Internal code or asset tag for this property'
     )
 
-    # ⭐ NEW: Multiple Approvers
+    # Multiple Approvers
     approver_ids = fields.Many2many(
         'res.users',
         'custody_property_approver_rel',

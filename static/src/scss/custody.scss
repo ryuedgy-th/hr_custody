@@ -1,0 +1,45 @@
+/**
+ * SCSS for HR Custody Module
+ */
+
+// Styles for image comparison view
+.o_custody_comparison_container {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
+.o_custody_comparison_column {
+    flex: 1;
+}
+
+.o_custody_comparison_image_container {
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+// Badge styling for custody status
+.o_custody_status {
+    &.o_custody_status_draft {
+        background-color: $o-gray-200;
+    }
+    
+    &.o_custody_status_to_approve {
+        background-color: $o-info;
+        color: white;
+    }
+    
+    &.o_custody_status_approved {
+        background-color: $o-success;
+        color: white;
+    }
+    
+    &.o_custody_status_returned {
+        background-color: $o-gray-400;
+    }
+    
+    &.o_custody_status_rejected {
+        background-color: $o-danger;
+        color: white;
+    }
+} 

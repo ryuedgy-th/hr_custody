@@ -7,7 +7,7 @@
         <field name="arch" type="xml">
             <pivot string="Custody Analysis" display_quantity="true" disable_linking="True">
                 <field name="name" type="row"/>
-                <!-- ⭐ เพิ่ม Approved By ใน Pivot -->
+                <!-- Add Approved By field to pivot -->
                 <field name="approved_by_id" type="col"/>
             </pivot>
         </field>
@@ -24,7 +24,7 @@
                 <field name="employee_id"/>
                 <field name="purpose"/>
                 <field name="custody_property_id"/>
-                <!-- ⭐ เพิ่ม Approved By columns -->
+                <!-- Add Approved By columns -->
                 <field name="approved_by_id"/>
                 <field name="approved_date"/>
                 <field name="return_date"/>
@@ -42,7 +42,7 @@
                 <field name="name"/>
                 <field name="employee_id"/>
                 <field name="custody_property_id"/>
-                <!-- ⭐ เพิ่ม search by approved by -->
+                <!-- Add search by approved by -->
                 <field name="approved_by_id"/>
                 <field name="state"/>
                 <field name="date_request"/>
@@ -55,7 +55,7 @@
                             context="{'group_by':'employee_id'}"/>
                     <filter string="Property" name="property" domain="[]"
                             context="{'group_by':'custody_property_id'}"/>
-                    <!-- ⭐ เพิ่ม Group by Approved By -->
+                    <!-- Add Group by Approved By -->
                     <filter string="Approved By" name="approved_by" domain="[]"
                             context="{'group_by':'approved_by_id'}"/>
                     <filter string="Request Date" name="request_date" domain="[]"
@@ -67,7 +67,7 @@
         </field>
     </record>
 
-    <!-- ⭐ NEW: Action สำหรับ Report ของ Approved By -->
+    <!-- NEW: Action for Report by Approver -->
     <record id="action_report_custody_by_approved_by" model="ir.actions.act_window">
         <field name="name">Custody Analysis by Approver</field>
         <field name="res_model">report.custody</field>

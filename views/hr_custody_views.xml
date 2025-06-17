@@ -12,13 +12,13 @@
                             class="oe_highlight"
                             invisible="state != 'draft'"/>
 
-                    <!-- ⭐ ปุ่มอนุมัติ - แสดงเฉพาะคนที่อยู่ใน property approvers -->
+                    <!-- Approval button - only visible for property approvers -->
                     <button string="Approve" type="object" name="approve"
                             class="oe_highlight"
                             invisible="state != 'to_approve'"
                             groups="base.group_user"/>
 
-                    <!-- ⭐ ปุ่มปฏิเสธ -->
+                    <!-- Refuse button -->
                     <button string="Refuse" type="object" name="refuse_with_reason"
                             invisible="state != 'to_approve'"
                             groups="base.group_user"/>
@@ -34,18 +34,18 @@
                            statusbar_visible="draft,to_approve,approved,returned"/>
                 </header>
                 <sheet>
-                    <!-- ⭐ Alert สำหรับ Pending Approval - แสดง Multiple Approvers -->
+                    <!-- Alert for pending approval - display approvers -->
                     <div class="alert alert-info" invisible="state != 'to_approve'">
                         <strong>Waiting for approval from any of these users:</strong><br/>
                         <field name="property_approver_ids" widget="many2many_tags" readonly="1"/>
                     </div>
 
-                    <!-- ⭐ Alert สำหรับ Current User ที่เป็น Approver -->
+                    <!-- Alert for current user who is an approver -->
                     <div class="alert alert-warning" invisible="state != 'to_approve' or uid not in property_approver_ids">
                         <strong>This request is waiting for YOUR approval!</strong>
                     </div>
 
-                    <!-- ⭐ Alert สำหรับ Approved Status -->
+                    <!-- Alert for approved status -->
                     <div class="alert alert-success" invisible="state not in ['approved', 'returned']">
                         <strong>Approved by:</strong>
                         <field name="approved_by_id" readonly="1" nolabel="1"/>
@@ -75,7 +75,7 @@
                             <field name="rejected_reason"
                                    invisible="state != 'rejected'"/>
 
-                            <!-- ⭐ Approval Information -->
+                            <!-- Approval Information -->
                             <field name="approved_by_id"
                                    invisible="state not in ['approved', 'returned']"/>
                             <field name="approved_date"
@@ -86,7 +86,7 @@
                         </group>
                     </group>
 
-                    <!-- ⭐ Hidden field for approvers (for domain/invisible conditions) -->
+                    <!-- Hidden field for approvers (for domain/invisible conditions) -->
                     <field name="property_approver_ids" invisible="1"/>
 
                     <notebook>
@@ -94,7 +94,7 @@
                             <field name="notes"/>
                         </page>
 
-                        <!-- ⭐ NEW: Equipment Images & Condition -->
+                        <!-- NEW: Equipment Images & Condition -->
                         <page string="Images &amp; Condition">
                             <group>
                                 <group string="Checkout Condition" name="checkout_images">
@@ -140,7 +140,7 @@
                             </div>
                         </page>
 
-                        <!-- ⭐ NEW: Approval Information Tab -->
+                        <!-- NEW: Approval Information Tab -->
                         <page string="Approval Info" invisible="state == 'draft'">
                             <group>
                                 <group string="Available Approvers">
@@ -169,7 +169,7 @@
                 <field name="custody_property_id"/>
                 <field name="purpose"/>
 
-                <!-- ⭐ Approvers & Approved By Columns -->
+                <!-- Approvers & Approved By Columns -->
                 <field name="property_approver_ids" widget="many2many_tags" string="Approvers"/>
                 <field name="approved_by_id" string="Approved By"/>
 
@@ -196,14 +196,14 @@
                 <field name="custody_property_id"/>
                 <field name="purpose"/>
 
-                <!-- ⭐ Search by Approvers & Approved By -->
+                <!-- Search by Approvers & Approved By -->
                 <field name="property_approver_ids"/>
                 <field name="approved_by_id"/>
 
                 <field name="state"/>
                 <field name="return_type"/>
 
-                <!-- ⭐ Important Filters -->
+                <!-- Important Filters -->
                 <filter string="Waiting My Approval" name="waiting_my_approval"
                         domain="[('property_approver_ids', 'in', [uid]), ('state', '=', 'to_approve')]"/>
                 <filter string="My Requests" name="my_requests"
@@ -239,7 +239,7 @@
                     <filter string="Employee" name="group_employee"
                             context="{'group_by':'employee_id'}"/>
 
-                    <!-- ⭐ Group by Approved By -->
+                    <!-- Group by Approved By -->
                     <filter string="Approved By" name="group_approved_by"
                             context="{'group_by':'approved_by_id'}"/>
 
@@ -305,10 +305,10 @@
                         <field name="custody_property_id" readonly="1" class="oe_inline"/>
                     </div>
                     
-                    <div style="display: flex; flex-direction: row; gap: 20px;">
-                        <div style="flex: 1;">
-                            <h3 style="text-align: center;">Checkout Image</h3>
-                            <div style="text-align: center;">
+                    <div class="o_custody_comparison_container">
+                        <div class="o_custody_comparison_column">
+                            <h3 class="text-center">Checkout Image</h3>
+                            <div class="o_custody_comparison_image_container">
                                 <field name="checkout_image" widget="image" readonly="1" options="{'size': [400, 400]}"/>
                                 <div>
                                     <label for="checkout_image_date" string="Date:"/>
@@ -318,9 +318,9 @@
                             <h4>Checkout Condition Notes:</h4>
                             <field name="checkout_condition_notes" readonly="1"/>
                         </div>
-                        <div style="flex: 1;">
-                            <h3 style="text-align: center;">Return Image</h3>
-                            <div style="text-align: center;">
+                        <div class="o_custody_comparison_column">
+                            <h3 class="text-center">Return Image</h3>
+                            <div class="o_custody_comparison_image_container">
                                 <field name="return_image" widget="image" readonly="1" options="{'size': [400, 400]}"/>
                                 <div>
                                     <label for="return_image_date" string="Date:"/>
