@@ -103,26 +103,26 @@
                                     <field name="checkout_image_date" readonly="1"/>
                                     <field name="checkout_condition_notes" 
                                            placeholder="Describe the condition of the equipment when handed over to the employee..."
-                                           attrs="{'readonly': [('state', 'not in', ['draft', 'to_approve'])]}"/>
+                                           readonly="state not in ['draft', 'to_approve']"/>
                                 </group>
                                 <group string="Return Condition" name="return_images"
-                                       attrs="{'invisible': [('state', 'not in', ['approved', 'returned'])]}">
+                                       invisible="state not in ['approved', 'returned']">
                                     <field name="return_image" widget="image" options="{'size': [300, 300], 'preview_image': 'return_image'}" 
                                            class="oe_avatar" nolabel="1"/>
                                     <field name="return_image_date" readonly="1"/>
                                     <field name="return_condition_notes" 
                                            placeholder="Describe the condition of the equipment when returned by the employee..."
-                                           attrs="{'readonly': [('state', '!=', 'approved')]}"/>
+                                           readonly="state != 'approved'"/>
                                 </group>
                             </group>
                             
                             <!-- Compare Images Button -->
-                            <div attrs="{'invisible': [('state', '!=', 'returned')]}">
+                            <div invisible="state != 'returned'">
                                 <button string="Compare Images" type="object" name="action_view_image_comparison" 
-                                        class="oe_highlight" attrs="{'invisible': ['|', ('checkout_image', '=', False), ('return_image', '=', False)]}"/>
+                                        class="oe_highlight" invisible="checkout_image == False or return_image == False"/>
                             </div>
                             
-                            <div attrs="{'invisible': [('state', 'in', ['approved', 'returned'])]}">
+                            <div invisible="state in ['approved', 'returned']">
                                 <h3>Instructions:</h3>
                                 <ul>
                                     <li>Upload an image of the equipment at the time of checkout</li>
@@ -130,7 +130,7 @@
                                     <li>Both employee and manager should verify the image and condition</li>
                                 </ul>
                             </div>
-                            <div attrs="{'invisible': [('state', '!=', 'approved')]}">
+                            <div invisible="state != 'approved'">
                                 <h3>Return Instructions:</h3>
                                 <ul>
                                     <li>Upload an image of the equipment at the time of return</li>
