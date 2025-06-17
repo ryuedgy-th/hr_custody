@@ -1,4 +1,11 @@
 from odoo import api, fields, models, _
+import base64
+try:
+    import PIL
+    from PIL import Image
+    from io import BytesIO
+except ImportError:
+    PIL = None
 
 
 class CustodyImage(models.Model):
@@ -27,6 +34,16 @@ class CustodyImage(models.Model):
         help='The image file'
     )
     
+    # Add thumbnail for better performance
+    image_128 = fields.Image(
+        string='Thumbnail',
+        related='image',
+        max_width=128,
+        max_height=128,
+        store=True,
+        help='Small-sized image used for thumbnails'
+    )
+    
     image_date = fields.Datetime(
         string='Image Date',
         default=fields.Datetime.now,
@@ -43,6 +60,7 @@ class CustodyImage(models.Model):
         string='Custody Record',
         required=True,
         ondelete='cascade',
+        index=True,  # Add index for better performance
         help='The custody record this image belongs to'
     )
     
@@ -55,6 +73,7 @@ class CustodyImage(models.Model):
         string='Image Type',
         required=True,
         default='other',
+        index=True,  # Add index for better performance
         help='Type of image - used for filtering and organizing'
     )
     
@@ -64,4 +83,32 @@ class CustodyImage(models.Model):
         default=lambda self: self.env.user.id,
         readonly=True,
         help='User who uploaded this image'
-    ) 
+    )
+    
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Override create to optimize images on creation"""
+        # Resize large images to improve performance
+        if PIL:
+            for vals in vals_list:
+                if vals.get('image') and isinstance(vals['image'], str):
+                    try:
+                        image_data = base64.b64decode(vals['image'])
+                        img = Image.open(BytesIO(image_data))
+                        
+                        # Don't process if already reasonable size
+                        if img.width <= 1920 and img.height <= 1920:
+                            continue
+                            
+                        # Resize to max dimensions while preserving aspect ratio
+                        img.thumbnail((1920, 1920), Image.LANCZOS)
+                        
+                        # Convert back to base64
+                        buffer = BytesIO()
+                        img.save(buffer, format=img.format or 'JPEG', quality=85)
+                        vals['image'] = base64.b64encode(buffer.getvalue()).decode()
+                    except Exception:
+                        # If any error occurs, just use the original image
+                        pass
+                        
+        return super().create(vals_list) 

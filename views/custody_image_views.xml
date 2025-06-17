@@ -56,13 +56,13 @@
             <kanban>
                 <field name="id"/>
                 <field name="name"/>
-                <field name="image"/>
                 <field name="image_date"/>
                 <field name="image_type"/>
                 <templates>
                     <t t-name="kanban-box">
                         <div class="oe_kanban_global_click o_kanban_record_has_image_fill">
-                            <div class="o_kanban_image_fill_left d-none d-md-block" t-attf-style="background-image: url('#{kanban_image('custody.image', 'image', record.id.raw_value)}')"/>
+                            <div class="o_kanban_image_fill_left d-none d-md-block" 
+                                 t-attf-style="background-image: url('#{kanban_image('custody.image', 'image', record.id.raw_value, {preview_image: 'image', size: [128, 128]})}')"/>
                             <div class="oe_kanban_details">
                                 <strong class="o_kanban_record_title">
                                     <field name="name"/>

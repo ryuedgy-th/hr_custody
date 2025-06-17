@@ -624,9 +624,11 @@ class HrCustody(models.Model):
         domain = [('custody_id', '=', self.id)]
         context = {
             'default_custody_id': self.id,
+            'search_default_image_type': image_type,  # Use search filter instead of domain for better caching
         }
         
         if image_type:
+            # Add domain filter but keep it minimal for better performance
             domain.append(('image_type', '=', image_type))
             context['default_image_type'] = image_type
             if image_type == 'checkout':
@@ -645,6 +647,7 @@ class HrCustody(models.Model):
             'view_mode': 'kanban,form',
             'domain': domain,
             'context': context,
+            'limit': 20,  # Limit initial load for better performance
         }
         
     def action_add_image(self, image_type=None):
