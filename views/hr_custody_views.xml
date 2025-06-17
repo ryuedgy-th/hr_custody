@@ -36,18 +36,18 @@
                 <sheet>
                     <!-- ⭐ Alert สำหรับ Pending Approval - แสดง Multiple Approvers -->
                     <div class="alert alert-info" invisible="state != 'to_approve'">
-                        <strong>🔔 Waiting for approval from any of these users:</strong><br/>
+                        <strong>Waiting for approval from any of these users:</strong><br/>
                         <field name="property_approver_ids" widget="many2many_tags" readonly="1"/>
                     </div>
 
                     <!-- ⭐ Alert สำหรับ Current User ที่เป็น Approver -->
                     <div class="alert alert-warning" invisible="state != 'to_approve' or uid not in property_approver_ids">
-                        <strong>⚡ This request is waiting for YOUR approval!</strong>
+                        <strong>This request is waiting for YOUR approval!</strong>
                     </div>
 
                     <!-- ⭐ Alert สำหรับ Approved Status -->
                     <div class="alert alert-success" invisible="state not in ['approved', 'returned']">
-                        <strong>✅ Approved by:</strong>
+                        <strong>Approved by:</strong>
                         <field name="approved_by_id" readonly="1" nolabel="1"/>
                         <strong>on</strong>
                         <field name="approved_date" readonly="1" nolabel="1"/>
@@ -158,11 +158,11 @@
                 <field name="return_type"/>
 
                 <!-- ⭐ Important Filters -->
-                <filter string="🔔 Waiting My Approval" name="waiting_my_approval"
+                <filter string="Waiting My Approval" name="waiting_my_approval"
                         domain="[('property_approver_ids', 'in', [uid]), ('state', '=', 'to_approve')]"/>
-                <filter string="📋 My Requests" name="my_requests"
+                <filter string="My Requests" name="my_requests"
                         domain="[('employee_id.user_id', '=', uid)]"/>
-                <filter string="✅ Approved by Me" name="approved_by_me"
+                <filter string="Approved by Me" name="approved_by_me"
                         domain="[('approved_by_id', '=', uid)]"/>
 
                 <separator/>
@@ -210,23 +210,10 @@
         <field name="res_model">hr.custody</field>
         <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="hr_custody_view_search"/>
+        <field name="context">{'search_default_waiting_my_approval': 1}</field>
         <field name="help" type="html">
             <p class="oe_view_nocontent_create">
                 Click to Create a New Custody Request.
-            </p>
-        </field>
-    </record>
-
-    <!-- ⭐ NEW: Action สำหรับ Pending Approvals -->
-    <record id="hr_custody_pending_approval_action" model="ir.actions.act_window">
-        <field name="name">🔔 Pending My Approval</field>
-        <field name="res_model">hr.custody</field>
-        <field name="view_mode">list,form</field>
-        <field name="domain">[('property_approver_ids', 'in', [uid]), ('state', '=', 'to_approve')]</field>
-        <field name="context">{'search_default_waiting_my_approval': 1}</field>
-        <field name="help" type="html">
-            <p class="oe_view_nocontent">
-                No custody requests waiting for your approval.
             </p>
         </field>
     </record>
@@ -251,13 +238,6 @@
               parent="hr_custody_menu_management"
               name="Custody Request"
               sequence="1"/>
-
-    <!-- ⭐ NEW: Pending Approvals menu -->
-    <menuitem action="hr_custody_pending_approval_action"
-              id="hr_custody_menu_pending_approval"
-              parent="hr_custody_menu_management"
-              name="🔔 Pending My Approval"
-              sequence="2"/>
 
     <!-- Properties menu - ใช้ action จาก custody_property_views.xml -->
     <menuitem action="custody_property_action"
