@@ -79,12 +79,25 @@
             .o_attachment_button_view {
                 background: $o-brand-primary;
                 color: white !important;
-                padding: 4px 12px;
-                border-radius: 16px;
+                padding: 8px 16px;
+                border-radius: 20px;
                 font-weight: bold;
                 display: inline-block;
                 text-decoration: none;
                 cursor: pointer;
+                font-size: 14px;
+                transition: all 0.2s ease;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+                
+                &:hover {
+                    background: darken($o-brand-primary, 10%);
+                    transform: scale(1.05);
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+                }
+                
+                i.fa {
+                    margin-right: 5px;
+                }
             }
         }
     }
@@ -100,13 +113,31 @@
 
 // Fullscreen image viewer
 .o_custody_image_fullscreen {
-    img.oe_avatar {
-        max-width: 90%;
-        max-height: 70vh;
+    .oe_avatar {
+        max-width: 100%;
+        max-height: 75vh;
         width: auto;
         height: auto;
         margin: 0 auto;
         display: block;
         object-fit: contain;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        border-radius: 4px;
+    }
+
+    // ปรับขนาดหน้าต่าง modal ให้ใหญ่ขึ้น
+    &.o_modal_full {
+        .modal-dialog {
+            max-width: 90%;
+            height: 90%;
+            margin: 5vh auto;
+        }
+    }
+    
+    // ปรับสไตล์ footer ให้มีระยะห่างจากรูปภาพ
+    footer {
+        border-top: 1px solid #eeeeee;
+        margin-top: 15px;
+        padding-top: 10px;
     }
 } 

@@ -140,16 +140,22 @@ class CustodyImage(models.Model):
         """Open image in a larger viewer - used from kanban view"""
         self.ensure_one()
         
-        # Prepare the context with custody filter
+        # Prepare the context with custody filter and modal settings
         ctx = self.env.context.copy()
         ctx.update({
             'form_view_initial_mode': 'readonly',
             'no_breadcrumbs': True,
-            'default_custody_id': self.custody_id.id
+            'default_custody_id': self.custody_id.id,
+            'modal_full_screen': True,  # ให้แสดงเต็มหน้าจอ
+            'create': False,  # ปิดไม่ให้สร้างใหม่
+            'edit': False     # ปิดไม่ให้แก้ไข
         })
         
+        # สร้างชื่อที่มีความหมายมากขึ้น
+        title = f"{self.name} - {self.image_type} ({self.custody_id.name})"
+        
         return {
-            'name': _('Image: %s') % self.name,
+            'name': title,
             'type': 'ir.actions.act_window',
             'view_mode': 'form',
             'res_model': 'custody.image',
@@ -157,5 +163,12 @@ class CustodyImage(models.Model):
             'view_id': self.env.ref('hr_custody.custody_image_view_fullscreen').id,
             'target': 'new',
             'context': ctx,
-            'flags': {'mode': 'readonly', 'withControlPanel': False}
+            'flags': {
+                'mode': 'readonly', 
+                'withControlPanel': False,
+                'no_breadcrumbs': True,
+                'hasSearchView': False,
+                'hasSidebar': False,
+                'headless': True  # ไม่แสดง header ทำให้รูปภาพมีพื้นที่มากขึ้น
+            }
         }
