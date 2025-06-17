@@ -17,3 +17,6 @@ access_report_custody_hr_manager,report.custody.hr.manager,model_report_custody,
 access_custody_image_employee,custody.image.employee,model_custody_image,base.group_user,1,1,1,0
 access_custody_image_hr_user,custody.image.hr.user,model_custody_image,hr.group_hr_user,1,1,1,1
 access_custody_image_hr_manager,custody.image.hr.manager,model_custody_image,hr.group_hr_manager,1,1,1,1
+access_custody_multi_images_upload_employee,custody.multi.images.upload.employee,model_custody_multi_images_upload,base.group_user,1,1,1,0
+access_custody_multi_images_upload_hr_user,custody.multi.images.upload.hr.user,model_custody_multi_images_upload,hr.group_hr_user,1,1,1,1
+access_custody_multi_images_upload_hr_manager,custody.multi.images.upload.hr.manager,model_custody_multi_images_upload,hr.group_hr_manager,1,1,1,1

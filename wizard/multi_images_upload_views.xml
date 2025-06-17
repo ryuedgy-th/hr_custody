@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Multiple Images Upload Wizard Form View -->
+    <record id="view_custody_multi_images_upload_form" model="ir.ui.view">
+        <field name="name">custody.multi.images.upload.form</field>
+        <field name="model">custody.multi.images.upload</field>
+        <field name="arch" type="xml">
+            <form string="Upload Multiple Images">
+                <div class="alert alert-info" role="alert">
+                    <p>
+                        Select multiple image files to upload at once. 
+                        You can select them by holding Ctrl/Cmd while clicking, or by dragging over multiple files.
+                    </p>
+                </div>
+                <group>
+                    <group>
+                        <field name="custody_id" invisible="context.get('default_custody_id')" options="{'no_create': True}"/>
+                        <field name="image_type" widget="radio"/>
+                        <field name="name" placeholder="Base name for all images"/>
+                    </group>
+                    <group>
+                        <field name="file_ids" widget="many2many_binary" string="Images" 
+                               options="{'accepted_file_extensions': 'image/*'}" 
+                               placeholder="Drag multiple files here or click to select files"/>
+                    </group>
+                </group>
+                <group>
+                    <field name="notes" placeholder="Common notes to apply to all images"/>
+                </group>
+                <footer>
+                    <button string="Upload Images" name="action_upload_images" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Multiple Images Upload Wizard Action -->
+    <record id="action_custody_multi_images_upload" model="ir.actions.act_window">
+        <field name="name">Upload Multiple Images</field>
+        <field name="res_model">custody.multi.images.upload</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="view_id" ref="view_custody_multi_images_upload_form"/>
+    </record>
+</odoo> 

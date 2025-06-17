@@ -115,6 +115,12 @@
                                         <span class="o_stat_text">Return Images</span>
                                     </div>
                                 </button>
+                                
+                                <!-- Button for Multiple Images Upload Wizard -->
+                                <button class="oe_highlight" type="object" name="action_add_multiple_images"
+                                        string="Upload Multiple Images" icon="fa-upload"
+                                        attrs="{'invisible': [('state', 'in', ['rejected', 'returned'])]}"/>
+                                
                                 <button class="oe_stat_button" type="object" name="action_add_image"
                                         context="{'default_image_type': 'checkout'}" 
                                         icon="fa-plus" string="Add Checkout Image"

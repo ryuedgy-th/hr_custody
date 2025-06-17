@@ -669,3 +669,14 @@ class HrCustody(models.Model):
             'target': 'new',
             'context': context,
         }
+
+    def action_add_multiple_images(self):
+        """Open wizard to upload multiple images at once"""
+        self.ensure_one()
+        
+        action = self.env['ir.actions.act_window']._for_xml_id('hr_custody.action_custody_multi_images_upload')
+        action['context'] = {
+            'default_custody_id': self.id,
+            'default_image_type': self.state == 'approved' and 'return' or 'checkout',
+        }
+        return action
