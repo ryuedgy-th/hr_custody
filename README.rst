@@ -3,52 +3,88 @@
     :alt: License: LGPL-3
 
 
-Open HRMS Custody
+Open HRMS Custody - Enhanced
 ============================
 
-Functionality to give and track the assets of a company to employees.
- - Creates a new menu item Custody Management under Employees
- - Can create custody contract with an employee
- - Can take the report of custody
+ระบบจัดการและติดตามทรัพย์สินของบริษัทที่อยู่ในความดูแลของพนักงาน ออกแบบมาเพื่อช่วยให้การทำสัญญาการยืม-คืนอุปกรณ์หรือทรัพย์สินต่างๆ เป็นไปอย่างมีประสิทธิภาพ มีการจัดการภาพถ่ายเพื่อบันทึกสภาพอุปกรณ์ และระบบการอนุมัติที่ยืดหยุ่น
 
-Configuration
+คุณสมบัติหลัก
 =============
-* No additional configurations needed
+
+* **การจัดการคำขอและอนุมัติ**: สร้างคำขอยืมทรัพย์สิน มีระบบการอนุมัติโดยผู้มีอำนาจ
+* **จัดการทรัพย์สิน**: บันทึกข้อมูลทรัพย์สินพร้อมรายละเอียดต่างๆ
+* **บันทึกด้วยภาพถ่าย**: บันทึกสภาพทรัพย์สินด้วยภาพถ่ายตอนรับและคืน
+* **จัดการภาพถ่ายขั้นสูง**: อัพโหลดหลายรูปพร้อมกัน ดูภาพแบบเต็มจอ ลบหลายรูปพร้อมกัน
+* **การแจ้งเตือน**: แจ้งเตือนผ่านอีเมลเมื่อใกล้ถึงกำหนดส่งคืน
+* **การติดตามสถานะ**: ติดตามสถานะของทรัพย์สินว่าอยู่ในความดูแลของใคร
+* **มุมมองภาพรวม**: ดูรายงานและสถิติเกี่ยวกับการยืม-คืนทรัพย์สิน
+
+การติดตั้ง
+==========
+
+1. ติดตั้งโมดูลตามขั้นตอนปกติของ Odoo
+2. สร้างข้อมูลทรัพย์สินและกำหนดผู้อนุมัติ
+3. เริ่มใช้งานโดยสร้างคำขอยืมทรัพย์สิน
+
+การใช้งาน
+=========
+
+**บันทึกข้อมูลทรัพย์สิน**:
+  * เพิ่มและบริหารจัดการรายการทรัพย์สินของบริษัท
+  * กำหนดสถานที่จัดเก็บ ผู้รับผิดชอบ และผู้มีอำนาจอนุมัติ
+
+**สร้างและจัดการคำขอยืม**:
+  * พนักงานสามารถสร้างคำขอยืมทรัพย์สินได้
+  * ผู้มีอำนาจอนุมัติสามารถอนุมัติหรือปฏิเสธคำขอ
+  * บันทึกสภาพทรัพย์สินด้วยภาพถ่ายทั้งตอนยืมและคืน
+
+**การบันทึกภาพถ่าย**:
+  * อัพโหลดภาพได้หลายรูปพร้อมกัน
+  * ดูภาพแบบเต็มจอและซูมเพื่อตรวจสอบรายละเอียด
+  * เปรียบเทียบสภาพก่อนยืมและหลังคืน
+  * ลบหลายภาพพร้อมกันได้ในมุมมอง List
+
+การกำหนดค่า
+===========
+
+* กำหนดค่าผู้อนุมัติสำหรับทรัพย์สินแต่ละรายการ
+* ปรับแต่งรูปแบบการแจ้งเตือนและอีเมล
+* กำหนดสิทธิ์การเข้าถึงตามบทบาทผู้ใช้
 
 License
 =======
 General Public License, Version 3 (LGPL v3).
 (https://www.gnu.org/licenses/lgpl-3.0-standalone.html)
 
-Company
--------
-* `Cybrosys Techno Solutions <https://cybrosys.com/>`
+เครดิต
+======
+**พัฒนาต้นฉบับโดย**:
+   * Cybrosys Techno Solutions
+   * Developers: (V15) Mily Shajan
+                (V16) Aiswarya M
+                (V17) Janish Babu EK
+   * Mail: odoo@cybrosys.com
 
-Credits
-------
-Developers: (V15) Mily Shajan
-            (V16) Aiswarya M
-            (V17) Janish Babu EK
-Contact: odoo@cybrosys.com
+**ปรับปรุงเพิ่มเติมโดย**:
+   * YOUR_COMPANY_NAME
+   * Developers: YOUR_NAME
+   * Mail: YOUR_EMAIL
 
-Contacts
---------
-* Mail Contact : odoo@cybrosys.com
-* Website : https://cybrosys.com
+Contact
+=======
+* Website: https://cybrosys.com
+* YOUR_WEBSITE
 
 Bug Tracker
 ===========
-Bugs are tracked on GitHub Issues. In case of trouble, please check there if your issue has already been reported.
+พบปัญหาหรือข้อผิดพลาด กรุณาแจ้งผ่าน GitHub Issues
 
 Maintainer
 ==========
 .. image:: https://cybrosys.com/images/logo.png
    :target: https://cybrosys.com
 
-This module is maintained by Cybrosys Technologies.
+ต้นฉบับโมดูลนี้พัฒนาและดูแลโดย Cybrosys Technologies 
+ปรับปรุงเพิ่มเติมโดย YOUR_COMPANY_NAME
 
-For support and more information, please visit `Our Website <https://cybrosys.com/>`__
-
-Further information
-===================
-HTML Description: `<static/description/index.html>`__
+สำหรับคำแนะนำเพิ่มเติม กรุณาติดต่อ https://cybrosys.com/ หรือ YOUR_WEBSITE
