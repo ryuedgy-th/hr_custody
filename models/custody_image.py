@@ -139,6 +139,15 @@ class CustodyImage(models.Model):
     def open_image_viewer(self):
         """Open image in a larger viewer - used from kanban view"""
         self.ensure_one()
+        
+        # Prepare the context with custody filter
+        ctx = self.env.context.copy()
+        ctx.update({
+            'form_view_initial_mode': 'readonly',
+            'no_breadcrumbs': True,
+            'default_custody_id': self.custody_id.id
+        })
+        
         return {
             'name': _('Image: %s') % self.name,
             'type': 'ir.actions.act_window',
@@ -147,6 +156,6 @@ class CustodyImage(models.Model):
             'res_id': self.id,
             'view_id': self.env.ref('hr_custody.custody_image_view_fullscreen').id,
             'target': 'new',
-            'context': {'form_view_initial_mode': 'readonly', 'no_breadcrumbs': True},
+            'context': ctx,
             'flags': {'mode': 'readonly', 'withControlPanel': False}
         }

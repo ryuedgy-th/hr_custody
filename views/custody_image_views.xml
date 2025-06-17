@@ -68,22 +68,8 @@
                                 <div class="o_image" t-att-data-mimetype="'image/jpg'">
                                     <img class="o_attachment_image" t-att-src="kanban_image('custody.image', 'image', record.id.raw_value)" alt="Image"/>
                                 </div>
-                                <div class="o_image_overlay" t-on-click="() => odoo.__WOWL_DEBUG__.root.env.services.action.doAction({
-                                    type: 'ir.actions.act_window',
-                                    res_model: 'custody.image',
-                                    res_id: record.id.raw_value,
-                                    view_id: odoo.__WOWL_DEBUG__.root.env.services.rpc.async_rpc('/web/dataset/call_kw', {
-                                        model: 'ir.model.data',
-                                        method: 'xmlid_to_res_id',
-                                        args: ['hr_custody.custody_image_view_fullscreen'],
-                                        kwargs: {}
-                                    }),
-                                    views: [[false, 'form']],
-                                    target: 'new',
-                                    context: {form_view_initial_mode: 'readonly'},
-                                    flags: {mode: 'readonly', withControlPanel: false}
-                                })">
-                                    <div class="o_attachment_button_view">View</div>
+                                <div class="o_image_overlay">
+                                    <a type="object" name="open_image_viewer" class="o_attachment_button_view">View</a>
                                 </div>
                             </div>
                             <div class="o_attachment_data mt-2">

@@ -78,10 +78,13 @@
             
             .o_attachment_button_view {
                 background: $o-brand-primary;
-                color: white;
+                color: white !important;
                 padding: 4px 12px;
                 border-radius: 16px;
                 font-weight: bold;
+                display: inline-block;
+                text-decoration: none;
+                cursor: pointer;
             }
         }
     }
