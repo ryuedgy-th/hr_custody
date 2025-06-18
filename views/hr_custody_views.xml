@@ -124,8 +124,6 @@
                                         invisible="state in ['rejected', 'returned']"
                                         style="margin-right: 10px; margin-left: 20px;"/>
                                 
-                                <div style="width: 30px; display: inline-block;"></div>
-                                
                                 <!-- Button for Manage Multiple Images (list view) -->
                                 <button class="oe_highlight o_custody_button" type="object" name="action_manage_multiple_images"
                                         string="Manage Multiple Images" icon="fa-list"
