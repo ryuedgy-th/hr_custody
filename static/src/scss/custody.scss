@@ -293,10 +293,30 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         margin: 0 !important;
     }
     
+    /* Remove gray background from hierarchy view content */
+    .o_hierarchy_view_content {
+        background-color: transparent !important;
+    }
+    
+    /* Remove background from fold button */
+    .o_hierarchy_button_fold {
+        background-color: transparent !important;
+    }
+    
+    /* Fix node container height and remove extra space */
+    .o_hierarchy_node_container {
+        margin-bottom: 8px !important;
+        padding: 0 !important;
+        min-height: auto !important;
+        height: auto !important;
+    }
+    
+    /* Fix white background for the container */
     .o_hierarchy_children {
         margin-left: 36px;
         position: relative;
         padding-left: 18px;
+        background-color: transparent !important;
         
         &:before {
             content: '';
@@ -346,16 +366,8 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         padding: 8px;
         display: flex;
         align-items: center;
-    }
-    
-    /* Remove gray background */
-    .o_hierarchy_view_content {
-        background-color: transparent !important;
-    }
-    
-    /* Remove fold button background */
-    .o_hierarchy_button_fold {
-        background-color: transparent !important;
+        height: auto !important; /* Fix height */
+        min-height: auto !important; /* Fix min-height */
     }
     
     /* Fix for node labels */
@@ -377,6 +389,7 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         z-index: 2;
         display: flex;
         align-items: center;
+        height: auto !important; /* Ensure automatic height */
         
         .o_custody_icon {
             position: relative;
@@ -400,5 +413,15 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             display: inline-block;
             vertical-align: middle;
         }
+    }
+    
+    /* Fix for empty areas */
+    .o_hierarchy_children_container {
+        background-color: transparent !important;
+    }
+    
+    /* Fix for fold/expand button area */
+    .o_hierarchy_header {
+        background-color: transparent !important;
     }
 } 
