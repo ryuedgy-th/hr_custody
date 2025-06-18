@@ -102,7 +102,7 @@
     <!-- Menu Items -->
     <menuitem id="menu_custody_tag" 
               name="Tags" 
-              parent="menu_custody_properties" 
+              parent="hr_custody.hr_property_menu" 
               action="custody_tag_action" 
               sequence="30"/>
 </odoo> 

@@ -268,16 +268,4 @@
         <field name="res_model">custody.property</field>
         <field name="view_mode">kanban,list,form</field>
     </record>
-
-    <!-- Custody Property Menu -->
-    <menuitem id="menu_custody_properties"
-              name="Properties"
-              parent="menu_hr_custody"
-              sequence="2"/>
-
-    <menuitem id="menu_custody_property"
-              name="Properties"
-              parent="menu_custody_properties"
-              action="custody_property_action"
-              sequence="10"/>
 </odoo>

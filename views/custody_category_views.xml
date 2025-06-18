@@ -145,7 +145,7 @@
     <!-- Menu Items -->
     <menuitem id="menu_custody_category" 
               name="Categories" 
-              parent="menu_custody_properties" 
+              parent="hr_custody.hr_property_menu" 
               action="custody_category_action" 
               sequence="20"/>
 </odoo> 
