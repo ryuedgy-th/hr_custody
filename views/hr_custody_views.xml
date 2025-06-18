@@ -122,7 +122,7 @@
                                 <button class="oe_highlight o_custody_button" type="object" name="action_add_multiple_images"
                                         string="Upload Multiple Images" icon="fa-upload"
                                         invisible="state in ['rejected', 'returned']"
-                                        style="margin-right: 40px; margin-left: 20px;"/>
+                                        style="margin-right: 20px; margin-left: 20px;"/>
                                 
                                 <div style="width: 10px; display: inline-block;"></div>
                                 
@@ -130,7 +130,7 @@
                                 <button class="oe_highlight o_custody_button" type="object" name="action_manage_multiple_images"
                                         string="Manage Multiple Images" icon="fa-list"
                                         help="View, select and delete multiple images at once"
-                                        style="margin-right: 40px;"/>
+                                        style="margin-right: 20px;"/>
                                 
                                 <!-- Keep only the checkout image button, remove return image button -->
                                 <button class="oe_stat_button" type="object" name="action_add_image"
