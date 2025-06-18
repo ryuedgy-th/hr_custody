@@ -188,7 +188,7 @@
                     <t t-name="hierarchy-node">
                         <div class="o_hierarchy_node_header" t-attf-style="{{record.color.raw_value ? 'border-left: 4px solid #' + record.color.raw_value + ';' : ''}}">
                             <div class="o_hierarchy_icon">
-                                <img t-if="record.image.value" t-att-src="kanban_image('custody.category', 'image', record.id.raw_value)" class="o_hierarchy_icon_image"/>
+                                <img t-if="record.image.value" t-att-src="'/web/image/custody.category/' + record.id.raw_value + '/image'" class="o_hierarchy_icon_image"/>
                                 <i t-else="" class="fa fa-folder-o"/>
                             </div>
                             <div class="o_hierarchy_node_header_content">
