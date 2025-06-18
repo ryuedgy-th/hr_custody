@@ -36,12 +36,12 @@
                         </page>
                         <page string="Child Categories" name="child_categories">
                             <field name="child_ids">
-                                <tree>
+                                <list>
                                     <field name="sequence" widget="handle"/>
                                     <field name="name"/>
                                     <field name="code"/>
                                     <field name="property_count"/>
-                                </tree>
+                                </list>
                             </field>
                         </page>
                     </notebook>
@@ -52,15 +52,15 @@
 
     <!-- Category Tree View -->
     <record id="custody_category_view_tree" model="ir.ui.view">
-        <field name="name">custody.category.view.tree</field>
+        <field name="name">custody.category.view.list</field>
         <field name="model">custody.category</field>
         <field name="arch" type="xml">
-            <tree string="Property Categories">
+            <list string="Property Categories">
                 <field name="sequence" widget="handle"/>
                 <field name="complete_name"/>
                 <field name="code"/>
                 <field name="property_count"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -130,7 +130,7 @@
     <record id="custody_category_action" model="ir.actions.act_window">
         <field name="name">Property Categories</field>
         <field name="res_model">custody.category</field>
-        <field name="view_mode">kanban,tree,form</field>
+        <field name="view_mode">kanban,list,form</field>
         <field name="search_view_id" ref="custody_category_view_search"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">

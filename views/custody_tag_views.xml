@@ -32,15 +32,15 @@
         </field>
     </record>
 
-    <!-- Tag Tree View -->
+    <!-- Tag List View -->
     <record id="custody_tag_view_tree" model="ir.ui.view">
-        <field name="name">custody.tag.view.tree</field>
+        <field name="name">custody.tag.view.list</field>
         <field name="model">custody.tag</field>
         <field name="arch" type="xml">
-            <tree string="Property Tags">
+            <list string="Property Tags">
                 <field name="name"/>
                 <field name="property_count"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -87,7 +87,7 @@
     <record id="custody_tag_action" model="ir.actions.act_window">
         <field name="name">Property Tags</field>
         <field name="res_model">custody.tag</field>
-        <field name="view_mode">kanban,tree,form</field>
+        <field name="view_mode">kanban,list,form</field>
         <field name="search_view_id" ref="custody_tag_view_search"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
