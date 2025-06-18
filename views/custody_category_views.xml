@@ -93,6 +93,7 @@
                 <field name="code"/>
                 <field name="property_count"/>
                 <field name="color"/>
+                <field name="image"/>
                 <templates>
                     <t t-name="kanban-box">
                         <div t-attf-class="oe_kanban_card oe_kanban_global_click o_kanban_record_has_image_fill o_custody_kanban_card_category {{record.color.raw_value ? 'oe_kanban_color_' + record.color.raw_value : ''}}">
