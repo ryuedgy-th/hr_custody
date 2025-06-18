@@ -10,11 +10,13 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 
 // Define CSS variables at root
 :root {
-    --CustodyStatus-draft: #{$o-gray-200};
-    --CustodyStatus-to-approve: #{$o-info};
-    --CustodyStatus-approved: #{$o-success};
-    --CustodyStatus-returned: #{$o-gray-400};
-    --CustodyStatus-rejected: #{$o-danger};
+    --custody-status-draft: #{$o-gray-200};
+    --custody-status-to-approve: #{$o-info};
+    --custody-status-approved: #{$o-success};
+    --custody-status-returned: #{$o-gray-400};
+    --custody-status-rejected: #{$o-danger};
+    --custody-brand-primary: #{$o-brand-primary};
+    --custody-brand-primary-dark: #{darken($o-brand-primary, 10%)};
 }
 
 // Styles for image comparison view
@@ -51,25 +53,25 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 // Badge styling for custody status
 .o_custody_status {
     &.o_custody_status_draft {
-        background-color: var(--CustodyStatus-draft, #CCCCCC);
+        background-color: var(--custody-status-draft, #CCCCCC);
     }
     
     &.o_custody_status_to_approve {
-        background-color: var(--CustodyStatus-to-approve, #6CB2EB);
+        background-color: var(--custody-status-to-approve, #6CB2EB);
         color: white;
     }
     
     &.o_custody_status_approved {
-        background-color: var(--CustodyStatus-approved, #38C172);
+        background-color: var(--custody-status-approved, #38C172);
         color: white;
     }
     
     &.o_custody_status_returned {
-        background-color: var(--CustodyStatus-returned, #B8C2CC);
+        background-color: var(--custody-status-returned, #B8C2CC);
     }
     
     &.o_custody_status_rejected {
-        background-color: var(--CustodyStatus-rejected, #E3342F);
+        background-color: var(--custody-status-rejected, #E3342F);
         color: white;
     }
 }
@@ -103,7 +105,7 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             }
             
             .o_attachment_button_view {
-                background: var(--o-brand-primary, #7C7BAD);
+                background: var(--custody-brand-primary, #7C7BAD);
                 color: white !important;
                 padding: 8px 16px;
                 border-radius: 20px;
@@ -116,7 +118,7 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
                 box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
                 
                 &:hover {
-                    background: var(--o-brand-primary-dark, #5D5C8E);
+                    background: var(--custody-brand-primary-dark, #5D5C8E);
                     filter: brightness(0.9);
                     transform: scale(1.05);
                     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
@@ -238,11 +240,11 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     flex-wrap: wrap;
     gap: 20px;
     
-    button.oe_stat_button, button.oe_highlight {
+    button.oe_stat_button, button.o_custody_button {
         margin-right: 20px;
     }
     
-    button.oe_highlight {
+    button.o_custody_button {
         &[name="action_add_multiple_images"] {
             margin-right: 40px;
             margin-left: 20px;
@@ -255,5 +257,11 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             padding-left: 16px;
             padding-right: 16px;
         }
+    }
+    
+    // Add spacer between buttons
+    .o_custody_button_spacer {
+        width: 10px;
+        display: inline-block;
     }
 } 
