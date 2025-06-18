@@ -305,7 +305,7 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     
     /* Fix node container height and remove extra space */
     .o_hierarchy_node_container {
-        margin-bottom: 8px !important;
+        margin-bottom: 0px !important;
         padding: 0 !important;
         min-height: auto !important;
         height: auto !important;
