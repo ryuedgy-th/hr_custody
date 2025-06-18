@@ -316,7 +316,7 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     .o_hierarchy_children {
         margin-left: 36px;
         position: relative;
-        padding-left: 12px;
+        padding-left: 18px;
         
         &:before {
             content: '';
@@ -330,52 +330,96 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         /* Add connector lines to each node */
         .o_hierarchy_node_container {
             position: relative;
+            margin-bottom: 12px;
             
             &:before {
                 content: '';
                 position: absolute;
-                left: -12px;
+                left: -18px;
                 top: 20px;
-                width: 12px;
+                width: 18px;
                 height: 2px;
                 background-color: #ddd;
             }
             
-            /* Last node special styling */
-            &:last-child:after {
-                content: '';
-                position: absolute;
-                left: -12px;
-                top: 22px;
-                height: calc(100% - 22px);
-                border-left: 2px solid white;
-                z-index: 1;
+            &:last-child {
+                &:after {
+                    content: '';
+                    position: absolute;
+                    left: -18px;
+                    top: 22px;
+                    height: calc(100% - 22px);
+                    border-left: 2px solid white;
+                    z-index: 1;
+                }
             }
         }
     }
-}
-
-/* Improve node styling with better spacing */
-.o_hierarchy_node_header {
-    border-radius: 4px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    padding: 12px;
-    margin-bottom: 12px;
-    background-color: #fff;
     
-    .o_hierarchy_icon {
+    /* Fix node styling */
+    .o_custody_hierarchy_node {
+        border-radius: 4px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        padding: 8px;
+        background-color: #fff;
         position: relative;
         z-index: 2;
-        background-color: #fff;
-        border-radius: 4px;
-        padding: 2px;
-        margin-right: 8px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         
-        .o_hierarchy_icon_image {
-            max-width: 32px;
-            max-height: 32px;
-            object-fit: contain;
+        .o_custody_icon {
+            position: relative;
+            z-index: 1;
+            background-color: #fff;
+            border-radius: 4px;
+            padding: 2px;
+            margin-right: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            
+            .o_hierarchy_icon_image {
+                max-width: 32px;
+                max-height: 32px;
+                object-fit: contain;
+            }
         }
+        
+        .o_hierarchy_node_header_content {
+            display: inline-block;
+            vertical-align: middle;
+        }
+    }
+    
+    /* Improve spacing between nodes */
+    .o_hierarchy_node_container {
+        margin-bottom: 8px;
+    }
+}
+
+/* Additional styles for hierarchy view */
+.o_hierarchy_view {
+    .o_hierarchy_header {
+        margin-bottom: 16px;
+    }
+    
+    .o_hierarchy_button_fold {
+        margin-left: 8px;
+    }
+    
+    .o_hierarchy_node_header {
+        display: flex;
+        align-items: center;
+    }
+    
+    .o_hierarchy_node_children_container {
+        margin-top: 8px;
+    }
+}
+
+/* Fix for node labels */
+.o_hierarchy_node_labels {
+    margin-top: 4px;
+    
+    .badge {
+        margin-right: 4px;
     }
 } 
