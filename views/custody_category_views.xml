@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Category Form View -->
+    <record id="custody_category_view_form" model="ir.ui.view">
+        <field name="name">custody.category.view.form</field>
+        <field name="model">custody.category</field>
+        <field name="arch" type="xml">
+            <form string="Property Category">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_properties" type="object" class="oe_stat_button" icon="fa-cubes">
+                            <field name="property_count" widget="statinfo" string="Properties"/>
+                        </button>
+                    </div>
+                    <field name="image" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1><field name="name" placeholder="e.g. IT Equipment"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code" placeholder="e.g. IT"/>
+                            <field name="parent_id"/>
+                            <field name="sequence"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                        <group>
+                            <field name="default_return_type"/>
+                            <field name="default_return_days" attrs="{'invisible': [('default_return_type', '!=', 'date')]}"/>
+                            <field name="color" widget="color_picker"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Description" name="description">
+                            <field name="description" placeholder="Describe this category..."/>
+                        </page>
+                        <page string="Child Categories" name="child_categories">
+                            <field name="child_ids">
+                                <tree>
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="code"/>
+                                    <field name="property_count"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Category Tree View -->
+    <record id="custody_category_view_tree" model="ir.ui.view">
+        <field name="name">custody.category.view.tree</field>
+        <field name="model">custody.category</field>
+        <field name="arch" type="xml">
+            <tree string="Property Categories">
+                <field name="sequence" widget="handle"/>
+                <field name="complete_name"/>
+                <field name="code"/>
+                <field name="property_count"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Category Search View -->
+    <record id="custody_category_view_search" model="ir.ui.view">
+        <field name="name">custody.category.view.search</field>
+        <field name="model">custody.category</field>
+        <field name="arch" type="xml">
+            <search string="Search Categories">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="parent_id"/>
+                <filter string="Top Level Categories" name="parent_false" domain="[('parent_id','=',False)]"/>
+                <filter string="Archived" name="inactive" domain="[('active','=',False)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_by_parent" string="Parent Category" domain="[]" context="{'group_by':'parent_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Category Kanban View -->
+    <record id="custody_category_view_kanban" model="ir.ui.view">
+        <field name="name">custody.category.view.kanban</field>
+        <field name="model">custody.category</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile" sample="1">
+                <field name="id"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="property_count"/>
+                <field name="color"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="oe_kanban_card oe_kanban_global_click o_kanban_record_has_image_fill o_custody_kanban_card_category {{record.color.raw_value ? 'oe_kanban_color_' + record.color.raw_value : ''}}">
+                            <div class="o_kanban_image_fill_left d-none d-md-block" t-attf-style="background-image: url({{kanban_image('custody.category', 'image', record.id.raw_value)}})">
+                                <img class="o_kanban_image_inner_pic" t-if="!record.image.raw_value" t-att-src="'/hr_custody/static/images/category_placeholder.png'"/>
+                            </div>
+                            <div class="oe_kanban_details">
+                                <div class="o_kanban_record_top">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title">
+                                            <field name="name"/>
+                                            <small t-if="record.code.raw_value"> (<field name="code"/>)</small>
+                                        </strong>
+                                    </div>
+                                </div>
+                                <div class="o_kanban_record_bottom">
+                                    <div class="oe_kanban_bottom_left">
+                                        <span class="badge rounded-pill"><field name="property_count"/> Properties</span>
+                                    </div>
+                                    <div class="oe_kanban_bottom_right">
+                                        <button class="btn btn-link p-0" name="action_view_properties" type="object" title="View Properties">
+                                            <i class="fa fa-cubes"/>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Category Action -->
+    <record id="custody_category_action" model="ir.actions.act_window">
+        <field name="name">Property Categories</field>
+        <field name="res_model">custody.category</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="search_view_id" ref="custody_category_view_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first property category!
+            </p>
+            <p>
+                Categories help you organize and classify your properties.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Items -->
+    <menuitem id="menu_custody_category" 
+              name="Categories" 
+              parent="menu_custody_properties" 
+              action="custody_category_action" 
+              sequence="20"/>
+</odoo> 

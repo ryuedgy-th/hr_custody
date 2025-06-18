@@ -20,3 +20,9 @@ access_custody_image_hr_manager,custody.image.hr.manager,model_custody_image,hr.
 access_custody_multi_images_upload_employee,custody.multi.images.upload.employee,model_custody_multi_images_upload,base.group_user,1,1,1,0
 access_custody_multi_images_upload_hr_user,custody.multi.images.upload.hr.user,model_custody_multi_images_upload,hr.group_hr_user,1,1,1,1
 access_custody_multi_images_upload_hr_manager,custody.multi.images.upload.hr.manager,model_custody_multi_images_upload,hr.group_hr_manager,1,1,1,1
+access_custody_category_employee,custody.category.employee,model_custody_category,base.group_user,1,0,0,0
+access_custody_category_hr_user,custody.category.hr.user,model_custody_category,hr.group_hr_user,1,1,1,1
+access_custody_category_hr_manager,custody.category.hr.manager,model_custody_category,hr.group_hr_manager,1,1,1,1
+access_custody_tag_employee,custody.tag.employee,model_custody_tag,base.group_user,1,0,0,0
+access_custody_tag_hr_user,custody.tag.hr.user,model_custody_tag,hr.group_hr_user,1,1,1,1
+access_custody_tag_hr_manager,custody.tag.hr.manager,model_custody_tag,hr.group_hr_manager,1,1,1,1

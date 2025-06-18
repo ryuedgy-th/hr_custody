@@ -50,6 +50,23 @@ class CustodyProperty(models.Model):
         help="Select the Product"
     )
 
+    # Categories and Tags
+    category_id = fields.Many2one(
+        'custody.category',
+        string='Category',
+        index=True,
+        help='Category of this property'
+    )
+    
+    tag_ids = fields.Many2many(
+        'custody.tag',
+        'custody_property_tag_rel',
+        'property_id',
+        'tag_id',
+        string='Tags',
+        help='Tags to categorize properties'
+    )
+
     # Storage and Location Information
     storage_location = fields.Char(
         string='Storage Location',
@@ -145,6 +162,19 @@ class CustodyProperty(models.Model):
         string='Purchase Value',
         help='Original purchase value of this property'
     )
+
+    # Auto-select default return period based on category
+    @api.onchange('category_id')
+    def _onchange_category_id(self):
+        """Auto-fill default return period based on category settings"""
+        if self.category_id and self.category_id.default_return_type:
+            # This will be used in hr.custody to set default return_type
+            return {
+                'domain': {},
+                'value': {
+                    # These values can be used when creating custody records
+                }
+            }
 
     @api.depends('product_id')
     def _onchange_product_id(self):

@@ -84,6 +84,6 @@ Maintainer
    :target: https://cybrosys.com
 
 ต้นฉบับโมดูลนี้พัฒนาและดูแลโดย Cybrosys Technologies 
-ปรับปรุงเพิ่มเติมโดย YOUR_COMPANY_NAME
+ปรับปรุงเพิ่มเติมโดย MYIS International School
 
-สำหรับคำแนะนำเพิ่มเติม กรุณาติดต่อ https://cybrosys.com/ หรือ YOUR_WEBSITE
+สำหรับคำแนะนำเพิ่มเติม กรุณาติดต่อ https://cybrosys.com/

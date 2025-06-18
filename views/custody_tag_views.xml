@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tag Form View -->
+    <record id="custody_tag_view_form" model="ir.ui.view">
+        <field name="name">custody.tag.view.form</field>
+        <field name="model">custody.tag</field>
+        <field name="arch" type="xml">
+            <form string="Property Tag">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_properties" type="object" class="oe_stat_button" icon="fa-cubes">
+                            <field name="property_count" widget="statinfo" string="Properties"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1><field name="name" placeholder="e.g. Loanable"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="color" widget="color_picker"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Description" name="description">
+                            <field name="description" placeholder="Describe what this tag represents..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Tag Tree View -->
+    <record id="custody_tag_view_tree" model="ir.ui.view">
+        <field name="name">custody.tag.view.tree</field>
+        <field name="model">custody.tag</field>
+        <field name="arch" type="xml">
+            <tree string="Property Tags">
+                <field name="name"/>
+                <field name="property_count"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Tag Search View -->
+    <record id="custody_tag_view_search" model="ir.ui.view">
+        <field name="name">custody.tag.view.search</field>
+        <field name="model">custody.tag</field>
+        <field name="arch" type="xml">
+            <search string="Search Tags">
+                <field name="name"/>
+                <filter string="Archived" name="inactive" domain="[('active','=',False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Tag Kanban View -->
+    <record id="custody_tag_view_kanban" model="ir.ui.view">
+        <field name="name">custody.tag.view.kanban</field>
+        <field name="model">custody.tag</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile">
+                <field name="name"/>
+                <field name="property_count"/>
+                <field name="color"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="oe_kanban_global_click oe_kanban_card {{record.color.raw_value ? 'oe_kanban_color_' + record.color.raw_value : ''}}">
+                            <div class="oe_kanban_content">
+                                <div>
+                                    <strong><field name="name"/></strong>
+                                </div>
+                                <div class="text-muted">
+                                    <span class="badge rounded-pill"><field name="property_count"/> Properties</span>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Tag Action -->
+    <record id="custody_tag_action" model="ir.actions.act_window">
+        <field name="name">Property Tags</field>
+        <field name="res_model">custody.tag</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="search_view_id" ref="custody_tag_view_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first property tag!
+            </p>
+            <p>
+                Tags help you organize and filter properties based on attributes.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Items -->
+    <menuitem id="menu_custody_tag" 
+              name="Tags" 
+              parent="menu_custody_properties" 
+              action="custody_tag_action" 
+              sequence="30"/>
+</odoo> 
