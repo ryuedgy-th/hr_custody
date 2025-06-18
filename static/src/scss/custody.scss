@@ -431,6 +431,8 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         &:before {
             border-left: 2px solid #aaa !important;
             z-index: 0;
+            height: calc(100% - 10px) !important;
+            top: 20px !important;
         }
         
         /* Make horizontal connector lines more visible */
@@ -440,12 +442,15 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
                 height: 0 !important;
                 background-color: #aaa !important;
                 z-index: 0;
+                top: 20px !important;
             }
             
             /* Fix last child vertical line */
             &:last-child:after {
                 border-left: 2px solid white !important;
                 z-index: 1;
+                height: calc(100% - 20px) !important;
+                top: 22px !important;
             }
         }
     }
