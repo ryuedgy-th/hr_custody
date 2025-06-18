@@ -314,16 +314,68 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
     
     .o_hierarchy_children {
-        margin-left: 24px;
+        margin-left: 36px;
         position: relative;
+        padding-left: 12px;
         
         &:before {
             content: '';
             position: absolute;
-            left: -12px;
+            left: 0;
             top: 0;
             height: 100%;
-            border-left: 1px solid #ddd;
+            border-left: 2px solid #ddd;
+        }
+        
+        /* Add connector lines to each node */
+        .o_hierarchy_node_container {
+            position: relative;
+            
+            &:before {
+                content: '';
+                position: absolute;
+                left: -12px;
+                top: 20px;
+                width: 12px;
+                height: 2px;
+                background-color: #ddd;
+            }
+            
+            /* Last node special styling */
+            &:last-child:after {
+                content: '';
+                position: absolute;
+                left: -12px;
+                top: 22px;
+                height: calc(100% - 22px);
+                border-left: 2px solid white;
+                z-index: 1;
+            }
+        }
+    }
+}
+
+/* Improve node styling with better spacing */
+.o_hierarchy_node_header {
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    padding: 12px;
+    margin-bottom: 12px;
+    background-color: #fff;
+    
+    .o_hierarchy_icon {
+        position: relative;
+        z-index: 2;
+        background-color: #fff;
+        border-radius: 4px;
+        padding: 2px;
+        margin-right: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        
+        .o_hierarchy_icon_image {
+            max-width: 32px;
+            max-height: 32px;
+            object-fit: contain;
         }
     }
 } 
