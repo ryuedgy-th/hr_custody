@@ -310,7 +310,8 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 /* Fix overlapping elements in hierarchy view */
 .o_hierarchy_view {
     .o_hierarchy_container {
-        padding: 16px;
+        padding: 0 !important;
+        margin: 0 !important;
     }
     
     .o_hierarchy_children {
@@ -330,7 +331,8 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         /* Add connector lines to each node */
         .o_hierarchy_node_container {
             position: relative;
-            margin-bottom: 12px;
+            margin-bottom: 4px !important;
+            padding: 0 !important;
             
             &:before {
                 content: '';
@@ -391,7 +393,7 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     
     /* Improve spacing between nodes */
     .o_hierarchy_node_container {
-        margin-bottom: 8px;
+        margin-bottom: 4px !important;
     }
 }
 
@@ -426,6 +428,18 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 
 /* Hierarchy View Connector Lines - Fix */
 .o_hierarchy_view {
+    /* Remove extra space and padding */
+    .o_hierarchy_container {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    /* Fix node container spacing */
+    .o_hierarchy_node_container {
+        margin-bottom: 4px !important;
+        padding: 0 !important;
+    }
+    
     /* Make the vertical connector line more visible */
     .o_hierarchy_children {
         &:before {
@@ -460,5 +474,15 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         position: relative;
         z-index: 2;
         background-color: white;
+    }
+    
+    /* Remove gray background */
+    .o_hierarchy_view_content {
+        background-color: transparent !important;
+    }
+    
+    /* Remove fold button background */
+    .o_hierarchy_button_fold {
+        background-color: transparent !important;
     }
 } 
