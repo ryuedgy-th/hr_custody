@@ -211,7 +211,6 @@
                                 <separator string="Effective Approvers" groups="hr.group_hr_user"/>
                                 <field name="effective_approver_ids" widget="many2many_tags" 
                                        options="{'no_create': True}" readonly="1"
-                                       decoration-success="env.user in effective_approver_ids"
                                        groups="hr.group_hr_user"/>
                             </group>
                         </page>
