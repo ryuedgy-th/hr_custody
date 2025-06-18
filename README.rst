@@ -66,14 +66,13 @@ General Public License, Version 3 (LGPL v3).
    * Mail: odoo@cybrosys.com
 
 **ปรับปรุงเพิ่มเติมโดย**:
-   * YOUR_COMPANY_NAME
-   * Developers: YOUR_NAME
-   * Mail: YOUR_EMAIL
+   * MYIS International School
+   * Developers: RYU
+   * Mail: ryuw@magicyears.ac.th
 
 Contact
 =======
 * Website: https://cybrosys.com
-* YOUR_WEBSITE
 
 Bug Tracker
 ===========
