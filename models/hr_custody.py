@@ -230,6 +230,14 @@ class HrCustody(models.Model):
         help='Number of return images'
     )
 
+    # Add a computed field to display property code in list view
+    property_code_display = fields.Char(
+        string='Property Code',
+        compute='_compute_property_code_display',
+        store=True,
+        help='Display the property code'
+    )
+
     # Computed Fields
     @api.depends('return_type', 'return_date', 'expected_return_period', 'state')
     def _compute_return_status_display(self):
@@ -266,6 +274,14 @@ class HrCustody(models.Model):
         for record in self:
             record.checkout_image_count = len(record.image_ids.filtered(lambda i: i.image_type == 'checkout'))
             record.return_image_count = len(record.image_ids.filtered(lambda i: i.image_type == 'return'))
+
+    @api.depends('custody_property_id', 'custody_property_id.property_code')
+    def _compute_property_code_display(self):
+        for record in self:
+            if record.custody_property_id and record.custody_property_id.property_code:
+                record.property_code_display = record.custody_property_id.property_code
+            else:
+                record.property_code_display = False
 
     # Onchange Methods
     @api.onchange('return_type')
