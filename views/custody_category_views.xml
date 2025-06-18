@@ -31,7 +31,7 @@
                             <field name="color" widget="color_picker"/>
                             <field name="template_id" 
                                    domain="[('is_template', '=', True)]" 
-                                   attrs="{'invisible': [('is_template', '=', True)]}" 
+                                   invisible="is_template"
                                    options="{'no_create': True}"/>
                             <field name="lifecycle_stage" widget="selection"/>
                         </group>
@@ -54,9 +54,9 @@
                             <group>
                                 <field name="requires_approval" widget="boolean_toggle"/>
                                 <field name="approver_ids" widget="many2many_tags" 
-                                       attrs="{'invisible': [('requires_approval', '=', False)]}"/>
+                                       invisible="not requires_approval"/>
                                 <field name="inherit_parent_approvers" 
-                                       attrs="{'invisible': ['|', ('requires_approval', '=', False), ('parent_id', '=', False)]}" 
+                                       invisible="not requires_approval or not parent_id"
                                        widget="boolean_toggle"/>
                             </group>
                         </page>
