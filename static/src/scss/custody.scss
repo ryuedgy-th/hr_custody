@@ -234,18 +234,26 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 
 // Specific styles for images & condition tab buttons
 .oe_button_box[name="image_button_box"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    
     button.oe_stat_button, button.oe_highlight {
-        margin-right: 16px;
+        margin-right: 20px;
     }
     
     button.oe_highlight {
         &[name="action_add_multiple_images"] {
-            margin-right: 24px;
-            margin-left: 8px;
+            margin-right: 40px;
+            margin-left: 20px;
+            padding-left: 16px;
+            padding-right: 16px;
         }
         
         &[name="action_manage_multiple_images"] {
-            margin-right: 16px;
+            margin-right: 40px;
+            padding-left: 16px;
+            padding-right: 16px;
         }
     }
 } 

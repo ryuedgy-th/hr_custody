@@ -119,16 +119,18 @@
                                 </button>
                                 
                                 <!-- Button for Multiple Images Upload Wizard -->
-                                <button class="oe_highlight" type="object" name="action_add_multiple_images"
+                                <button class="oe_highlight o_custody_button" type="object" name="action_add_multiple_images"
                                         string="Upload Multiple Images" icon="fa-upload"
                                         invisible="state in ['rejected', 'returned']"
-                                        style="margin-right: 24px; margin-left: 8px;"/>
+                                        style="margin-right: 40px; margin-left: 20px;"/>
+                                
+                                <div style="width: 10px; display: inline-block;"></div>
                                 
                                 <!-- Button for Manage Multiple Images (list view) -->
-                                <button class="oe_highlight" type="object" name="action_manage_multiple_images"
+                                <button class="oe_highlight o_custody_button" type="object" name="action_manage_multiple_images"
                                         string="Manage Multiple Images" icon="fa-list"
                                         help="View, select and delete multiple images at once"
-                                        style="margin-right: 16px;"/>
+                                        style="margin-right: 40px;"/>
                                 
                                 <!-- Keep only the checkout image button, remove return image button -->
                                 <button class="oe_stat_button" type="object" name="action_add_image"
