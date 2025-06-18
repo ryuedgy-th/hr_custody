@@ -209,7 +209,7 @@
             <list>
                 <field name="name"/>
                 <field name="employee_id"/>
-                <field name="custody_property_id" string="Property Code" display_field="property_code"/>
+                <field name="custody_property_id" string="Property"/>
                 <field name="purpose"/>
 
                 <!-- Approvers & Approved By Columns -->
