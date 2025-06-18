@@ -335,7 +335,7 @@
               name="Custody Request"
               sequence="1"/>
 
-    <!-- Properties menu - ใช้ action จาก custody_property_views.xml -->
+    <!-- Properties menu - Using action from custody_property_views.xml -->
     <menuitem action="custody_property_action"
               id="hr_property_menu"
               parent="hr_custody_menu_management"
@@ -343,7 +343,7 @@
               sequence="5"
               groups="hr.group_hr_manager"/>
 
-    <!-- Images Management menu - เพิ่มเมนูสำหรับจัดการรูปภาพหลายรูป -->
+    <!-- Images Management menu - Added for managing multiple images -->
     <menuitem action="hr_custody.action_custody_image_list"
               id="hr_custody_images_menu"
               parent="hr_custody_menu_management"
@@ -366,7 +366,7 @@
                         <div class="o_custody_comparison_column">
                             <h3 class="text-center">Checkout Images</h3>
                             <div class="o_custody_comparison_image_container">
-                                <!-- แสดงรูปภาพ checkout จากระบบใหม่ -->
+                                <!-- Display checkout images from the new system -->
                                 <field name="image_ids" readonly="1" mode="kanban" 
                                        domain="[('image_type', '=', 'checkout')]"
                                        options="{'no_create': True, 'no_open': True}">
@@ -395,7 +395,7 @@
                         <div class="o_custody_comparison_column">
                             <h3 class="text-center">Return Images</h3>
                             <div class="o_custody_comparison_image_container">
-                                <!-- แสดงรูปภาพ return จากระบบใหม่ -->
+                                <!-- Display return images from the new system -->
                                 <field name="image_ids" readonly="1" mode="kanban" 
                                        domain="[('image_type', '=', 'return')]"
                                        options="{'no_create': True, 'no_open': True}">

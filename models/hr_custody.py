@@ -55,6 +55,7 @@ class HrCustody(models.Model):
         'hr.employee',
         string='Employee',
         required=True,
+        index=True,
         help='The employee associated with this record.',
         default=lambda self: self.env.user.employee_id
     )
@@ -70,6 +71,7 @@ class HrCustody(models.Model):
         'custody.property',
         string='Property',
         required=True,
+        index=True,
         help='The property associated with this custody record'
     )
 
@@ -86,6 +88,7 @@ class HrCustody(models.Model):
         'res.users',
         string='Approved By',
         readonly=True,
+        index=True,
         tracking=True,
         help='User who approved this request'
     )
@@ -101,7 +104,7 @@ class HrCustody(models.Model):
         ('date', 'Fixed Return Date'),
         ('flexible', 'No Fixed Return Date'),
         ('term_end', 'Return at Term/Project End')
-    ], string='Return Type', default='date', required=True, tracking=True,
+    ], string='Return Type', default='date', required=True, index=True, tracking=True,
     help='Select the type of return date arrangement')
 
     return_date = fields.Date(
@@ -133,7 +136,9 @@ class HrCustody(models.Model):
 
     notes = fields.Html(
         string='Notes',
-        help='Note for Custody'
+        help='Note for Custody',
+        sanitize=True,
+        prefetch=False
     )
 
     # Image fields for documenting equipment condition
@@ -142,7 +147,8 @@ class HrCustody(models.Model):
         help="Image of the equipment when checked out to the employee",
         attachment=True,
         max_width=1920,
-        max_height=1920
+        max_height=1920,
+        prefetch=False
     )
     
     checkout_image_date = fields.Datetime(
@@ -161,7 +167,8 @@ class HrCustody(models.Model):
         help="Image of the equipment when returned by the employee",
         attachment=True,
         max_width=1920,
-        max_height=1920
+        max_height=1920,
+        prefetch=False
     )
     
     return_image_date = fields.Datetime(
@@ -196,6 +203,7 @@ class HrCustody(models.Model):
     ],
     string='Status',
     default='draft',
+    index=True,
     tracking=True,
     help='Custody states visible in statusbar'
     )
@@ -215,7 +223,9 @@ class HrCustody(models.Model):
         'custody.image',
         'custody_id',
         string='Additional Images',
-        help='Additional images for this custody record'
+        help='Additional images for this custody record',
+        prefetch=False,
+        copy=False
     )
     
     checkout_image_count = fields.Integer(
@@ -235,6 +245,7 @@ class HrCustody(models.Model):
         string='Property Code',
         compute='_compute_property_code_display',
         store=True,
+        index=True,
         help='Display the property code'
     )
 
@@ -612,7 +623,7 @@ class HrCustody(models.Model):
         """Open a wizard to compare checkout and return images side by side"""
         self.ensure_one()
         
-        # ตรวจสอบว่ามีภาพทั้งสองประเภทหรือไม่
+        # Check if both types of images exist
         checkout_images = self.env['custody.image'].search([
             ('custody_id', '=', self.id),
             ('image_type', '=', 'checkout')
@@ -633,7 +644,7 @@ class HrCustody(models.Model):
                 
             raise UserError(_("Cannot compare images. Missing %s image(s). Please upload images first.") % (" and ".join(missing)))
         
-        # สร้าง context สำหรับการเปิดมุมมองเปรียบเทียบ
+        # Create context for opening comparison view
         context = self.env.context.copy()
         context.update({
             'default_checkout_images': checkout_images.ids,

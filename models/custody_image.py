@@ -152,7 +152,7 @@ class CustodyImage(models.Model):
             'edit': False
         })
         
-        # สร้างชื่อที่มีความหมายมากขึ้น
+        # Create a more meaningful title
         title = f"{self.name} - {self.image_type} ({self.custody_id.name})"
         
         return {

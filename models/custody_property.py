@@ -20,12 +20,15 @@ class CustodyProperty(models.Model):
     image = fields.Image(
         string="Image",
         help="This field holds the image used for "
-             "this provider, limited to 1024x1024px"
+             "this provider, limited to 1024x1024px",
+        prefetch=False
     )
 
     desc = fields.Html(
         string='Description',
-        help='A detailed description of the item.'
+        help='A detailed description of the item.',
+        sanitize=True,
+        prefetch=False
     )
 
     company_id = fields.Many2one(
@@ -113,12 +116,14 @@ class CustodyProperty(models.Model):
     custody_count = fields.Integer(
         string='Total Custodies',
         compute='_compute_custody_counts',
+        store=True,
         help='Total number of custody records for this property'
     )
 
     active_custody_count = fields.Integer(
         string='Active Custodies',
         compute='_compute_custody_counts',
+        store=True,
         help='Number of active custodies for this property'
     )
 
@@ -126,6 +131,7 @@ class CustodyProperty(models.Model):
         'hr.employee',
         string='Current Borrower',
         compute='_compute_current_borrower',
+        store=True,
         help='Employee currently borrowing this property'
     )
 
@@ -133,12 +139,14 @@ class CustodyProperty(models.Model):
         'hr.custody',
         string='Current Custody',
         compute='_compute_current_borrower',
+        store=True,
         help='Current active custody record'
     )
 
     is_available = fields.Boolean(
         string='Available',
         compute='_compute_is_available',
+        store=True,
         help='Whether this property is available for custody'
     )
 
@@ -185,29 +193,51 @@ class CustodyProperty(models.Model):
             if record.product_id:
                 record.name = record.product_id.name
 
-    @api.depends('name')
+    @api.depends()
     def _compute_custody_counts(self):
-        """Compute the number of custodies for this property"""
+        """Compute the number of custodies for this property using read_group for better performance"""
+        # Get all custody counts in one query
+        all_custody_data = self.env['hr.custody'].read_group(
+            [('custody_property_id', 'in', self.ids)],
+            ['custody_property_id'],
+            ['custody_property_id']
+        )
+        
+        # Get active custody counts in one query
+        active_custody_data = self.env['hr.custody'].read_group(
+            [('custody_property_id', 'in', self.ids), ('state', '=', 'approved')],
+            ['custody_property_id'],
+            ['custody_property_id']
+        )
+        
+        # Create dictionaries for faster lookup
+        all_counts = {data['custody_property_id'][0]: data['custody_property_id_count'] for data in all_custody_data}
+        active_counts = {data['custody_property_id'][0]: data['custody_property_id_count'] for data in active_custody_data}
+        
+        # Set the values for each property
         for record in self:
-            custody_records = self.env['hr.custody'].search([
-                ('custody_property_id', '=', record.id)
-            ])
-            record.custody_count = len(custody_records)
+            record.custody_count = all_counts.get(record.id, 0)
+            record.active_custody_count = active_counts.get(record.id, 0)
 
-            active_custody = custody_records.filtered(
-                lambda r: r.state == 'approved'
-            )
-            record.active_custody_count = len(active_custody)
-
-    @api.depends('active_custody_count')
+    @api.depends('active_custody_count', 'property_status')
     def _compute_current_borrower(self):
-        """Compute current borrower information and auto-update status"""
+        """Compute current borrower information and auto-update status using efficient queries"""
+        # Get all active custodies in one query for better performance
+        active_custodies = self.env['hr.custody'].search([
+            ('custody_property_id', 'in', self.ids),
+            ('state', '=', 'approved')
+        ])
+        
+        # Create a dictionary mapping property_id to custody record
+        property_to_custody = {}
+        for custody in active_custodies:
+            if custody.custody_property_id.id not in property_to_custody:
+                property_to_custody[custody.custody_property_id.id] = custody
+        
+        # Process each property
         for record in self:
-            current_custody = self.env['hr.custody'].search([
-                ('custody_property_id', '=', record.id),
-                ('state', '=', 'approved')
-            ], limit=1)
-
+            current_custody = property_to_custody.get(record.id, False)
+            
             if current_custody:
                 record.current_borrower_id = current_custody.employee_id
                 record.current_custody_id = current_custody
