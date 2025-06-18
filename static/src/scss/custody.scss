@@ -422,4 +422,38 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     .badge {
         margin-right: 4px;
     }
+}
+
+/* Hierarchy View Connector Lines - Fix */
+.o_hierarchy_view {
+    /* Make the vertical connector line more visible */
+    .o_hierarchy_children {
+        &:before {
+            border-left: 2px solid #aaa !important;
+            z-index: 0;
+        }
+        
+        /* Make horizontal connector lines more visible */
+        .o_hierarchy_node_container {
+            &:before {
+                border-top: 2px solid #aaa !important;
+                height: 0 !important;
+                background-color: #aaa !important;
+                z-index: 0;
+            }
+            
+            /* Fix last child vertical line */
+            &:last-child:after {
+                border-left: 2px solid white !important;
+                z-index: 1;
+            }
+        }
+    }
+    
+    /* Ensure nodes are above connector lines */
+    .o_hierarchy_node_header {
+        position: relative;
+        z-index: 2;
+        background-color: white;
+    }
 } 
