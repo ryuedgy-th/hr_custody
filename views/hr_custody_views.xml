@@ -99,7 +99,7 @@
                             <div class="oe_button_box" name="image_button_box">
                                 <button class="oe_stat_button" type="object" name="action_view_images"
                                         context="{'default_image_type': 'checkout'}" icon="fa-camera"
-                                        style="margin-right: 10px;">
+                                        style="margin-right: 16px;">
                                     <div class="o_field_widget o_stat_info">
                                         <span class="o_stat_value">
                                             <field name="checkout_image_count"/>
@@ -109,7 +109,7 @@
                                 </button>
                                 <button class="oe_stat_button" type="object" name="action_view_images"
                                         context="{'default_image_type': 'return'}" icon="fa-camera"
-                                        style="margin-right: 10px;">
+                                        style="margin-right: 16px;">
                                     <div class="o_field_widget o_stat_info">
                                         <span class="o_stat_value">
                                             <field name="return_image_count"/>
@@ -122,13 +122,13 @@
                                 <button class="oe_highlight" type="object" name="action_add_multiple_images"
                                         string="Upload Multiple Images" icon="fa-upload"
                                         invisible="state in ['rejected', 'returned']"
-                                        style="margin-right: 10px;"/>
+                                        style="margin-right: 24px; margin-left: 8px;"/>
                                 
                                 <!-- Button for Manage Multiple Images (list view) -->
                                 <button class="oe_highlight" type="object" name="action_manage_multiple_images"
                                         string="Manage Multiple Images" icon="fa-list"
                                         help="View, select and delete multiple images at once"
-                                        style="margin-right: 10px;"/>
+                                        style="margin-right: 16px;"/>
                                 
                                 <!-- Keep only the checkout image button, remove return image button -->
                                 <button class="oe_stat_button" type="object" name="action_add_image"

@@ -20,6 +20,6 @@
 #    If not, see <http://www.gnu.org/licenses/>.
 #
 #############################################################################
-from . import property_return_date
 from . import property_return_reason
+from . import property_return_date
 from . import multi_images_upload

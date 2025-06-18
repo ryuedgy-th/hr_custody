@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Extended hr_employee form view -->
-    <record model="ir.ui.view" id="view_employee_form">
+    <!-- HR Employee Form Extension for Custody Management -->
+    <record model="ir.ui.view" id="custody_hr_employee_inherit_form_view">
         <field name="name">hr.employee.form.inherit.custody</field>
         <field name="model">hr.employee</field>
         <field name="inherit_id" ref="hr.view_employee_form"/>
         <field name="arch" type="xml">
+            <!-- Add buttons to the button box -->
             <div class="oe_button_box" position="inside">
-
                 <!-- Active Custody Button -->
-                <button class="oe_stat_button" name="custody_view"
+                <button class="o_stat_button" name="custody_view"
                         type="object" icon="fa-list-ol"
                         invisible="custody_count == 0">
                     <div class="o_field_widget o_stat_info">
@@ -21,7 +21,7 @@
                 </button>
 
                 <!-- Total Custody History Button -->
-                <button class="oe_stat_button" name="custody_view"
+                <button class="o_stat_button" name="custody_view"
                         type="object" icon="fa-history"
                         invisible="total_custody_count == 0">
                     <div class="o_field_widget o_stat_info">
@@ -33,7 +33,7 @@
                 </button>
 
                 <!-- Equipment in Possession Button -->
-                <button class="oe_stat_button" name="equipment_view"
+                <button class="o_stat_button" name="equipment_view"
                         type="object" icon="fa-cube"
                         invisible="equipment_count == 0">
                     <div class="o_field_widget o_stat_info">
@@ -43,7 +43,6 @@
                         <span class="o_stat_text">Equipment</span>
                     </div>
                 </button>
-
             </div>
         </field>
     </record>
