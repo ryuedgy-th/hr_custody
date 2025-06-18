@@ -3,87 +3,82 @@
     :alt: License: LGPL-3
 
 
-Open HRMS Custody - Enhanced
-============================
+Open HRMS Custody
+================
 
-ระบบจัดการและติดตามทรัพย์สินของบริษัทที่อยู่ในความดูแลของพนักงาน ออกแบบมาเพื่อช่วยให้การทำสัญญาการยืม-คืนอุปกรณ์หรือทรัพย์สินต่างๆ เป็นไปอย่างมีประสิทธิภาพ มีการจัดการภาพถ่ายเพื่อบันทึกสภาพอุปกรณ์ และระบบการอนุมัติที่ยืดหยุ่น
+Manage and track company property in the custody of employees. This module provides an efficient system for managing property loans, returns, and condition tracking with image documentation and a flexible approval system.
 
-คุณสมบัติหลัก
-=============
+Key Features
+-----------
 
-* **การจัดการคำขอและอนุมัติ**: สร้างคำขอยืมทรัพย์สิน มีระบบการอนุมัติโดยผู้มีอำนาจ
-* **จัดการทรัพย์สิน**: บันทึกข้อมูลทรัพย์สินพร้อมรายละเอียดต่างๆ
-* **บันทึกด้วยภาพถ่าย**: บันทึกสภาพทรัพย์สินด้วยภาพถ่ายตอนรับและคืน
-* **จัดการภาพถ่ายขั้นสูง**: อัพโหลดหลายรูปพร้อมกัน ดูภาพแบบเต็มจอ ลบหลายรูปพร้อมกัน
-* **การแจ้งเตือน**: แจ้งเตือนผ่านอีเมลเมื่อใกล้ถึงกำหนดส่งคืน
-* **การติดตามสถานะ**: ติดตามสถานะของทรัพย์สินว่าอยู่ในความดูแลของใคร
-* **มุมมองภาพรวม**: ดูรายงานและสถิติเกี่ยวกับการยืม-คืนทรัพย์สิน
+* **Request and Approval Management**: Create custody requests with flexible approval workflows
+* **Property Management**: Record property details with categories and tags
+* **Image Documentation**: Document property condition with photos at checkout and return
+* **Advanced Image Management**: Upload multiple images, view fullscreen, batch delete
+* **Notifications**: Email alerts for upcoming returns
+* **Status Tracking**: Track property status and current custodian
+* **Overview Reports**: View reports and statistics about property custody
 
-การติดตั้ง
-==========
+Installation
+-----------
 
-1. ติดตั้งโมดูลตามขั้นตอนปกติของ Odoo
-2. สร้างข้อมูลทรัพย์สินและกำหนดผู้อนุมัติ
-3. เริ่มใช้งานโดยสร้างคำขอยืมทรัพย์สิน
+1. Install the module through the standard Odoo installation process
+2. Create property records and define approvers
+3. Begin creating custody requests
 
-การใช้งาน
-=========
+Usage
+-----
 
-**บันทึกข้อมูลทรัพย์สิน**:
-  * เพิ่มและบริหารจัดการรายการทรัพย์สินของบริษัท
-  * กำหนดสถานที่จัดเก็บ ผู้รับผิดชอบ และผู้มีอำนาจอนุมัติ
+**Record Property Information**:
+  * Add and manage company property items
+  * Define storage locations, responsible persons, and approvers
 
-**สร้างและจัดการคำขอยืม**:
-  * พนักงานสามารถสร้างคำขอยืมทรัพย์สินได้
-  * ผู้มีอำนาจอนุมัติสามารถอนุมัติหรือปฏิเสธคำขอ
-  * บันทึกสภาพทรัพย์สินด้วยภาพถ่ายทั้งตอนยืมและคืน
+**Create and Manage Custody Requests**:
+  * Employees can create requests to borrow property
+  * Approvers can approve or reject requests
+  * Document property condition with images at checkout and return
 
-**การบันทึกภาพถ่าย**:
-  * อัพโหลดภาพได้หลายรูปพร้อมกัน
-  * ดูภาพแบบเต็มจอและซูมเพื่อตรวจสอบรายละเอียด
-  * เปรียบเทียบสภาพก่อนยืมและหลังคืน
-  * ลบหลายภาพพร้อมกันได้ในมุมมอง List
+**Image Documentation**:
+  * Upload multiple images at once
+  * View images in fullscreen and zoom to check details
+  * Compare condition before checkout and after return
+  * Delete multiple images at once in list view
 
-การกำหนดค่า
-===========
+Configuration
+------------
 
-* กำหนดค่าผู้อนุมัติสำหรับทรัพย์สินแต่ละรายการ
-* ปรับแต่งรูปแบบการแจ้งเตือนและอีเมล
-* กำหนดสิทธิ์การเข้าถึงตามบทบาทผู้ใช้
+* Configure approvers for each property item
+* Customize notification templates and emails
+* Set up access rights based on user roles
 
 License
-=======
+-------
 General Public License, Version 3 (LGPL v3).
 (https://www.gnu.org/licenses/lgpl-3.0-standalone.html)
 
-เครดิต
-======
-**พัฒนาต้นฉบับโดย**:
+Credits
+-------
+**Original Development**:
    * Cybrosys Techno Solutions
    * Developers: (V15) Mily Shajan
                 (V16) Aiswarya M
                 (V17) Janish Babu EK
+                (V18) RYU
    * Mail: odoo@cybrosys.com
 
-**ปรับปรุงเพิ่มเติมโดย**:
-   * MYIS International School
-   * Developers: RYU
-   * Mail: ryuw@magicyears.ac.th
-
 Contact
-=======
+-------
 * Website: https://cybrosys.com
 
 Bug Tracker
-===========
-พบปัญหาหรือข้อผิดพลาด กรุณาแจ้งผ่าน GitHub Issues
+----------
+Bugs are tracked on GitHub Issues. In case of trouble, please check there if your issue has already been reported.
 
 Maintainer
-==========
+---------
 .. image:: https://cybrosys.com/images/logo.png
    :target: https://cybrosys.com
 
-ต้นฉบับโมดูลนี้พัฒนาและดูแลโดย Cybrosys Technologies 
-ปรับปรุงเพิ่มเติมโดย MYIS International School
+This module is maintained by Cybrosys Technologies.
 
-สำหรับคำแนะนำเพิ่มเติม กรุณาติดต่อ https://cybrosys.com/
+For additional support, please contact https://cybrosys.com
