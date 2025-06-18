@@ -173,7 +173,7 @@
                     <t t-name="hierarchy-box">
                         <div class="o_hierarchy_node_container">
                             <t t-call="hierarchy-node"/>
-                            <t t-if="node.children.length">
+                            <t t-if="node.children and node.children.length">
                                 <div class="o_hierarchy_children">
                                     <t t-foreach="node.children" t-as="child">
                                         <t t-set="node" t-value="child"/>
