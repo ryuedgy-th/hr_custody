@@ -305,7 +305,7 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     
     /* Fix node container height and remove extra space */
     .o_hierarchy_node_container {
-        margin-bottom: 8px !important;
+        margin-bottom: 25px !important;
         padding: 0 !important;
         min-height: auto !important;
         height: auto !important;
@@ -323,7 +323,7 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         &:before {
             content: '';
             position: absolute;
-            left: 15px;
+            left: 0px;
             top: 0;
             height: 100%;
             border-left: 2px solid #aaa;
@@ -331,7 +331,7 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         
         .o_hierarchy_node_container {
             position: relative;
-            margin-bottom: 30px !important;
+            margin-bottom: 25px !important;
             padding: 0 !important;
             
             &:before {
