@@ -8,6 +8,15 @@ $-image-border-radius: 4px;
 $-button-spacing: 16px;
 $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 
+// Define CSS variables at root
+:root {
+    --CustodyStatus-draft: #{$o-gray-200};
+    --CustodyStatus-to-approve: #{$o-info};
+    --CustodyStatus-approved: #{$o-success};
+    --CustodyStatus-returned: #{$o-gray-400};
+    --CustodyStatus-rejected: #{$o-danger};
+}
+
 // Styles for image comparison view
 .o_custody_comparison_container {
     display: flex;
@@ -42,25 +51,25 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 // Badge styling for custody status
 .o_custody_status {
     &.o_custody_status_draft {
-        background-color: var(--KanbanRecord-color-draft, #{$o-gray-200});
+        background-color: var(--CustodyStatus-draft, #CCCCCC);
     }
     
     &.o_custody_status_to_approve {
-        background-color: var(--KanbanRecord-color-to-approve, #{$o-info});
+        background-color: var(--CustodyStatus-to-approve, #6CB2EB);
         color: white;
     }
     
     &.o_custody_status_approved {
-        background-color: var(--KanbanRecord-color-approved, #{$o-success});
+        background-color: var(--CustodyStatus-approved, #38C172);
         color: white;
     }
     
     &.o_custody_status_returned {
-        background-color: var(--KanbanRecord-color-returned, #{$o-gray-400});
+        background-color: var(--CustodyStatus-returned, #B8C2CC);
     }
     
     &.o_custody_status_rejected {
-        background-color: var(--KanbanRecord-color-rejected, #{$o-danger});
+        background-color: var(--CustodyStatus-rejected, #E3342F);
         color: white;
     }
 }
@@ -94,7 +103,7 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             }
             
             .o_attachment_button_view {
-                background: var(--o-brand-primary);
+                background: var(--o-brand-primary, #7C7BAD);
                 color: white !important;
                 padding: 8px 16px;
                 border-radius: 20px;
@@ -107,7 +116,8 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
                 box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
                 
                 &:hover {
-                    background: darken(var(--o-brand-primary), 10%);
+                    background: var(--o-brand-primary-dark, #5D5C8E);
+                    filter: brightness(0.9);
                     transform: scale(1.05);
                     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
                 }
