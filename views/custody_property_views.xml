@@ -63,6 +63,9 @@
                             <field name="product_id"
                                    invisible="property_selection != 'product'"/>
                             <field name="category_id" options="{'no_create_edit': True}"/>
+                            <button name="action_auto_categorize" string="Auto Categorize" 
+                                    type="object" class="btn btn-link" icon="fa-magic"
+                                    attrs="{'invisible': [('category_id', '!=', False)]}"/>
                             <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color', 'no_create_edit': True}"/>
                             <field name="company_id"
                                    options="{'no_create': True}"/>
@@ -267,5 +270,21 @@
         <field name="name">Property</field>
         <field name="res_model">custody.property</field>
         <field name="view_mode">kanban,list,form</field>
+    </record>
+
+    <!-- Add a wizard action for auto category -->
+    <record id="action_auto_categorize" model="ir.actions.server">
+        <field name="name">Auto Categorize</field>
+        <field name="model_id" ref="model_custody_property"/>
+        <field name="binding_model_id" ref="model_custody_property"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+            for record in records:
+                if not record.category_id and record.name:
+                    category_id = env['custody.category'].predict_category_for_property(record.name, record.desc)
+                    if category_id:
+                        record.write({'category_id': category_id})
+        </field>
     </record>
 </odoo>

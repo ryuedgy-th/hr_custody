@@ -83,6 +83,24 @@ class HrCustody(models.Model):
         help='Users who can approve this request based on the selected property'
     )
 
+    # NEW: Add category approvers relation
+    category_approver_ids = fields.Many2many(
+        'res.users',
+        string='Category Approvers',
+        compute='_compute_category_approvers',
+        store=False,
+        help='Approvers determined by the property category'
+    )
+    
+    # NEW: Combined approvers from property and category
+    effective_approver_ids = fields.Many2many(
+        'res.users',
+        string='Effective Approvers',
+        compute='_compute_effective_approvers',
+        store=False,
+        help='All users who can approve this request'
+    )
+
     # Approval tracking
     approved_by_id = fields.Many2one(
         'res.users',
@@ -294,6 +312,26 @@ class HrCustody(models.Model):
             else:
                 record.property_code_display = False
 
+    @api.depends('custody_property_id', 'custody_property_id.category_id')
+    def _compute_category_approvers(self):
+        """Compute approvers based on property category"""
+        for record in self:
+            approvers = self.env['res.users']
+            
+            if record.custody_property_id and record.custody_property_id.category_id:
+                category = record.custody_property_id.category_id
+                if category.requires_approval:
+                    approvers = category.get_effective_approvers()
+                    
+            record.category_approver_ids = approvers
+
+    @api.depends('property_approver_ids', 'category_approver_ids')
+    def _compute_effective_approvers(self):
+        """Combine all approvers for this custody request"""
+        for record in self:
+            # Combine property approvers and category approvers
+            record.effective_approver_ids = record.property_approver_ids | record.category_approver_ids
+
     # Onchange Methods
     @api.onchange('return_type')
     def _onchange_return_type(self):
@@ -475,48 +513,55 @@ class HrCustody(models.Model):
         self.renew_date = False
         self.state = 'approved'
 
-    # ⭐ UPDATED: Approve with Multiple Approvers Check
+    # UPDATED: Approve with enhanced approval checking
     def approve(self):
         """Approve the current custody record.
         
         Validates user permissions, checks property availability,
         records approval metadata, and updates property status.
         """
-        # Check approval permissions - only for users in approvers or HR Manager
-        if (self.env.user not in self.custody_property_id.approver_ids and
-            not self.env.user.has_group('hr.group_hr_manager')):
-            allowed_names = ', '.join(self.custody_property_id.approver_ids.mapped('name'))
-            raise UserError(
-                _("Only these users can approve this request: %s") % allowed_names
-            )
-
-        # Check property availability
-        for custody in self.env['hr.custody'].search([
-            ('custody_property_id', '=', self.custody_property_id.id),
-            ('id', '!=', self.id)
-        ]):
-            if custody.state == "approved":
-                raise UserError(_("Custody is not available now"))
-
-        # Record approval information
-        self.approved_by_id = self.env.user
-        self.approved_date = fields.Datetime.now()
+        # Check if current user is in effective approvers or is HR Manager
+        current_user = self.env.user
+        is_hr_manager = current_user.has_group('hr.group_hr_manager')
         
-        # Update checkout image date if image exists but date not set
-        if self.checkout_image and not self.checkout_image_date:
-            self.checkout_image_date = fields.Datetime.now()
+        for record in self:
+            # Refresh approvers to ensure we have the latest
+            record._compute_effective_approvers()
+            
+            # Check approval permissions
+            if not is_hr_manager and current_user not in record.effective_approver_ids:
+                raise UserError(
+                    _("You don't have permission to approve this request. Authorized approvers are: %s")
+                    % (', '.join(record.effective_approver_ids.mapped('name')))
+                )
 
-        # Update property status to 'in_use' when approved
-        if self.custody_property_id.property_status == 'available':
-            self.custody_property_id.property_status = 'in_use'
+            # Check property availability
+            for custody in self.env['hr.custody'].search([
+                ('custody_property_id', '=', record.custody_property_id.id),
+                ('id', '!=', record.id)
+            ]):
+                if custody.state == "approved":
+                    raise UserError(_("Custody is not available now"))
 
-        self.state = 'approved'
+            # Record approval information
+            record.approved_by_id = current_user
+            record.approved_date = fields.Datetime.now()
+            
+            # Update checkout image date if image exists but date not set
+            if record.checkout_image and not record.checkout_image_date:
+                record.checkout_image_date = fields.Datetime.now()
 
-        # Post message for tracking
-        self.message_post(
-            body=_('Request approved by %s') % self.env.user.name,
-            message_type='notification'
-        )
+            # Update property status to 'in_use' when approved
+            if record.custody_property_id.property_status == 'available':
+                record.custody_property_id.property_status = 'in_use'
+
+            record.state = 'approved'
+
+            # Post message for tracking
+            record.message_post(
+                body=_('Request approved by %s') % current_user.name,
+                message_type='notification'
+            )
 
     # Refuse with reason
     def refuse_with_reason(self):

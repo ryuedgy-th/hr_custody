@@ -1,4 +1,5 @@
 from odoo import api, fields, models, _
+from lxml import etree
 
 
 class CustodyCategory(models.Model):
@@ -95,6 +96,57 @@ class CustodyCategory(models.Model):
         help="This field holds an image used for this category"
     )
     
+    # NEW FIELDS: Category Lifecycle Management
+    lifecycle_stage = fields.Selection([
+        ('active', 'Active'),
+        ('phasing_out', 'Phasing Out'),
+        ('archived', 'Archived')
+    ], string='Lifecycle Stage', default='active', tracking=True,
+       help='Stage in the category lifecycle')
+    
+    # NEW FIELDS: Category Template System
+    is_template = fields.Boolean(
+        string='Is Template',
+        default=False,
+        help='Mark this category as a template that can be used to create new categories'
+    )
+    
+    template_id = fields.Many2one(
+        'custody.category',
+        string='Based on Template',
+        domain="[('is_template', '=', True)]",
+        help='Template this category was created from'
+    )
+    
+    # NEW FIELDS: Approval Requirements
+    requires_approval = fields.Boolean(
+        string='Requires Specific Approvers',
+        default=False,
+        help='Enable to specify approvers for properties in this category'
+    )
+    
+    approver_ids = fields.Many2many(
+        'res.users',
+        'custody_category_approver_rel',
+        'category_id',
+        'user_id',
+        string='Default Approvers',
+        help='Users who can approve custody requests for properties in this category'
+    )
+    
+    inherit_parent_approvers = fields.Boolean(
+        string='Inherit Parent Approvers',
+        default=True,
+        help='Also use approvers from parent category'
+    )
+    
+    # Extended property count to include subcategories
+    total_property_count = fields.Integer(
+        compute='_compute_total_property_count',
+        string='Total Properties',
+        help='Total number of properties in this category and subcategories'
+    )
+    
     @api.depends('name', 'parent_id.complete_name')
     def _compute_complete_name(self):
         """Compute the complete name including parent hierarchy"""
@@ -120,6 +172,15 @@ class CustodyCategory(models.Model):
         for category in self:
             category.property_count = count_dict.get(category.id, 0)
     
+    @api.depends('property_count', 'child_ids.property_count', 'child_ids.total_property_count')
+    def _compute_total_property_count(self):
+        """Compute total number of properties including subcategories"""
+        for category in self:
+            total = category.property_count
+            for child in category.child_ids:
+                total += child.total_property_count
+            category.total_property_count = total
+    
     def action_view_properties(self):
         """Action to view properties in this category"""
         self.ensure_one()
@@ -140,4 +201,158 @@ class CustodyCategory(models.Model):
             if category.code:
                 name = f"[{category.code}] {name}"
             result.append((category.id, name))
-        return result 
+        return result
+        
+    # NEW METHODS: Category Lifecycle Management
+    def action_set_phasing_out(self):
+        """Start phasing out this category"""
+        self.lifecycle_stage = 'phasing_out'
+        return self._notify_lifecycle_change('phasing_out')
+        
+    def action_set_archived(self):
+        """Archive this category"""
+        self.lifecycle_stage = 'archived'
+        self.active = False
+        return self._notify_lifecycle_change('archived')
+        
+    def action_set_active(self):
+        """Set category back to active"""
+        self.lifecycle_stage = 'active'
+        self.active = True
+        return self._notify_lifecycle_change('active')
+        
+    def _notify_lifecycle_change(self, stage):
+        """Send notification about lifecycle change"""
+        for category in self:
+            category.message_post(
+                body=_("Category lifecycle changed to: %s") % dict(
+                    self._fields['lifecycle_stage'].selection).get(stage)
+            )
+        return True
+        
+    # NEW METHODS: Template System
+    @api.model
+    def create_from_template(self, template_id, values=None):
+        """Create a new category based on template"""
+        if values is None:
+            values = {}
+            
+        template = self.browse(template_id)
+        if not template.exists() or not template.is_template:
+            raise ValueError(_("Template not found or not marked as template"))
+            
+        # Copy template values but override with provided values
+        vals = template.copy_data(default={'is_template': False, 'template_id': template.id})[0]
+        vals.update(values)
+        
+        return self.create(vals)
+        
+    @api.model
+    def get_available_templates(self):
+        """Get all available templates"""
+        return self.search([('is_template', '=', True)])
+
+    # NEW METHODS: Smart Categorization
+    @api.model
+    def predict_category_for_property(self, property_name, description=None):
+        """Predict the most appropriate category for a property based on its name and description"""
+        # A simple keyword-based approach - could be enhanced with ML techniques
+        property_name = (property_name or "").lower()
+        description = (description or "").lower()
+        
+        # Create a combined text for searching
+        text = f"{property_name} {description}"
+        
+        # Define keywords for each category
+        # This could be made configurable via the UI
+        category_keywords = {
+            'laptop': 'IT Equipment',
+            'computer': 'IT Equipment',
+            'mouse': 'IT Equipment',
+            'keyboard': 'IT Equipment',
+            'monitor': 'IT Equipment',
+            'printer': 'IT Equipment',
+            'phone': 'Communication Devices',
+            'mobile': 'Communication Devices',
+            'desk': 'Furniture',
+            'chair': 'Furniture',
+            'table': 'Furniture',
+            'cabinet': 'Furniture',
+            'car': 'Vehicles',
+            'vehicle': 'Vehicles',
+            'book': 'Office Supplies',
+            'pen': 'Office Supplies',
+            'paper': 'Office Supplies',
+        }
+        
+        # Find matching categories
+        matches = {}
+        for keyword, category_name in category_keywords.items():
+            if keyword in text:
+                matches[category_name] = matches.get(category_name, 0) + 1
+        
+        # Return the category with the most matches
+        if matches:
+            best_match = max(matches.items(), key=lambda x: x[1])[0]
+            category = self.search([('name', '=', best_match)], limit=1)
+            if category:
+                return category.id
+        
+        # Default to uncategorized if no match found
+        return False
+
+    # NEW METHODS: Form Customization by Category
+    @api.model
+    def get_property_fields_view(self, view_id=None, view_type='form', **options):
+        """Get a customized form view for property based on category"""
+        # Get the standard view first
+        res = self.env['custody.property'].fields_view_get(view_id=view_id, view_type=view_type, **options)
+        
+        # Check if we're in a context with a specific category
+        category_id = options.get('default_category_id')
+        if view_type == 'form' and category_id:
+            category = self.browse(category_id)
+            if category.exists():
+                # Parse the view
+                doc = etree.XML(res['arch'])
+                
+                # Example: Add category-specific fields to a notebook page
+                # This is just a demonstration - real implementation would be more complex
+                if category.name == 'IT Equipment':
+                    # Add IT specific fields to a new notebook page
+                    notebook = doc.xpath("//notebook")
+                    if notebook:
+                        page = etree.SubElement(notebook[0], 'page', {
+                            'string': 'IT Specifications',
+                            'name': 'it_specs',
+                        })
+                        group = etree.SubElement(page, 'group')
+                        # These would need to be actual fields on the model
+                        fields = [
+                            ('processor', 'Processor'),
+                            ('ram', 'RAM'),
+                            ('storage', 'Storage'),
+                            ('os', 'Operating System'),
+                        ]
+                        for field, label in fields:
+                            field_elem = etree.SubElement(group, 'field', {'name': field})
+                            field_elem.set('invisible', "context.get('hide_it_fields', False)")
+                
+                # Update the arch
+                res['arch'] = etree.tostring(doc, encoding='unicode')
+        
+        return res
+
+    # NEW METHODS: Get Effective Approvers
+    def get_effective_approvers(self):
+        """Get all approvers for this category, including inherited ones"""
+        self.ensure_one()
+        
+        approvers = self.approver_ids
+        
+        # Add parent approvers if needed
+        if self.inherit_parent_approvers and self.parent_id:
+            parent_approvers = self.parent_id.get_effective_approvers()
+            approvers |= parent_approvers
+            
+        return approvers 

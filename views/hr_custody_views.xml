@@ -198,6 +198,23 @@
                                 </group>
                             </group>
                         </page>
+
+                        <!-- Available Approvers -->
+                        <page string="Approvers" name="approvers">
+                            <group>
+                                <field name="property_approver_ids" widget="many2many_tags" 
+                                       options="{'no_create': True}" readonly="1"/>
+                                <separator string="Category Approvers" groups="hr.group_hr_user"/>
+                                <field name="category_approver_ids" widget="many2many_tags" 
+                                       options="{'no_create': True}" readonly="1" 
+                                       groups="hr.group_hr_user"/>
+                                <separator string="Effective Approvers" groups="hr.group_hr_user"/>
+                                <field name="effective_approver_ids" widget="many2many_tags" 
+                                       options="{'no_create': True}" readonly="1"
+                                       decoration-success="env.user in effective_approver_ids"
+                                       groups="hr.group_hr_user"/>
+                            </group>
+                        </page>
                     </notebook>
                 </sheet>
             </form>

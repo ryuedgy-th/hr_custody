@@ -176,11 +176,13 @@ class CustodyProperty(models.Model):
     def _onchange_category_id(self):
         """Auto-fill default return period based on category settings"""
         if self.category_id and self.category_id.default_return_type:
-            # This will be used in hr.custody to set default return_type
+            # Get and set default values from category
+            self.approver_ids = self.category_id.get_effective_approvers()
+            
             return {
                 'domain': {},
                 'value': {
-                    # These values can be used when creating custody records
+                    # Add values to be set when creating custody records
                 }
             }
 
@@ -192,6 +194,13 @@ class CustodyProperty(models.Model):
         for record in self:
             if record.product_id:
                 record.name = record.product_id.name
+                
+                # Try to predict category if not already set
+                if not record.category_id:
+                    category_id = self.env['custody.category'].predict_category_for_property(
+                        record.name, record.desc)
+                    if category_id:
+                        record.category_id = category_id
 
     @api.depends()
     def _compute_custody_counts(self):
@@ -342,3 +351,100 @@ class CustodyProperty(models.Model):
         """Set property status to available"""
         for record in self:
             record.property_status = 'available'
+
+    # Method for auto categorize button
+    def action_auto_categorize(self):
+        """Auto-categorize this property based on name and description"""
+        for record in self:
+            if not record.category_id and record.name:
+                category_id = self.env['custody.category'].predict_category_for_property(
+                    record.name, record.desc)
+                if category_id:
+                    record.category_id = category_id
+                    # Also set approvers if needed
+                    category = self.env['custody.category'].browse(category_id)
+                    approvers = category.get_effective_approvers()
+                    if approvers:
+                        record.approver_ids = [(6, 0, approvers.ids)]
+                    
+                    # Show success message
+                    return {
+                        'type': 'ir.actions.client',
+                        'tag': 'display_notification',
+                        'params': {
+                            'title': _('Auto-Categorization'),
+                            'message': _('Property categorized as: %s') % category.name,
+                            'type': 'success',
+                            'sticky': False,
+                        }
+                    }
+                else:
+                    # Show warning if no category found
+                    return {
+                        'type': 'ir.actions.client',
+                        'tag': 'display_notification',
+                        'params': {
+                            'title': _('Auto-Categorization'),
+                            'message': _('Could not find an appropriate category.'),
+                            'type': 'warning',
+                            'sticky': False,
+                        }
+                    }
+            elif record.category_id:
+                # Show info message if already categorized
+                return {
+                    'type': 'ir.actions.client',
+                    'tag': 'display_notification',
+                    'params': {
+                        'title': _('Auto-Categorization'),
+                        'message': _('Property is already categorized as: %s') % record.category_id.name,
+                        'type': 'info',
+                        'sticky': False,
+                    }
+                }
+        
+        return True
+
+    # Inherit fields_view_get to customize form based on category
+    @api.model
+    def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):
+        """Customize form view based on selected category"""
+        res = super(CustodyProperty, self).fields_view_get(
+            view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu
+        )
+        
+        # If we're on a form view and there's a category_id in context
+        if view_type == 'form' and self._context.get('default_category_id'):
+            category_id = self._context.get('default_category_id')
+            category = self.env['custody.category'].browse(category_id)
+            
+            if category.exists():
+                # Use the category's customization method
+                res = category.get_property_fields_view(
+                    view_id=view_id, view_type=view_type, 
+                    toolbar=toolbar, submenu=submenu,
+                    default_category_id=category_id
+                )
+        
+        return res
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Override create to handle auto-categorization"""
+        for vals in vals_list:
+            # Try to predict category if not provided
+            if 'category_id' not in vals and 'name' in vals:
+                description = vals.get('desc', '')
+                category_id = self.env['custody.category'].predict_category_for_property(
+                    vals['name'], description)
+                if category_id:
+                    vals['category_id'] = category_id
+                    
+                    # If we have a category, also set default approvers
+                    if category_id and 'approver_ids' not in vals:
+                        category = self.env['custody.category'].browse(category_id)
+                        approvers = category.get_effective_approvers()
+                        if approvers:
+                            vals['approver_ids'] = [(6, 0, approvers.ids)]
+        
+        return super(CustodyProperty, self).create(vals_list)

@@ -23,11 +23,17 @@
                             <field name="parent_id"/>
                             <field name="sequence"/>
                             <field name="active" widget="boolean_toggle"/>
+                            <field name="is_template" groups="hr.group_hr_user"/>
                         </group>
                         <group>
                             <field name="default_return_type"/>
                             <field name="default_return_days" invisible="default_return_type != 'date'"/>
                             <field name="color" widget="color_picker"/>
+                            <field name="template_id" 
+                                   domain="[('is_template', '=', True)]" 
+                                   attrs="{'invisible': [('is_template', '=', True)]}" 
+                                   options="{'no_create': True}"/>
+                            <field name="lifecycle_stage" widget="selection"/>
                         </group>
                     </group>
                     <notebook>
@@ -43,6 +49,16 @@
                                     <field name="property_count"/>
                                 </list>
                             </field>
+                        </page>
+                        <page string="Approval Requirements" name="approval_requirements" groups="hr.group_hr_user">
+                            <group>
+                                <field name="requires_approval" widget="boolean_toggle"/>
+                                <field name="approver_ids" widget="many2many_tags" 
+                                       attrs="{'invisible': [('requires_approval', '=', False)]}"/>
+                                <field name="inherit_parent_approvers" 
+                                       attrs="{'invisible': ['|', ('requires_approval', '=', False), ('parent_id', '=', False)]}" 
+                                       widget="boolean_toggle"/>
+                            </group>
                         </page>
                     </notebook>
                 </sheet>
@@ -60,6 +76,11 @@
                 <field name="complete_name"/>
                 <field name="code"/>
                 <field name="property_count"/>
+                <field name="lifecycle_stage" widget="badge" 
+                       decoration-success="lifecycle_stage == 'active'" 
+                       decoration-warning="lifecycle_stage == 'phasing_out'" 
+                       decoration-danger="lifecycle_stage == 'archived'"/>
+                <field name="is_template" groups="hr.group_hr_user"/>
             </list>
         </field>
     </record>
@@ -74,9 +95,14 @@
                 <field name="code"/>
                 <field name="parent_id"/>
                 <filter string="Top Level Categories" name="parent_false" domain="[('parent_id','=',False)]"/>
+                <filter string="Templates" name="templates" domain="[('is_template','=',True)]"/>
+                <filter string="Active" name="active" domain="[('lifecycle_stage','=','active')]"/>
+                <filter string="Phasing Out" name="phasing_out" domain="[('lifecycle_stage','=','phasing_out')]"/>
                 <filter string="Archived" name="inactive" domain="[('active','=',False)]"/>
                 <group expand="0" string="Group By">
                     <filter name="group_by_parent" string="Parent Category" domain="[]" context="{'group_by':'parent_id'}"/>
+                    <filter name="group_by_lifecycle" string="Lifecycle Stage" domain="[]" context="{'group_by':'lifecycle_stage'}"/>
+                    <filter name="group_by_template" string="Is Template" domain="[]" context="{'group_by':'is_template'}"/>
                 </group>
             </search>
         </field>
@@ -94,6 +120,7 @@
                 <field name="property_count"/>
                 <field name="color"/>
                 <field name="image"/>
+                <field name="lifecycle_stage"/>
                 <templates>
                     <t t-name="kanban-box">
                         <div t-attf-class="oe_kanban_card oe_kanban_global_click o_kanban_record_has_image_fill o_custody_kanban_card_category {{record.color.raw_value ? 'oe_kanban_color_' + record.color.raw_value : ''}}">
@@ -104,20 +131,22 @@
                                 <div class="o_kanban_record_top">
                                     <div class="o_kanban_record_headings">
                                         <strong class="o_kanban_record_title">
-                                            <field name="name"/>
-                                            <small t-if="record.code.raw_value"> (<field name="code"/>)</small>
+                                            <span><t t-esc="record.name.value"/></span>
+                                            <small t-if="record.code.value"> [<t t-esc="record.code.value"/>]</small>
                                         </strong>
                                     </div>
                                 </div>
-                                <div class="o_kanban_record_bottom">
-                                    <div class="oe_kanban_bottom_left">
-                                        <span class="badge rounded-pill"><field name="property_count"/> Properties</span>
-                                    </div>
-                                    <div class="oe_kanban_bottom_right">
-                                        <button class="btn btn-link p-0" name="action_view_properties" type="object" title="View Properties">
-                                            <i class="fa fa-cubes"/>
-                                        </button>
-                                    </div>
+                                <div class="o_kanban_record_body">
+                                    <t t-if="record.property_count.raw_value">
+                                        <span class="badge badge-pill badge-primary">
+                                            <t t-esc="record.property_count.value"/> Properties
+                                        </span>
+                                    </t>
+                                    <t t-if="record.lifecycle_stage.raw_value !== 'active'">
+                                        <span t-attf-class="badge badge-pill badge-{{record.lifecycle_stage.raw_value === 'phasing_out' ? 'warning' : 'danger'}}">
+                                            <t t-esc="record.lifecycle_stage.value"/>
+                                        </span>
+                                    </t>
                                 </div>
                             </div>
                         </div>
@@ -126,12 +155,54 @@
             </kanban>
         </field>
     </record>
+    
+    <!-- NEW: Hierarchy View for Categories -->
+    <record id="custody_category_view_hierarchy" model="ir.ui.view">
+        <field name="name">custody.category.view.hierarchy</field>
+        <field name="model">custody.category</field>
+        <field name="arch" type="xml">
+            <hierarchy>
+                <field name="name"/>
+                <field name="property_count"/>
+                <field name="code"/>
+                <field name="color"/>
+                <field name="lifecycle_stage"/>
+                <field name="image"/>
+                <templates>
+                    <t t-name="hierarchy-node">
+                        <div class="o_hierarchy_node_header" t-attf-style="{{record.color.raw_value ? 'border-left: 4px solid #' + record.color.raw_value + ';' : ''}}">
+                            <div class="o_hierarchy_icon">
+                                <img t-if="record.image.value" t-att-src="kanban_image('custody.category', 'image', record.id.raw_value)" class="o_hierarchy_icon_image"/>
+                                <i t-else="" class="fa fa-folder-o"/>
+                            </div>
+                            <div class="o_hierarchy_node_header_content">
+                                <div class="o_hierarchy_node_title">
+                                    <span t-if="record.code.value" class="text-muted">[<t t-esc="record.code.value"/>]</span>
+                                    <strong><t t-esc="record.name.value"/></strong>
+                                </div>
+                                <div class="o_hierarchy_node_labels">
+                                    <span class="badge badge-pill badge-primary">
+                                        <t t-esc="record.property_count.value"/> Properties
+                                    </span>
+                                    <t t-if="record.lifecycle_stage.raw_value !== 'active'">
+                                        <span t-attf-class="badge badge-pill badge-{{record.lifecycle_stage.raw_value === 'phasing_out' ? 'warning' : 'danger'}}">
+                                            <t t-esc="record.lifecycle_stage.value"/>
+                                        </span>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </hierarchy>
+        </field>
+    </record>
 
     <!-- Category Action -->
     <record id="custody_category_action" model="ir.actions.act_window">
         <field name="name">Property Categories</field>
         <field name="res_model">custody.category</field>
-        <field name="view_mode">kanban,list,form</field>
+        <field name="view_mode">hierarchy,kanban,list,form</field>
         <field name="search_view_id" ref="custody_category_view_search"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
@@ -143,10 +214,35 @@
         </field>
     </record>
 
+    <!-- Template Categories Action -->
+    <record id="custody_category_template_action" model="ir.actions.act_window">
+        <field name="name">Category Templates</field>
+        <field name="res_model">custody.category</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('is_template', '=', True)]</field>
+        <field name="context">{'default_is_template': True}</field>
+        <field name="search_view_id" ref="custody_category_view_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first category template!
+            </p>
+            <p>
+                Templates help you quickly create standardized categories.
+            </p>
+        </field>
+    </record>
+
     <!-- Menu Items -->
     <menuitem id="menu_custody_category" 
               name="Categories" 
               parent="hr_custody.hr_property_menu" 
               action="custody_category_action" 
               sequence="20"/>
+              
+    <menuitem id="menu_custody_category_templates" 
+              name="Category Templates" 
+              parent="hr_custody.hr_property_menu" 
+              action="custody_category_template_action" 
+              sequence="21"
+              groups="hr.group_hr_user"/>
 </odoo> 
