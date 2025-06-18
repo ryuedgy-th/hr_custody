@@ -170,9 +170,11 @@
                 <field name="image"/>
                 <templates>
                     <t t-name="hierarchy-box">
-                        <div class="o_hierarchy_node_header" t-attf-style="{{record.color.raw_value ? 'border-left: 4px solid #' + record.color.raw_value + ';' : ''}}">
-                            <div class="o_hierarchy_icon">
-                                <img t-if="record.image.value" t-att-src="'/web/image/custody.category/' + record.id.raw_value + '/image'" class="o_hierarchy_icon_image"/>
+                        <div class="o_custody_hierarchy_node o_hierarchy_node_header" t-attf-style="{{record.color.raw_value ? 'border-left: 4px solid #' + record.color.raw_value + ';' : ''}}">
+                            <div class="o_hierarchy_icon o_custody_icon">
+                                <t t-if="record.image.value">
+                                    <img t-att-src="'/web/image/custody.category/' + record.id.raw_value + '/image'" class="o_hierarchy_icon_image"/>
+                                </t>
                                 <i t-else="" class="fa fa-folder-o"/>
                             </div>
                             <div class="o_hierarchy_node_header_content">

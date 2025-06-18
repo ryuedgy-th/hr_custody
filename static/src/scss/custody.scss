@@ -264,4 +264,66 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         width: 10px;
         display: inline-block;
     }
+}
+
+/* Custody Hierarchy View Styling */
+
+/* Fix overlapping images in hierarchy view */
+.o_hierarchy_node_header {
+    .o_hierarchy_icon {
+        position: relative;
+        z-index: 1;
+        background-color: #fff;
+        border-radius: 4px;
+        padding: 2px;
+        margin-right: 8px;
+        
+        .o_hierarchy_icon_image {
+            max-width: 32px;
+            max-height: 32px;
+            object-fit: contain;
+        }
+    }
+}
+
+/* Add spacing between nodes */
+.o_hierarchy_container {
+    .o_hierarchy_node_container {
+        margin-bottom: 8px;
+    }
+}
+
+/* Improve node styling */
+.o_hierarchy_node_header {
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    padding: 8px;
+    background-color: #fff;
+    
+    .o_hierarchy_node_header_content {
+        .o_hierarchy_node_title {
+            margin-bottom: 4px;
+        }
+    }
+}
+
+/* Fix overlapping elements in hierarchy view */
+.o_hierarchy_view {
+    .o_hierarchy_container {
+        padding: 16px;
+    }
+    
+    .o_hierarchy_children {
+        margin-left: 24px;
+        position: relative;
+        
+        &:before {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: 0;
+            height: 100%;
+            border-left: 1px solid #ddd;
+        }
+    }
 } 
