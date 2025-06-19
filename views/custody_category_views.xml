@@ -237,13 +237,13 @@
     <!-- Menu Items -->
     <menuitem id="menu_custody_category" 
               name="Categories" 
-              parent="hr_custody.hr_property_menu" 
+              parent="hr_custody_menu_management" 
               action="custody_category_action" 
               sequence="20"/>
               
     <menuitem id="menu_custody_category_templates" 
               name="Category Templates" 
-              parent="hr_custody.hr_property_menu" 
+              parent="hr_custody_menu_management" 
               action="custody_category_template_action" 
               sequence="21"
               groups="hr.group_hr_user"/>

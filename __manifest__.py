@@ -22,14 +22,14 @@
         'wizard/property_return_reason_views.xml',
         'wizard/property_return_date_views.xml',
         'wizard/multi_images_upload_views.xml',
-        # Category and Tag views
-        'views/custody_category_views.xml',
-        'views/custody_tag_views.xml',
-        # Important: custody_property_views.xml must come before hr_custody_views.xml
-        # because hr_custody_views.xml references custody_property_action
+        # Main views with menu structure - must come before dependent views
         'views/custody_property_views.xml',
         'views/custody_image_views.xml',
         'views/hr_custody_views.xml',
+        # Category and Tag views that depend on menus from hr_custody_views.xml
+        'views/custody_category_views.xml',
+        'views/custody_tag_views.xml',
+        # Employee views
         'views/hr_employee_views.xml',
         # Reports last
         'reports/report_custody_views.xml',
