@@ -16,9 +16,10 @@
                             <field name="vendor_id"/>
                         </group>
                         <group>
-                            <field name="cost" widget="monetary"/>
+                            <field name="cost"/>
                             <field name="next_maintenance_date"/>
                             <field name="update_status"/>
+                            <field name="preserve_in_use_status"/>
                         </group>
                     </group>
                     <notebook>
@@ -26,7 +27,7 @@
                             <field name="notes" placeholder="Enter maintenance notes and details..."/>
                         </page>
                         <page string="Images" name="images">
-                            <field name="image_ids" widget="many2many_binary" string="Upload Maintenance Images"/>
+                            <field name="image_ids" context="{'default_name': 'Maintenance Image'}" string="Upload Maintenance Images"/>
                         </page>
                     </notebook>
                 </sheet>
