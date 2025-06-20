@@ -437,6 +437,37 @@
         <field name="arch" type="xml">
             <form string="Add Property" class="o_model_custody_property o_hr_custody_container">
                 <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="object"
+                                name="action_view_custodies" icon="fa-list">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="custody_count"/>
+                                </span>
+                                <span class="o_stat_text">Total Custodies</span>
+                            </div>
+                        </button>
+                        <button class="oe_stat_button" type="object"
+                                name="action_view_current_custody" icon="fa-user"
+                                invisible="active_custody_count == 0">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="active_custody_count"/>
+                                </span>
+                                <span class="o_stat_text">In Use</span>
+                            </div>
+                        </button>
+                        <button class="oe_stat_button" type="object"
+                                name="action_view_maintenance_history" icon="fa-history">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="maintenance_history_count"/>
+                                </span>
+                                <span class="o_stat_text">Maintenance History</span>
+                            </div>
+                        </button>
+                    </div>
+                    
                     <field name="image" widget='image' class="oe_avatar"/>
                     <div class="oe_title">
                         <h1>
@@ -484,9 +515,16 @@
                             <field name="maintenance_interval" invisible="maintenance_frequency != 'custom'" required="maintenance_frequency == 'custom'"/>
                             <field name="last_maintenance_date"/>
                             <field name="next_maintenance_date"/>
+                            <button name="action_record_maintenance" string="🔧 Record Maintenance" 
+                                    type="object" class="btn-primary" 
+                                    help="Record completed maintenance work"/>
                         </group>
                         <group>
                             <field name="maintenance_notes" placeholder="Enter maintenance notes..."/>
+                            <field name="maintenance_status_display" readonly="1" 
+                                   string="Current Status" help="Current maintenance status"/>
+                            <button name="action_view_maintenance_history" string="📋 View History" 
+                                    type="object" class="btn-info btn-sm"/>
                         </group>
                     </group>
 
@@ -503,6 +541,11 @@
                         </page>
                     </notebook>
                 </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
             </form>
         </field>
     </record>
