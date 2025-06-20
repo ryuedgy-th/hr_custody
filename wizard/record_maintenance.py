@@ -65,11 +65,12 @@ class RecordMaintenanceWizard(models.TransientModel):
         help='If checked and property was in use, it will remain in use after maintenance'
     )
     
-    image_ids = fields.Many2many(
-        'ir.attachment',
-        string='Maintenance Images',
-        help='Images documenting the maintenance'
-    )
+    # Temporarily removed image_ids to fix OwlError
+    # image_ids = fields.Many2many(
+    #     'ir.attachment',
+    #     string='Maintenance Images',
+    #     help='Images documenting the maintenance'
+    # )
     
     @api.onchange('property_id')
     def _onchange_property(self):
@@ -139,12 +140,13 @@ class RecordMaintenanceWizard(models.TransientModel):
         )
         
         # Attach images if any
-        if self.image_ids:
-            for attachment in self.image_ids:
-                attachment.write({
-                    'res_model': 'custody.property',
-                    'res_id': self.property_id.id,
-                })
+        # Temporarily disabled to fix OwlError
+        # if self.image_ids:
+        #     for attachment in self.image_ids:
+        #         attachment.write({
+        #             'res_model': 'custody.property',
+        #             'res_id': self.property_id.id,
+        #         })
         
         return {
             'type': 'ir.actions.client',
