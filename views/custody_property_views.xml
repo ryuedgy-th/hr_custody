@@ -335,11 +335,6 @@
         <field name="name">Properties</field>
         <field name="res_model">custody.property</field>
         <field name="view_mode">kanban,list,form</field>
-        <field name="views">
-            [(%(custody_property_view_kanban)d, 'kanban'),
-             (%(custody_property_view_tree)d, 'list'),
-             (%(custody_property_view_form)d, 'form')]
-        </field>
         <field name="context">{'search_default_available': 1, 'default_property_status': 'available'}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
