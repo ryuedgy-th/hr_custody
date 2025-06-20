@@ -320,6 +320,7 @@
                 <field name="purchase_value"/>
                 <field name="next_maintenance_date"/>
                 <field name="maintenance_frequency"/>
+                <field name="maintenance_status_display"/>
                 <field name="maintenance_overdue"/>
                 <field name="maintenance_due_soon"/>
                 <templates>
@@ -357,16 +358,16 @@
                                             <field name="current_borrower_id"/>
                                         </div>
                                     </t>
+                                    <t t-if="record.maintenance_status_display.value">
+                                        <div>
+                                            <strong>Status: </strong>
+                                            <field name="maintenance_status_display"/>
+                                        </div>
+                                    </t>
                                     <t t-if="record.next_maintenance_date.value">
                                         <div>
-                                            <span class="text-muted">Next maintenance: </span>
+                                            <span class="text-muted">Next: </span>
                                             <field name="next_maintenance_date"/>
-                                        </div>
-                                        <div t-if="record.maintenance_overdue.raw_value" class="text-danger">
-                                            <i class="fa fa-exclamation-triangle"/> Maintenance Overdue
-                                        </div>
-                                        <div t-elif="record.maintenance_due_soon.raw_value" class="text-warning">
-                                            <i class="fa fa-clock-o"/> Maintenance Due Soon
                                         </div>
                                     </t>
                                 </div>

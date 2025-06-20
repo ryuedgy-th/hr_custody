@@ -347,23 +347,31 @@ class CustodyProperty(models.Model):
                 record.maintenance_overdue = False
                 record.maintenance_due_soon = False
     
-    @api.depends('maintenance_frequency', 'next_maintenance_date', 'maintenance_overdue', 'maintenance_due_soon', 'days_to_maintenance')
+    @api.depends('maintenance_frequency', 'next_maintenance_date')
     def _compute_maintenance_status_display(self):
         """Compute human readable maintenance status"""
+        today = fields.Date.today()
+        reminder_days = int(self.env['ir.config_parameter'].sudo().get_param(
+            'hr_custody.maintenance_reminder_days', '7'))
+        
         for record in self:
             if record.maintenance_frequency == 'none':
                 record.maintenance_status_display = 'No Schedule'
             elif not record.next_maintenance_date:
                 record.maintenance_status_display = 'Not Scheduled'
-            elif record.maintenance_overdue:
-                days_overdue = abs(record.days_to_maintenance)
-                record.maintenance_status_display = f'🔴 Overdue ({days_overdue} days)'
-            elif record.maintenance_due_soon:
-                record.maintenance_status_display = f'🟡 Due Soon ({record.days_to_maintenance} days)'
-            elif record.days_to_maintenance > 0:
-                record.maintenance_status_display = f'🟢 OK ({record.days_to_maintenance} days left)'
             else:
-                record.maintenance_status_display = 'Due Today'
+                # Calculate days to maintenance locally
+                delta = (record.next_maintenance_date - today).days
+                
+                if delta < 0:
+                    days_overdue = abs(delta)
+                    record.maintenance_status_display = f'🔴 Overdue ({days_overdue} days)'
+                elif 0 <= delta <= reminder_days:
+                    record.maintenance_status_display = f'🟡 Due Soon ({delta} days)'
+                elif delta > 0:
+                    record.maintenance_status_display = f'🟢 OK ({delta} days left)'
+                else:
+                    record.maintenance_status_display = 'Due Today'
     
     # NEW: Update next maintenance date based on frequency
     @api.onchange('maintenance_frequency', 'maintenance_interval', 'last_maintenance_date')
