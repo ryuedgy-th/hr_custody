@@ -33,7 +33,6 @@
             <field name="code">model._cron_custody_return_reminder()</field>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
-            <field name="doall" eval="False"/>
             <field name="active" eval="True"/>
         </record>
         
@@ -45,7 +44,6 @@
             <field name="code">model._cron_maintenance_reminder()</field>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
-            <field name="doall" eval="False"/>
             <field name="active" eval="True"/>
             <!-- Using Python expression for nextcall -->
             <field name="nextcall" eval="datetime.datetime.now() + datetime.timedelta(days=1)"/>
