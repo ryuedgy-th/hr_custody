@@ -20,52 +20,58 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 // Fix for property form display issue on desktop
-.o_content, .o_form_view {
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow-x: hidden !important;
-    
-    .o_form_sheet_bg {
+// Restrict to hr_custody module only using more specific selectors
+.o_hr_custody_container, 
+.o_action_hr_custody, 
+.o_model_custody_property, 
+.o_model_hr_custody {
+    .o_content, .o_form_view {
         width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: hidden !important;
         
-        .o_form_sheet {
-            min-width: 650px;
-            max-width: 1140px;
+        .o_form_sheet_bg {
             width: 100% !important;
-            margin: 0 auto;
+            
+            .o_form_sheet {
+                min-width: 650px;
+                max-width: 1140px;
+                width: 100% !important;
+                margin: 0 auto;
+            }
         }
     }
-}
-
-// Fix for narrow container in kanban views
-.o_kanban_view {
-    width: 100% !important;
     
-    .o_kanban_record {
+    // Fix for narrow container in kanban views
+    .o_kanban_view {
         width: 100% !important;
-    }
-}
-
-// Fix responsive layout for tables and lists
-.o_list_view {
-    width: 100% !important;
-    overflow-x: auto;
-}
-
-// Mobile specific fixes
-@media (max-width: 767px) {
-    .o_form_sheet {
-        min-width: unset !important;
-        padding: 16px !important;
-    }
-    
-    // Improve button layout on mobile
-    .oe_button_box {
-        flex-direction: column;
         
-        .oe_stat_button {
-            width: 100%;
-            margin-bottom: 8px;
+        .o_kanban_record {
+            width: 100% !important;
+        }
+    }
+
+    // Fix responsive layout for tables and lists
+    .o_list_view {
+        width: 100% !important;
+        overflow-x: auto;
+    }
+
+    // Mobile specific fixes
+    @media (max-width: 767px) {
+        .o_form_sheet {
+            min-width: unset !important;
+            padding: 16px !important;
+        }
+        
+        // Improve button layout on mobile
+        .oe_button_box {
+            flex-direction: column;
+            
+            .oe_stat_button {
+                width: 100%;
+                margin-bottom: 8px;
+            }
         }
     }
 }
