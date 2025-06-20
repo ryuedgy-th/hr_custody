@@ -44,15 +44,6 @@
                                 <span class="o_stat_text">In Use</span>
                             </div>
                         </button>
-                        <button class="oe_stat_button" type="object"
-                                name="action_view_maintenance_history" icon="fa-history">
-                            <div class="o_field_widget o_stat_info">
-                                <span class="o_stat_value">
-                                    <field name="maintenance_history_count"/>
-                                </span>
-                                <span class="o_stat_text">Maintenance History</span>
-                            </div>
-                        </button>
                     </div>
 
                     <field name="image" widget='image' class="oe_avatar"/>
@@ -184,20 +175,6 @@
                             <group string="📝 Maintenance Notes &amp; Instructions">
                                 <field name="maintenance_notes" nolabel="1" 
                                        placeholder="Enter special instructions, requirements, or notes for maintenance personnel..."/>
-                            </group>
-                            
-                            <!-- Maintenance History Section -->
-                            <group string="📚 Maintenance History" col="1">
-                                <div class="row">
-                                    <div class="col-md-8">
-                                        <span>Total maintenance records: </span>
-                                        <field name="maintenance_history_count" readonly="1" style="font-weight: bold;"/>
-                                    </div>
-                                    <div class="col-md-4 text-right">
-                                        <button name="action_view_maintenance_history" string="📋 View Full History" 
-                                                type="object" class="btn btn-info btn-sm"/>
-                                    </div>
-                                </div>
                             </group>
                         </page>
 
