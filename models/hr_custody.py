@@ -395,14 +395,14 @@ class HrCustody(models.Model):
             # Check for fixed date return type
             if record.return_type == 'date':
                 if not record.return_date:
-                    raise ValidationError('Please specify return date when selecting "Fixed Return Date"')
+                    raise ValidationError(_('Please specify return date when selecting "Fixed Return Date"'))
                 if record.return_date < record.date_request:
-                    raise ValidationError('Return date must not be before request date')
+                    raise ValidationError(_('Return date must not be before request date'))
 
             # Check for flexible or term end return types
             elif record.return_type in ['flexible', 'term_end']:
                 if not record.expected_return_period:
-                    raise ValidationError('Please specify expected return period')
+                    raise ValidationError(_('Please specify expected return period'))
 
     @api.constrains('return_date', 'date_request')
     def validate_return_date(self):
