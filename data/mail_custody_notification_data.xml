@@ -187,10 +187,10 @@
                                   </tr>
                               </table>
                               
-                              % if object.maintenance_notes:
+                              <t t-if="object.maintenance_notes">
                               <p><strong>Maintenance Notes:</strong></p>
                               <p style="padding: 10px; border: 1px solid #e1e1e1; background-color: #f9f9f9;">${object.maintenance_notes}</p>
-                              % endif
+                              </t>
                               
                               <p>Please ensure maintenance is performed by the due date.</p>
                               <p style="margin: 20px 0;">
@@ -260,10 +260,10 @@
                                   </tr>
                               </table>
                               
-                              % if object.maintenance_notes:
+                              <t t-if="object.maintenance_notes">
                               <p><strong>Maintenance Notes:</strong></p>
                               <p style="padding: 10px; border: 1px solid #e1e1e1; background-color: #f9f9f9;">${object.maintenance_notes}</p>
-                              % endif
+                              </t>
                               
                               <p><strong>Please schedule maintenance immediately to ensure proper functioning and safety of this property.</strong></p>
                               <p style="margin: 20px 0;">

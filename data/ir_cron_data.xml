@@ -1,7 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     <!-- Custody Return mail Scheduler-->
-    <data>
+    <data noupdate="1">
+        <!-- Import for DateTime and timedelta -->
+        <function model="ir.model.data" name="_update_xmlids">
+            <value model="base" eval="[{
+                'xml_id': 'hr_custody.datetime_import',
+                'noupdate': True,
+                'res_id': False,
+                'model': False,
+                'module': 'hr_custody',
+                'values': {},
+            }]"/>
+            <value name="datetime" eval="__import__('datetime')"/>
+        </function>
+        
         <record model="ir.cron" id="hr_custody_data_reminders">
             <field name="name">HR Custody Return Notification</field>
             <field name="interval_number">1</field>
@@ -36,7 +49,8 @@
             <field name="numbercall">-1</field>
             <field name="doall" eval="False"/>
             <field name="active" eval="True"/>
-            <field name="nextcall" eval="(DateTime.now() + timedelta(days=1)).replace(hour=6, minute=0, second=0)"/>
+            <!-- Using Python expression for nextcall -->
+            <field name="nextcall" eval="datetime.datetime.now() + datetime.timedelta(days=1)"/>
         </record>
         
         <!-- System parameter for maintenance reminder days -->

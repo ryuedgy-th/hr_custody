@@ -59,6 +59,12 @@ class RecordMaintenanceWizard(models.TransientModel):
         help='Update property status to Available'
     )
     
+    preserve_in_use_status = fields.Boolean(
+        string='Preserve "In Use" Status',
+        default=True,
+        help='If checked and property was in use, it will remain in use after maintenance'
+    )
+    
     image_ids = fields.Many2many(
         'ir.attachment',
         string='Maintenance Images',
@@ -99,7 +105,11 @@ class RecordMaintenanceWizard(models.TransientModel):
         
         # Update property status if requested
         if self.update_status:
-            vals['property_status'] = 'available'
+            # Check if we should preserve the 'in_use' status
+            if self.preserve_in_use_status and self.property_id.property_status == 'in_use':
+                vals['property_status'] = 'in_use'
+            else:
+                vals['property_status'] = 'available'
             
         # Update the property
         self.property_id.write(vals)
