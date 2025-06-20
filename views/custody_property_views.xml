@@ -348,6 +348,90 @@
         </field>
     </record>
 
+    <!-- NEW: Simple Property Form for Adding New Records -->
+    <record id="custody_property_view_form_simple" model="ir.ui.view">
+        <field name="name">custody.property.form.simple</field>
+        <field name="model">custody.property</field>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <form string="Add Property" class="o_model_custody_property o_hr_custody_container">
+                <sheet>
+                    <field name="image" widget='image' class="oe_avatar"/>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Property Name"/>
+                        </h1>
+                        <h3>
+                            <field name="property_code" placeholder="Property Code (Optional)"/>
+                        </h3>
+                    </div>
+
+                    <group>
+                        <group string="Basic Information">
+                            <field name="property_selection" widget="radio"/>
+                            <field name="product_id"
+                                   invisible="property_selection != 'product'"/>
+                            <field name="category_id" options="{'no_create_edit': True}"/>
+                            <button name="action_auto_categorize" string="Auto Categorize" 
+                                    type="object" class="btn btn-link" icon="fa-magic"
+                                    invisible="category_id"/>
+                            <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color', 'no_create_edit': True}"/>
+                            <field name="property_status" widget="selection"/>
+                        </group>
+                        <group string="Location &amp; Responsibility">
+                            <field name="storage_location" placeholder="e.g., IT Room Cabinet A1"/>
+                            <field name="department_id"/>
+                            <field name="responsible_person"/>
+                            <field name="company_id" options="{'no_create': True}"/>
+                        </group>
+                    </group>
+
+                    <!-- Approvers Section -->
+                    <group string="Approval Settings">
+                        <field name="approver_ids" widget="many2many_tags"
+                               placeholder="Select users who can approve custody requests for this property"
+                               options="{'no_create': True, 'no_create_edit': True}"/>
+                    </group>
+
+                    <notebook>
+                        <page name="desc" string="Description">
+                            <field name="desc"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- NEW: Action for Adding New Property -->
+    <record id="action_custody_property_create" model="ir.actions.act_window">
+        <field name="name">New Property</field>
+        <field name="res_model">custody.property</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="custody_property_view_form_simple"/>
+        <field name="target">current</field>
+        <field name="context">{'default_property_status': 'available'}</field>
+    </record>
+    
+    <!-- NEW: Override the "create" button action in list view -->
+    <record id="custody_property_view_tree_create_button" model="ir.ui.view">
+        <field name="name">custody.property.tree.create.button</field>
+        <field name="model">custody.property</field>
+        <field name="inherit_id" ref="custody_property_view_tree"/>
+        <field name="arch" type="xml">
+            <list position="attributes">
+                <attribute name="create">0</attribute>
+            </list>
+        </field>
+    </record>
+    
     <!-- Menu Items -->
     <!-- Note: This menu is now managed in hr_custody_views.xml -->
+    
+    <!-- NEW: Add a menu item for creating new property with the simple form -->
+    <menuitem id="menu_custody_property_create" 
+              name="Create New Property" 
+              parent="hr_custody_menu_management" 
+              action="action_custody_property_create" 
+              sequence="6"/>
 </odoo>

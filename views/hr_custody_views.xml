@@ -356,7 +356,14 @@
               id="hr_property_menu"
               parent="hr_custody_menu_management"
               name="Properties"
-              sequence="5"
+              sequence="5"/>
+
+    <!-- NEW: Direct menu for creating property with simple form -->
+    <menuitem action="action_custody_property_create"
+              id="menu_custody_property_create_direct"
+              parent="hr_custody_menu_management"
+              name="Add New Property"
+              sequence="6"
               groups="hr.group_hr_manager"/>
 
     <!-- Images Management menu - Added for managing multiple images -->
