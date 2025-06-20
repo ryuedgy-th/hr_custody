@@ -347,9 +347,5 @@
     </record>
 
     <!-- Menu Items -->
-    <menuitem id="menu_custody_property"
-              name="Properties"
-              parent="hr_custody_menu_management"
-              action="action_custody_property"
-              sequence="10"/>
+    <!-- Note: This menu is now managed in hr_custody_views.xml -->
 </odoo>
