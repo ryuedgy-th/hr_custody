@@ -465,6 +465,9 @@
                         </group>
                         <group>
                             <field name="maintenance_notes" placeholder="Enter maintenance notes..."/>
+                            <button name="action_view_maintenance_history" string="📋 View History" 
+                                    type="object" class="btn-info btn-sm"
+                                    help="View maintenance history for this property"/>
                         </group>
                     </group>
 

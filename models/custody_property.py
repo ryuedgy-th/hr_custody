@@ -581,41 +581,28 @@ class CustodyProperty(models.Model):
                     record.category_id = category_id
         return True
     
-    # def action_view_maintenance_history(self):
-    #     """Action to view maintenance history from chatter messages"""
-    #     self.ensure_one()
+    def action_view_maintenance_history(self):
+        """Action to view maintenance history from chatter messages"""
+        self.ensure_one()
         
-    #     # Filter messages related to maintenance
-    #     maintenance_messages = self.message_ids.filtered(
-    #         lambda m: 'Maintenance Recorded' in (m.body or '') or 
-    #                  'maintenance' in (m.subject or '').lower() or
-    #                  'Record Maintenance' in (m.body or '')
-    #     )
-        
-    #     if not maintenance_messages:
-    #         return {
-    #             'type': 'ir.actions.client',
-    #             'tag': 'display_notification',
-    #             'params': {
-    #                 'title': _('No Maintenance History'),
-    #                 'message': _('No maintenance records found for this property.'),
-    #                 'sticky': False,
-    #                 'type': 'info',
-    #             }
-    #         }
-        
-    #     return {
-    #         'name': _('Maintenance History - %s') % self.name,
-    #         'type': 'ir.actions.act_window',
-    #         'res_model': 'mail.message',
-    #         'view_mode': 'list,form',
-    #         'domain': [('id', 'in', maintenance_messages.ids)],
-    #         'context': {
-    #             'default_res_model': 'custody.property',
-    #             'default_res_id': self.id,
-    #         },
-    #         'help': '<p class="o_view_nocontent_smiling_face">No maintenance history found</p>'
-    #     }
+        # Simple approach: open messages filtered by model and record
+        return {
+            'name': _('Maintenance History - %s') % self.name,
+            'type': 'ir.actions.act_window',
+            'res_model': 'mail.message',
+            'view_mode': 'list,form',
+            'domain': [
+                ('res_model', '=', 'custody.property'),
+                ('res_id', '=', self.id),
+                '|',
+                ('body', 'ilike', 'maintenance'),
+                ('subject', 'ilike', 'maintenance')
+            ],
+            'context': {
+                'default_res_model': 'custody.property',
+                'default_res_id': self.id,
+            }
+        }
         
     @api.model
     def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):
