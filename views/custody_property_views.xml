@@ -482,6 +482,8 @@
                     <field name="maintenance_due_soon" invisible="1"/>
                     <field name="days_to_maintenance" invisible="1"/>
                     <field name="is_available" invisible="1"/>
+                    <field name="current_borrower_id" invisible="1"/>
+                    <field name="current_custody_id" invisible="1"/>
                     
                     <div class="oe_button_box" name="button_box">
                         <button class="oe_stat_button" type="object"
