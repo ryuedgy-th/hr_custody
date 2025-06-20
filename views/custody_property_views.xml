@@ -472,7 +472,7 @@
         <field name="model">custody.property</field>
         <field name="priority">20</field>
         <field name="arch" type="xml">
-            <form string="Add Property" class="o_model_custody_property o_hr_custody_container">
+            <form string="Add Property">
                 <sheet>
                     <field name="image" widget='image' class="oe_avatar"/>
                     <div class="oe_title">
