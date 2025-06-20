@@ -45,8 +45,8 @@
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
             <field name="active" eval="True"/>
-            <!-- Using Python expression for nextcall -->
-            <field name="nextcall" eval="datetime.datetime.now() + datetime.timedelta(days=1)"/>
+            <!-- Using correct format for nextcall in Odoo 18 -->
+            <field name="nextcall" eval="(datetime.now() + timedelta(days=1)).replace(hour=6, minute=0, second=0)"/>
         </record>
         
         <!-- System parameter for maintenance reminder days -->
