@@ -349,7 +349,7 @@
     <!-- Menu Items -->
     <menuitem id="menu_custody_property"
               name="Properties"
-              parent="hr_custody_menu"
+              parent="hr_custody_menu_management"
               action="action_custody_property"
               sequence="10"/>
 </odoo>
