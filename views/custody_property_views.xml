@@ -335,12 +335,6 @@
         <field name="name">Properties</field>
         <field name="res_model">custody.property</field>
         <field name="view_mode">kanban,list,form</field>
-        <field name="view_id" ref="custody_property_view_kanban"/>
-        <field name="views">
-            [(False, 'kanban'),
-             (False, 'list'),
-             (ref('custody_property_view_form'), 'form')]
-        </field>
         <field name="context">{'search_default_available': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
