@@ -437,6 +437,15 @@
         <field name="arch" type="xml">
             <form string="Add Property" class="o_model_custody_property o_hr_custody_container">
                 <sheet>
+                    <!-- Required invisible fields for computed fields -->
+                    <field name="custody_count" invisible="1"/>
+                    <field name="active_custody_count" invisible="1"/>
+                    <field name="maintenance_history_count" invisible="1"/>
+                    <field name="maintenance_overdue" invisible="1"/>
+                    <field name="maintenance_due_soon" invisible="1"/>
+                    <field name="days_to_maintenance" invisible="1"/>
+                    <field name="is_available" invisible="1"/>
+                    
                     <div class="oe_button_box" name="button_box">
                         <button class="oe_stat_button" type="object"
                                 name="action_view_custodies" icon="fa-list">
