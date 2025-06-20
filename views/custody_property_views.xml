@@ -439,6 +439,32 @@
         <field name="target">current</field>
         <field name="context">{'default_property_status': 'available'}</field>
     </record>
+    
+    <!-- Force Simple Form for all Property views -->
+    <record id="action_custody_property_force_simple" model="ir.actions.act_window">
+        <field name="name">Properties</field>
+        <field name="res_model">custody.property</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="view_id" ref="custody_property_view_tree"/>
+        <field name="target">current</field>
+        <field name="context">{'search_default_available': 1, 'default_property_status': 'available'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first property!
+            </p>
+            <p>
+                Properties are items that can be assigned to employees.
+            </p>
+        </field>
+    </record>
+    
+    <!-- Define view reference for Simple Form -->
+    <record id="action_custody_property_force_simple_view_form" model="ir.actions.act_window.view">
+        <field name="sequence" eval="2"/>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="custody_property_view_form_simple"/>
+        <field name="act_window_id" ref="action_custody_property_force_simple"/>
+    </record>
 
     <!-- NEW: Simple Property Form for Adding New Records -->
     <record id="custody_property_view_form_simple" model="ir.ui.view">
