@@ -592,14 +592,14 @@ class CustodyProperty(models.Model):
             'res_model': 'mail.message',
             'view_mode': 'list,form',
             'domain': [
-                ('res_model', '=', 'custody.property'),
+                ('model', '=', 'custody.property'),
                 ('res_id', '=', self.id),
                 '|',
                 ('body', 'ilike', 'maintenance'),
                 ('subject', 'ilike', 'maintenance')
             ],
             'context': {
-                'default_res_model': 'custody.property',
+                'default_model': 'custody.property',
                 'default_res_id': self.id,
             }
         }
