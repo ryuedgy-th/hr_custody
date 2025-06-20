@@ -11,5 +11,38 @@
             <field name="state">code</field>
             <field name="code">model.mail_reminder()</field>
         </record>
+        
+        <!-- Scheduled action for custody return reminders -->
+        <record id="ir_cron_custody_return_reminder" model="ir.cron">
+            <field name="name">Custody: Return Reminder</field>
+            <field name="model_id" ref="model_hr_custody"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_custody_return_reminder()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+            <field name="active" eval="True"/>
+        </record>
+        
+        <!-- NEW: Scheduled action for maintenance reminders -->
+        <record id="ir_cron_maintenance_reminder" model="ir.cron">
+            <field name="name">Property: Maintenance Reminder</field>
+            <field name="model_id" ref="model_custody_property"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_maintenance_reminder()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+            <field name="active" eval="True"/>
+            <field name="nextcall" eval="(DateTime.now() + timedelta(days=1)).replace(hour=6, minute=0, second=0)"/>
+        </record>
+        
+        <!-- System parameter for maintenance reminder days -->
+        <record id="param_maintenance_reminder_days" model="ir.config_parameter">
+            <field name="key">hr_custody.maintenance_reminder_days</field>
+            <field name="value">7</field>
+        </record>
     </data>
 </odoo>

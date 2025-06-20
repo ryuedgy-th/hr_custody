@@ -1,5 +1,6 @@
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
+from datetime import timedelta
 
 
 class CustodyProperty(models.Model):
@@ -10,6 +11,7 @@ class CustodyProperty(models.Model):
     _description = 'Custody Property'
     _order = 'name'
     _rec_name = 'name'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
 
     name = fields.Char(
         string='Property Name',
@@ -110,7 +112,7 @@ class CustodyProperty(models.Model):
         ('maintenance', 'Under Maintenance'),
         ('damaged', 'Damaged'),
         ('retired', 'Retired')
-    ], string='Property Status', default='available', help='Current status of the property')
+    ], string='Property Status', default='available', help='Current status of the property', tracking=True)
 
     # Computed fields for better tracking
     custody_count = fields.Integer(
@@ -153,12 +155,63 @@ class CustodyProperty(models.Model):
     # History fields
     last_maintenance_date = fields.Date(
         string='Last Maintenance Date',
-        help='Date of last maintenance or inspection'
+        help='Date of last maintenance or inspection',
+        tracking=True
     )
 
     next_maintenance_date = fields.Date(
         string='Next Maintenance Date',
-        help='Scheduled date for next maintenance'
+        help='Scheduled date for next maintenance',
+        tracking=True
+    )
+
+    # NEW: Maintenance fields
+    maintenance_frequency = fields.Selection([
+        ('none', 'No Regular Maintenance'),
+        ('monthly', 'Monthly'),
+        ('quarterly', 'Quarterly'),
+        ('biannual', 'Bi-annual'),
+        ('annual', 'Annual'),
+        ('custom', 'Custom')
+    ], 
+        string='Maintenance Frequency', 
+        default='none',
+        help='Frequency of regular maintenance for this property',
+        tracking=True
+    )
+    
+    maintenance_interval = fields.Integer(
+        string='Custom Interval (Days)',
+        default=30,
+        help='Custom maintenance interval in days',
+        tracking=True
+    )
+    
+    maintenance_notes = fields.Text(
+        string='Maintenance Notes',
+        help='Special instructions or notes for maintenance',
+        tracking=True
+    )
+    
+    maintenance_overdue = fields.Boolean(
+        string='Maintenance Overdue',
+        compute='_compute_maintenance_status',
+        store=True,
+        help='Indicates if maintenance is overdue'
+    )
+    
+    maintenance_due_soon = fields.Boolean(
+        string='Maintenance Due Soon',
+        compute='_compute_maintenance_status',
+        store=True,
+        help='Indicates if maintenance is due within the reminder period'
+    )
+    
+    days_to_maintenance = fields.Integer(
+        string='Days to Next Maintenance',
+        compute='_compute_maintenance_status',
+        store=True,
+        help='Number of days until next scheduled maintenance'
     )
 
     purchase_date = fields.Date(
@@ -250,64 +303,86 @@ class CustodyProperty(models.Model):
             if current_custody:
                 record.current_borrower_id = current_custody.employee_id
                 record.current_custody_id = current_custody
-                # Auto update status to 'in_use' when someone borrows
-                if record.property_status == 'available':
-                    record.property_status = 'in_use'
             else:
                 record.current_borrower_id = False
                 record.current_custody_id = False
-                # Auto update status to 'available' when returned (only if it was in_use)
-                if record.property_status == 'in_use':
-                    record.property_status = 'available'
 
     @api.depends('property_status', 'active_custody_count')
     def _compute_is_available(self):
-        """Compute if the property is available for custody"""
+        """Compute whether the property is available for custody"""
         for record in self:
             record.is_available = (
-                record.property_status == 'available' and
+                record.property_status == 'available' and 
                 record.active_custody_count == 0
             )
+    
+    # NEW: Compute maintenance status
+    @api.depends('next_maintenance_date')
+    def _compute_maintenance_status(self):
+        """Compute maintenance status indicators"""
+        today = fields.Date.today()
+        reminder_days = int(self.env['ir.config_parameter'].sudo().get_param(
+            'hr_custody.maintenance_reminder_days', '7'))
+        
+        for record in self:
+            if record.next_maintenance_date:
+                # Calculate days to maintenance
+                delta = (record.next_maintenance_date - today).days
+                record.days_to_maintenance = delta
+                
+                # Check if maintenance is overdue
+                record.maintenance_overdue = delta < 0
+                
+                # Check if maintenance is due soon
+                record.maintenance_due_soon = 0 <= delta <= reminder_days
+            else:
+                record.days_to_maintenance = 0
+                record.maintenance_overdue = False
+                record.maintenance_due_soon = False
+    
+    # NEW: Update next maintenance date based on frequency
+    @api.onchange('maintenance_frequency', 'maintenance_interval', 'last_maintenance_date')
+    def _onchange_maintenance_settings(self):
+        """Update next maintenance date when frequency or last date changes"""
+        if self.last_maintenance_date and self.maintenance_frequency != 'none':
+            base_date = self.last_maintenance_date
+            
+            if self.maintenance_frequency == 'monthly':
+                self.next_maintenance_date = base_date + timedelta(days=30)
+            elif self.maintenance_frequency == 'quarterly':
+                self.next_maintenance_date = base_date + timedelta(days=90)
+            elif self.maintenance_frequency == 'biannual':
+                self.next_maintenance_date = base_date + timedelta(days=182)
+            elif self.maintenance_frequency == 'annual':
+                self.next_maintenance_date = base_date + timedelta(days=365)
+            elif self.maintenance_frequency == 'custom' and self.maintenance_interval > 0:
+                self.next_maintenance_date = base_date + timedelta(days=self.maintenance_interval)
 
     @api.model
     def name_search(self, name='', args=None, operator='ilike', limit=100):
-        """Override name_search to search in multiple fields"""
-        if args is None:
-            args = []
-
+        """Improved name search to include property code"""
+        args = args or []
+        domain = []
+        
         if name:
-            domain = [
-                '|', '|', '|', '|', '|',
-                ('name', operator, name),  # Property name
-                ('property_code', operator, name),  # Property code
-                ('desc', operator, name),  # Description
-                ('storage_location', operator, name),  # Storage location
-                ('current_borrower_id.name', operator, name),  # Current borrower name
-                ('department_id.name', operator, name)  # Department name
-            ]
-            records = self.search(domain + args, limit=limit)
-            return records.name_get()
-
-        return super(CustodyProperty, self).name_search(name, args, operator, limit)
-
+            domain = ['|', ('name', operator, name), ('property_code', operator, name)]
+            
+        pos = self.search(domain + args, limit=limit)
+        return pos.name_get()
+        
     def name_get(self):
-        """Override name_get to show availability status and current borrower"""
+        """Override name_get to include property code"""
         result = []
         for record in self:
-            name = record.name
             if record.property_code:
-                name = f"[{record.property_code}] {name}"
-
-            if record.current_borrower_id:
-                name += _(f' (Used by {record.current_borrower_id.name})')
-            elif not record.is_available:
-                name += _(f' ({dict(record._fields["property_status"].selection)[record.property_status]})')
-
+                name = f"[{record.property_code}] {record.name}"
+            else:
+                name = record.name
             result.append((record.id, name))
         return result
-
+        
     def action_view_custodies(self):
-        """Action to view all custodies related to this property"""
+        """Action to view all custodies for this property"""
         self.ensure_one()
         return {
             'name': _('Custodies for %s') % self.name,
@@ -317,9 +392,9 @@ class CustodyProperty(models.Model):
             'domain': [('custody_property_id', '=', self.id)],
             'context': {'default_custody_property_id': self.id}
         }
-
+        
     def action_view_current_custody(self):
-        """Action to view current active custody"""
+        """Action to view current custody for this property"""
         self.ensure_one()
         if self.current_custody_id:
             return {
@@ -328,123 +403,166 @@ class CustodyProperty(models.Model):
                 'res_model': 'hr.custody',
                 'view_mode': 'form',
                 'res_id': self.current_custody_id.id,
+                'target': 'current',
             }
         else:
             return {
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
                 'params': {
-                    'title': _('Information'),
-                    'message': _('This property is not currently in use.'),
-                    'type': 'info'
+                    'title': _('No Active Custody'),
+                    'message': _('This property is not currently in custody.'),
+                    'sticky': False,
+                    'type': 'warning',
                 }
             }
-
+    
     def action_set_maintenance(self):
-        """Set property status to under maintenance"""
-        for record in self:
-            if record.active_custody_count > 0:
-                raise UserError(_('Cannot set to maintenance while property is in use'))
-            record.property_status = 'maintenance'
-
+        """Set property status to Under Maintenance"""
+        self.write({'property_status': 'maintenance'})
+        return True
+        
     def action_set_available(self):
-        """Set property status to available"""
-        for record in self:
-            record.property_status = 'available'
+        """Set property status to Available"""
+        self.write({'property_status': 'available'})
+        return True
+        
+    # NEW: Record maintenance
+    def action_record_maintenance(self):
+        """Record maintenance for this property"""
+        self.ensure_one()
+        return {
+            'name': _('Record Maintenance'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'custody.record.maintenance.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_property_id': self.id,
+                'default_maintenance_date': fields.Date.today(),
+            }
+        }
+    
+    # NEW: Send maintenance reminder
+    def _send_maintenance_reminder(self):
+        """Send maintenance reminder email"""
+        self.ensure_one()
+        if not self.responsible_person or not self.responsible_person.work_email:
+            return False
+            
+        template = self.env.ref('hr_custody.email_template_maintenance_reminder')
+        if template:
+            template.send_mail(self.id, force_send=True)
+            
+            # Add note in chatter
+            days_left = (self.next_maintenance_date - fields.Date.today()).days
+            self.message_post(
+                body=_("Maintenance reminder sent to %s. Maintenance due in %s days.") % 
+                     (self.responsible_person.name, days_left),
+                subtype_id=self.env.ref('mail.mt_note').id
+            )
+            return True
+        return False
+    
+    # NEW: Send overdue maintenance reminder
+    def _send_overdue_maintenance_reminder(self):
+        """Send overdue maintenance reminder email"""
+        self.ensure_one()
+        if not self.responsible_person or not self.responsible_person.work_email:
+            return False
+            
+        template = self.env.ref('hr_custody.email_template_maintenance_overdue')
+        if template:
+            template.send_mail(self.id, force_send=True)
+            
+            # Add note in chatter
+            days_overdue = abs((self.next_maintenance_date - fields.Date.today()).days)
+            self.message_post(
+                body=_("Overdue maintenance reminder sent to %s. Maintenance is %s days overdue.") % 
+                     (self.responsible_person.name, days_overdue),
+                subtype_id=self.env.ref('mail.mt_note').id
+            )
+            return True
+        return False
+    
+    # NEW: Cron job for maintenance reminders
+    @api.model
+    def _cron_maintenance_reminder(self):
+        """Send reminders for upcoming maintenance"""
+        today = fields.Date.today()
+        reminder_days = int(self.env['ir.config_parameter'].sudo().get_param(
+            'hr_custody.maintenance_reminder_days', '7'))
+        
+        # Calculate the date range for sending reminders
+        reminder_date = today + timedelta(days=reminder_days)
+        
+        # Find properties that need maintenance soon
+        properties = self.search([
+            ('next_maintenance_date', '>=', today),
+            ('next_maintenance_date', '<=', reminder_date),
+            ('property_status', '!=', 'maintenance'),  # Not already under maintenance
+        ])
+        
+        # Send reminders for each property
+        for prop in properties:
+            if prop.responsible_person and prop.responsible_person.work_email:
+                prop._send_maintenance_reminder()
+                
+        # Also send reminders for overdue maintenance
+        overdue = self.search([
+            ('next_maintenance_date', '<', today),
+            ('property_status', '!=', 'maintenance'),
+        ])
+        
+        for prop in overdue:
+            if prop.responsible_person and prop.responsible_person.work_email:
+                prop._send_overdue_maintenance_reminder()
+        
+        return True
 
-    # Method for auto categorize button
     def action_auto_categorize(self):
-        """Auto-categorize this property based on name and description"""
+        """Auto-categorize property based on name and description"""
         for record in self:
-            if not record.category_id and record.name:
+            if not record.category_id:
                 category_id = self.env['custody.category'].predict_category_for_property(
                     record.name, record.desc)
                 if category_id:
                     record.category_id = category_id
-                    # Also set approvers if needed
-                    category = self.env['custody.category'].browse(category_id)
-                    approvers = category.get_effective_approvers()
-                    if approvers:
-                        record.approver_ids = [(6, 0, approvers.ids)]
-                    
-                    # Show success message
-                    return {
-                        'type': 'ir.actions.client',
-                        'tag': 'display_notification',
-                        'params': {
-                            'title': _('Auto-Categorization'),
-                            'message': _('Property categorized as: %s') % category.name,
-                            'type': 'success',
-                            'sticky': False,
-                        }
-                    }
-                else:
-                    # Show warning if no category found
-                    return {
-                        'type': 'ir.actions.client',
-                        'tag': 'display_notification',
-                        'params': {
-                            'title': _('Auto-Categorization'),
-                            'message': _('Could not find an appropriate category.'),
-                            'type': 'warning',
-                            'sticky': False,
-                        }
-                    }
-            elif record.category_id:
-                # Show info message if already categorized
-                return {
-                    'type': 'ir.actions.client',
-                    'tag': 'display_notification',
-                    'params': {
-                        'title': _('Auto-Categorization'),
-                        'message': _('Property is already categorized as: %s') % record.category_id.name,
-                        'type': 'info',
-                        'sticky': False,
-                    }
-                }
-        
         return True
-
-    # Inherit fields_view_get to customize form based on category
+        
     @api.model
     def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):
-        """Customize form view based on selected category"""
+        """Override to customize views based on category"""
         res = super(CustodyProperty, self).fields_view_get(
-            view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu
-        )
-        
-        # If we're on a form view and there's a category_id in context
-        if view_type == 'form' and self._context.get('default_category_id'):
-            category_id = self._context.get('default_category_id')
-            category = self.env['custody.category'].browse(category_id)
+            view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
             
-            if category.exists():
-                # Use the category's customization method
-                res = category.get_property_fields_view(
-                    view_id=view_id, view_type=view_type, 
-                    toolbar=toolbar, submenu=submenu,
-                    default_category_id=category_id
-                )
-        
+        # If category_id is in context, try to get custom view
+        category_id = self.env.context.get('default_category_id')
+        if category_id and view_type == 'form':
+            category = self.env['custody.category'].browse(category_id)
+            custom_view = category.get_property_fields_view(view_id, view_type)
+            if custom_view:
+                res = custom_view
+                
         return res
-
+        
     @api.model_create_multi
     def create(self, vals_list):
-        """Override create to handle auto-categorization"""
+        """Override create to handle additional logic"""
         for vals in vals_list:
-            # Try to predict category if not provided
-            if 'category_id' not in vals and 'name' in vals:
-                description = vals.get('desc', '')
-                category_id = self.env['custody.category'].predict_category_for_property(
-                    vals['name'], description)
-                if category_id:
-                    vals['category_id'] = category_id
+            # Auto-set next maintenance date if frequency is set
+            if vals.get('last_maintenance_date') and vals.get('maintenance_frequency', 'none') != 'none':
+                base_date = fields.Date.from_string(vals['last_maintenance_date'])
+                
+                if vals['maintenance_frequency'] == 'monthly':
+                    vals['next_maintenance_date'] = base_date + timedelta(days=30)
+                elif vals['maintenance_frequency'] == 'quarterly':
+                    vals['next_maintenance_date'] = base_date + timedelta(days=90)
+                elif vals['maintenance_frequency'] == 'biannual':
+                    vals['next_maintenance_date'] = base_date + timedelta(days=182)
+                elif vals['maintenance_frequency'] == 'annual':
+                    vals['next_maintenance_date'] = base_date + timedelta(days=365)
+                elif vals['maintenance_frequency'] == 'custom' and vals.get('maintenance_interval', 0) > 0:
+                    vals['next_maintenance_date'] = base_date + timedelta(days=vals['maintenance_interval'])
                     
-                    # If we have a category, also set default approvers
-                    if category_id and 'approver_ids' not in vals:
-                        category = self.env['custody.category'].browse(category_id)
-                        approvers = category.get_effective_approvers()
-                        if approvers:
-                            vals['approver_ids'] = [(6, 0, approvers.ids)]
-        
         return super(CustodyProperty, self).create(vals_list)

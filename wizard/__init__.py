@@ -23,3 +23,4 @@
 from . import property_return_reason
 from . import property_return_date
 from . import multi_images_upload
+from . import record_maintenance

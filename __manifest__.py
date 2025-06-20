@@ -22,6 +22,7 @@
         'wizard/property_return_reason_views.xml',
         'wizard/property_return_date_views.xml',
         'wizard/multi_images_upload_views.xml',
+        'wizard/record_maintenance_views.xml',
         # Main views with menu structure - must come before dependent views
         'views/custody_property_views.xml',
         'views/custody_image_views.xml',

@@ -23,5 +23,268 @@
               <p><t t-out="object.company_id.name or ''"/></p>
           </field>
       </record>
+
+      <!-- Email template for custody request notification -->
+      <record id="email_template_custody_request" model="mail.template">
+          <field name="name">Custody Request: Notification</field>
+          <field name="model_id" ref="model_hr_custody"/>
+          <field name="subject">Custody Request for ${object.custody_property_id.name}</field>
+          <field name="email_from">${object.company_id.email or ''}</field>
+          <field name="email_to">${','.join(['%s' % email for email in object.custody_property_id.approver_ids.mapped('email')])}</field>
+          <field name="body_html" type="html">
+              <div style="margin: 0px; padding: 0px;">
+                  <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                      Dear ${object.custody_property_id.approver_ids[0].name if object.custody_property_id.approver_ids else ''},
+                      <br/><br/>
+                      A custody request has been made for the following property:
+                      <br/><br/>
+                      <strong>Property:</strong> ${object.custody_property_id.name}<br/>
+                      <strong>Requested by:</strong> ${object.employee_id.name}<br/>
+                      <strong>Request Date:</strong> ${format_date(object.date_request)}<br/>
+                      <strong>Purpose:</strong> ${object.purpose or 'N/A'}<br/>
+                      <br/>
+                      Please review and approve or reject this request.
+                      <br/><br/>
+                      Thank you,<br/>
+                      ${object.company_id.name}
+                  </p>
+              </div>
+          </field>
+          <field name="lang">${object.employee_id.user_id.lang}</field>
+          <field name="auto_delete" eval="True"/>
+      </record>
+
+      <!-- Email template for custody approval notification -->
+      <record id="email_template_custody_approval" model="mail.template">
+          <field name="name">Custody Request: Approved</field>
+          <field name="model_id" ref="model_hr_custody"/>
+          <field name="subject">Custody Request Approved for ${object.custody_property_id.name}</field>
+          <field name="email_from">${object.company_id.email or ''}</field>
+          <field name="email_to">${object.employee_id.work_email or ''}</field>
+          <field name="body_html" type="html">
+              <div style="margin: 0px; padding: 0px;">
+                  <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                      Dear ${object.employee_id.name},
+                      <br/><br/>
+                      Your custody request for <strong>${object.custody_property_id.name}</strong> has been approved.
+                      <br/><br/>
+                      <strong>Property:</strong> ${object.custody_property_id.name}<br/>
+                      <strong>Approved by:</strong> ${object.approved_by_id.name}<br/>
+                      <strong>Approval Date:</strong> ${format_date(object.approved_date)}<br/>
+                      <br/>
+                      Please collect the property as per company policy.
+                      <br/><br/>
+                      Thank you,<br/>
+                      ${object.company_id.name}
+                  </p>
+              </div>
+          </field>
+          <field name="lang">${object.employee_id.user_id.lang}</field>
+          <field name="auto_delete" eval="True"/>
+      </record>
+
+      <!-- Email template for custody rejection notification -->
+      <record id="email_template_custody_rejection" model="mail.template">
+          <field name="name">Custody Request: Rejected</field>
+          <field name="model_id" ref="model_hr_custody"/>
+          <field name="subject">Custody Request Rejected for ${object.custody_property_id.name}</field>
+          <field name="email_from">${object.company_id.email or ''}</field>
+          <field name="email_to">${object.employee_id.work_email or ''}</field>
+          <field name="body_html" type="html">
+              <div style="margin: 0px; padding: 0px;">
+                  <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                      Dear ${object.employee_id.name},
+                      <br/><br/>
+                      Your custody request for <strong>${object.custody_property_id.name}</strong> has been rejected.
+                      <br/><br/>
+                      <strong>Property:</strong> ${object.custody_property_id.name}<br/>
+                      <strong>Rejected by:</strong> ${object.rejected_by_id.name}<br/>
+                      <strong>Rejection Date:</strong> ${format_date(object.rejected_date)}<br/>
+                      <strong>Reason:</strong> ${object.rejection_reason or 'No reason provided'}<br/>
+                      <br/>
+                      If you have any questions, please contact the property manager.
+                      <br/><br/>
+                      Thank you,<br/>
+                      ${object.company_id.name}
+                  </p>
+              </div>
+          </field>
+          <field name="lang">${object.employee_id.user_id.lang}</field>
+          <field name="auto_delete" eval="True"/>
+      </record>
+
+      <!-- Email template for custody return reminder -->
+      <record id="email_template_custody_return_reminder" model="mail.template">
+          <field name="name">Custody Return: Reminder</field>
+          <field name="model_id" ref="model_hr_custody"/>
+          <field name="subject">Reminder: Return of ${object.custody_property_id.name}</field>
+          <field name="email_from">${object.company_id.email or ''}</field>
+          <field name="email_to">${object.employee_id.work_email or ''}</field>
+          <field name="body_html" type="html">
+              <div style="margin: 0px; padding: 0px;">
+                  <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                      Dear ${object.employee_id.name},
+                      <br/><br/>
+                      This is a reminder that the following property is due for return:
+                      <br/><br/>
+                      <strong>Property:</strong> ${object.custody_property_id.name}<br/>
+                      <strong>Return Date:</strong> ${format_date(object.return_date)}<br/>
+                      <br/>
+                      Please return the property on or before the due date.
+                      <br/><br/>
+                      Thank you,<br/>
+                      ${object.company_id.name}
+                  </p>
+              </div>
+          </field>
+          <field name="lang">${object.employee_id.user_id.lang}</field>
+          <field name="auto_delete" eval="True"/>
+      </record>
+      
+      <!-- NEW: Email template for maintenance reminder -->
+      <record id="email_template_maintenance_reminder" model="mail.template">
+          <field name="name">Maintenance Reminder</field>
+          <field name="model_id" ref="model_custody_property"/>
+          <field name="subject">Maintenance Reminder: ${object.name}</field>
+          <field name="email_from">${object.company_id.email or ''}</field>
+          <field name="email_to">${object.responsible_person.work_email or ''}</field>
+          <field name="body_html" type="html">
+              <div style="margin: 0px; padding: 0px; background-color: #f2f2f2; font-family: Arial, Helvetica, sans-serif;">
+                  <table style="width: 600px; margin: 0 auto; background-color: white; border-collapse: collapse;">
+                      <tr>
+                          <td style="padding: 20px; border-bottom: 1px solid #e1e1e1;">
+                              <h2 style="color: #875A7B; margin: 0;">Maintenance Reminder</h2>
+                          </td>
+                      </tr>
+                      <tr>
+                          <td style="padding: 20px;">
+                              <p>Dear ${object.responsible_person.name},</p>
+                              <p>This is a reminder that the following property is due for maintenance:</p>
+                              <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                                  <tr>
+                                      <td style="padding: 10px; border: 1px solid #e1e1e1; width: 30%;"><strong>Property:</strong></td>
+                                      <td style="padding: 10px; border: 1px solid #e1e1e1;">${object.name}</td>
+                                  </tr>
+                                  <tr>
+                                      <td style="padding: 10px; border: 1px solid #e1e1e1;"><strong>Property Code:</strong></td>
+                                      <td style="padding: 10px; border: 1px solid #e1e1e1;">${object.property_code or 'N/A'}</td>
+                                  </tr>
+                                  <tr>
+                                      <td style="padding: 10px; border: 1px solid #e1e1e1;"><strong>Category:</strong></td>
+                                      <td style="padding: 10px; border: 1px solid #e1e1e1;">${object.category_id.name or 'N/A'}</td>
+                                  </tr>
+                                  <tr>
+                                      <td style="padding: 10px; border: 1px solid #e1e1e1;"><strong>Maintenance Due Date:</strong></td>
+                                      <td style="padding: 10px; border: 1px solid #e1e1e1;">${format_date(object.next_maintenance_date)}</td>
+                                  </tr>
+                                  <tr>
+                                      <td style="padding: 10px; border: 1px solid #e1e1e1;"><strong>Days Remaining:</strong></td>
+                                      <td style="padding: 10px; border: 1px solid #e1e1e1;">${object.days_to_maintenance}</td>
+                                  </tr>
+                                  <tr>
+                                      <td style="padding: 10px; border: 1px solid #e1e1e1;"><strong>Location:</strong></td>
+                                      <td style="padding: 10px; border: 1px solid #e1e1e1;">${object.storage_location or 'N/A'}</td>
+                                  </tr>
+                              </table>
+                              
+                              % if object.maintenance_notes:
+                              <p><strong>Maintenance Notes:</strong></p>
+                              <p style="padding: 10px; border: 1px solid #e1e1e1; background-color: #f9f9f9;">${object.maintenance_notes}</p>
+                              % endif
+                              
+                              <p>Please ensure maintenance is performed by the due date.</p>
+                              <p style="margin: 20px 0;">
+                                  <a href="/web#id=${object.id}&amp;model=custody.property&amp;view_type=form" 
+                                     style="background-color: #875A7B; padding: 10px 15px; color: #ffffff; text-decoration: none; border-radius: 5px;">
+                                     Record Maintenance
+                                  </a>
+                              </p>
+                              <p>Thank you,<br/>${object.company_id.name}</p>
+                          </td>
+                      </tr>
+                      <tr>
+                          <td style="padding: 20px; background-color: #f2f2f2; color: #888888; font-size: 12px; text-align: center;">
+                              <p>This is an automated message from your ERP system. Please do not reply directly to this email.</p>
+                          </td>
+                      </tr>
+                  </table>
+              </div>
+          </field>
+          <field name="lang">${object.responsible_person.user_id.lang}</field>
+          <field name="auto_delete" eval="True"/>
+      </record>
+      
+      <!-- NEW: Email template for overdue maintenance -->
+      <record id="email_template_maintenance_overdue" model="mail.template">
+          <field name="name">Maintenance Overdue Alert</field>
+          <field name="model_id" ref="model_custody_property"/>
+          <field name="subject">URGENT: Maintenance Overdue for ${object.name}</field>
+          <field name="email_from">${object.company_id.email or ''}</field>
+          <field name="email_to">${object.responsible_person.work_email or ''}</field>
+          <field name="body_html" type="html">
+              <div style="margin: 0px; padding: 0px; background-color: #f2f2f2; font-family: Arial, Helvetica, sans-serif;">
+                  <table style="width: 600px; margin: 0 auto; background-color: white; border-collapse: collapse;">
+                      <tr>
+                          <td style="padding: 20px; border-bottom: 1px solid #e1e1e1; background-color: #DC3545;">
+                              <h2 style="color: white; margin: 0;">URGENT: Maintenance Overdue</h2>
+                          </td>
+                      </tr>
+                      <tr>
+                          <td style="padding: 20px;">
+                              <p>Dear ${object.responsible_person.name},</p>
+                              <p><strong>This is an urgent notification that maintenance for the following property is overdue:</strong></p>
+                              <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                                  <tr>
+                                      <td style="padding: 10px; border: 1px solid #e1e1e1; width: 30%;"><strong>Property:</strong></td>
+                                      <td style="padding: 10px; border: 1px solid #e1e1e1;">${object.name}</td>
+                                  </tr>
+                                  <tr>
+                                      <td style="padding: 10px; border: 1px solid #e1e1e1;"><strong>Property Code:</strong></td>
+                                      <td style="padding: 10px; border: 1px solid #e1e1e1;">${object.property_code or 'N/A'}</td>
+                                  </tr>
+                                  <tr>
+                                      <td style="padding: 10px; border: 1px solid #e1e1e1;"><strong>Category:</strong></td>
+                                      <td style="padding: 10px; border: 1px solid #e1e1e1;">${object.category_id.name or 'N/A'}</td>
+                                  </tr>
+                                  <tr>
+                                      <td style="padding: 10px; border: 1px solid #e1e1e1;"><strong>Maintenance Due Date:</strong></td>
+                                      <td style="padding: 10px; border: 1px solid #e1e1e1; color: #DC3545;"><strong>${format_date(object.next_maintenance_date)}</strong></td>
+                                  </tr>
+                                  <tr>
+                                      <td style="padding: 10px; border: 1px solid #e1e1e1;"><strong>Days Overdue:</strong></td>
+                                      <td style="padding: 10px; border: 1px solid #e1e1e1; color: #DC3545;"><strong>${abs(object.days_to_maintenance)}</strong></td>
+                                  </tr>
+                                  <tr>
+                                      <td style="padding: 10px; border: 1px solid #e1e1e1;"><strong>Location:</strong></td>
+                                      <td style="padding: 10px; border: 1px solid #e1e1e1;">${object.storage_location or 'N/A'}</td>
+                                  </tr>
+                              </table>
+                              
+                              % if object.maintenance_notes:
+                              <p><strong>Maintenance Notes:</strong></p>
+                              <p style="padding: 10px; border: 1px solid #e1e1e1; background-color: #f9f9f9;">${object.maintenance_notes}</p>
+                              % endif
+                              
+                              <p><strong>Please schedule maintenance immediately to ensure proper functioning and safety of this property.</strong></p>
+                              <p style="margin: 20px 0;">
+                                  <a href="/web#id=${object.id}&amp;model=custody.property&amp;view_type=form" 
+                                     style="background-color: #DC3545; padding: 10px 15px; color: #ffffff; text-decoration: none; border-radius: 5px;">
+                                     Record Maintenance Urgently
+                                  </a>
+                              </p>
+                              <p>Thank you,<br/>${object.company_id.name}</p>
+                          </td>
+                      </tr>
+                      <tr>
+                          <td style="padding: 20px; background-color: #f2f2f2; color: #888888; font-size: 12px; text-align: center;">
+                              <p>This is an automated message from your ERP system. Please do not reply directly to this email.</p>
+                          </td>
+                      </tr>
+                  </table>
+              </div>
+          </field>
+          <field name="lang">${object.responsible_person.user_id.lang}</field>
+          <field name="auto_delete" eval="True"/>
+      </record>
     </data>
 </odoo>

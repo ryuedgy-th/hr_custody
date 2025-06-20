@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Record Maintenance Wizard Form View -->
+    <record id="view_custody_record_maintenance_wizard_form" model="ir.ui.view">
+        <field name="name">custody.record.maintenance.wizard.form</field>
+        <field name="model">custody.record.maintenance.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Record Maintenance">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="property_id" invisible="context.get('default_property_id')"/>
+                            <field name="maintenance_date"/>
+                            <field name="maintenance_type"/>
+                            <field name="performed_by"/>
+                            <field name="vendor_id"/>
+                        </group>
+                        <group>
+                            <field name="cost" widget="monetary"/>
+                            <field name="next_maintenance_date"/>
+                            <field name="update_status"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Notes" name="notes">
+                            <field name="notes" placeholder="Enter maintenance notes and details..."/>
+                        </page>
+                        <page string="Images" name="images">
+                            <field name="image_ids" widget="many2many_binary" string="Upload Maintenance Images"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <footer>
+                    <button name="action_record_maintenance" string="Record Maintenance" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Record Maintenance Action -->
+    <record id="action_custody_record_maintenance" model="ir.actions.act_window">
+        <field name="name">Record Maintenance</field>
+        <field name="res_model">custody.record.maintenance.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="model_custody_property"/>
+        <field name="binding_view_types">form</field>
+    </record>
+</odoo> 

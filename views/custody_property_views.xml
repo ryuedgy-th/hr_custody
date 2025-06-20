@@ -7,6 +7,10 @@
         <field name="arch" type="xml">
             <form string="Properties">
                 <header>
+                    <button string="Record Maintenance" type="object"
+                            name="action_record_maintenance"
+                            class="btn-primary"
+                            groups="hr.group_hr_user"/>
                     <button string="Set to Maintenance" type="object"
                             name="action_set_maintenance"
                             invisible="property_status == 'maintenance' or active_custody_count > 0"
@@ -56,6 +60,21 @@
                         <strong>Currently in use by:</strong>
                         <field name="current_borrower_id" readonly="1"/>
                     </div>
+                    
+                    <!-- Maintenance Alert -->
+                    <div class="alert alert-danger" attrs="{'invisible': [('maintenance_overdue', '=', False)]}">
+                        <strong>Maintenance Overdue!</strong> This property is overdue for maintenance.
+                        <div>
+                            <button name="action_record_maintenance" string="Record Maintenance" type="object" class="btn btn-sm btn-danger"/>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning" attrs="{'invisible': [('maintenance_due_soon', '=', False)]}">
+                        <strong>Maintenance Due Soon!</strong> This property is due for maintenance in <field name="days_to_maintenance"/> days.
+                        <div>
+                            <button name="action_record_maintenance" string="Record Maintenance" type="object" class="btn btn-sm btn-warning"/>
+                        </div>
+                    </div>
 
                     <group>
                         <group string="Basic Information">
@@ -70,6 +89,9 @@
                             <field name="company_id"
                                    options="{'no_create': True}"/>
                             <field name="is_available" readonly="1"/>
+                            <field name="maintenance_overdue" invisible="1"/>
+                            <field name="maintenance_due_soon" invisible="1"/>
+                            <field name="days_to_maintenance" invisible="1"/>
                         </group>
                         <group string="Location &amp; Responsibility">
                             <field name="storage_location" placeholder="e.g., IT Room Cabinet A1"/>
@@ -105,16 +127,31 @@
                             </group>
                         </page>
 
-                        <page name="storage_info" string="Storage &amp; Maintenance">
+                        <page name="maintenance" string="Maintenance">
+                            <group>
+                                <group string="Maintenance Schedule">
+                                    <field name="maintenance_frequency"/>
+                                    <field name="maintenance_interval" attrs="{'invisible': [('maintenance_frequency', '!=', 'custom')], 'required': [('maintenance_frequency', '=', 'custom')]}"/>
+                                    <field name="last_maintenance_date"/>
+                                    <field name="next_maintenance_date"/>
+                                </group>
+                                <group string="Maintenance Status">
+                                    <field name="days_to_maintenance"/>
+                                    <field name="maintenance_overdue" readonly="1"/>
+                                    <field name="maintenance_due_soon" readonly="1"/>
+                                </group>
+                            </group>
+                            <group string="Maintenance Notes">
+                                <field name="maintenance_notes" nolabel="1" placeholder="Enter special instructions or notes for maintenance..."/>
+                            </group>
+                        </page>
+
+                        <page name="storage_info" string="Storage Information">
                             <group>
                                 <group string="Storage Information">
                                     <field name="storage_location"/>
                                     <field name="department_id"/>
                                     <field name="responsible_person"/>
-                                </group>
-                                <group string="Maintenance">
-                                    <field name="last_maintenance_date"/>
-                                    <field name="next_maintenance_date"/>
                                 </group>
                             </group>
                         </page>
@@ -140,6 +177,11 @@
                         </page>
                     </notebook>
                 </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
             </form>
         </field>
     </record>
@@ -154,17 +196,18 @@
                 <field name="name"/>
                 <field name="category_id"/>
                 <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
-                <field name="property_selection"/>
-                <field name="storage_location"/>
-                <field name="current_borrower_id"/>
-                <!-- Approvers column -->
-                <field name="approver_ids" widget="many2many_tags"/>
                 <field name="property_status" widget="badge"
                        decoration-success="property_status == 'available'"
                        decoration-info="property_status == 'in_use'"
                        decoration-warning="property_status == 'maintenance'"
                        decoration-danger="property_status == 'damaged'"/>
-                <field name="company_id"/>
+                <field name="current_borrower_id"/>
+                <field name="next_maintenance_date"/>
+                <field name="maintenance_overdue" invisible="1"/>
+                <field name="maintenance_due_soon" invisible="1"/>
+                <field name="days_to_maintenance" invisible="1"/>
+                <button name="action_record_maintenance" string="Record" type="object" icon="fa-wrench" 
+                        attrs="{'invisible': [('next_maintenance_date', '=', False)]}"/>
             </list>
         </field>
     </record>
@@ -192,69 +235,91 @@
                         domain="[('property_status', '=', 'in_use')]"/>
                 <filter string="Under Maintenance" name="maintenance"
                         domain="[('property_status', '=', 'maintenance')]"/>
+                
+                <!-- Maintenance Filters -->
+                <separator/>
+                <filter string="Maintenance Overdue" name="maintenance_overdue"
+                        domain="[('maintenance_overdue', '=', True)]"/>
+                <filter string="Maintenance Due Soon" name="maintenance_due_soon"
+                        domain="[('maintenance_due_soon', '=', True)]"/>
+                <filter string="No Maintenance Schedule" name="no_maintenance"
+                        domain="[('maintenance_frequency', '=', 'none')]"/>
 
                 <separator/>
 
                 <!-- Group By -->
                 <group expand="0" string="Group By">
                     <filter string="Category" name="group_category"
-                            context="{'group_by':'category_id'}"/>
+                            domain="[]" context="{'group_by': 'category_id'}"/>
                     <filter string="Status" name="group_status"
-                            context="{'group_by':'property_status'}"/>
+                            domain="[]" context="{'group_by': 'property_status'}"/>
                     <filter string="Department" name="group_department"
-                            context="{'group_by':'department_id'}"/>
-                    <filter string="Storage Location" name="group_storage"
-                            context="{'group_by':'storage_location'}"/>
+                            domain="[]" context="{'group_by': 'department_id'}"/>
+                    <filter string="Current Borrower" name="group_borrower"
+                            domain="[]" context="{'group_by': 'current_borrower_id'}"/>
+                    <filter string="Maintenance Frequency" name="group_maintenance_frequency"
+                            domain="[]" context="{'group_by': 'maintenance_frequency'}"/>
                 </group>
             </search>
         </field>
     </record>
-
-    <!-- Custody Property kanban view -->
+    
+    <!-- Custody Property Kanban View -->
     <record id="custody_property_view_kanban" model="ir.ui.view">
         <field name="name">custody.property.view.kanban</field>
         <field name="model">custody.property</field>
         <field name="arch" type="xml">
-            <kanban class="o_kanban_mobile" sample="1">
+            <kanban default_group_by="property_status" class="o_kanban_small_column" sample="1">
                 <field name="id"/>
                 <field name="name"/>
                 <field name="property_code"/>
+                <field name="image"/>
                 <field name="category_id"/>
-                <field name="tag_ids"/>
                 <field name="property_status"/>
                 <field name="current_borrower_id"/>
-                <field name="image"/>
+                <field name="next_maintenance_date"/>
+                <field name="maintenance_overdue"/>
+                <field name="maintenance_due_soon"/>
                 <templates>
                     <t t-name="kanban-box">
                         <div t-attf-class="oe_kanban_global_click o_kanban_record_has_image_fill">
                             <div class="o_kanban_image_fill_left d-none d-md-block" t-attf-style="background-image: url({{kanban_image('custody.property', 'image', record.id.raw_value)}})"/>
-                            <div class="oe_kanban_details d-flex flex-column">
-                                <div>
-                                    <strong class="o_kanban_record_title">
-                                        <field name="name"/>
-                                        <small t-if="record.property_code.raw_value"> (<field name="property_code"/>)</small>
-                                    </strong>
-                                </div>
-                                <div t-if="record.category_id.raw_value">
-                                    <field name="category_id"/>
-                                </div>
-                                <div t-if="record.tag_ids.raw_value.length > 0">
-                                    <field name="tag_ids" widget="many2many_tags"/>
-                                </div>
-                                <div class="o_kanban_record_bottom mt-auto">
-                                    <div class="oe_kanban_bottom_left">
-                                        <field name="property_status" widget="label_selection" 
-                                               options="{'classes': {
-                                                   'available': 'success', 
-                                                   'in_use': 'info',
-                                                   'maintenance': 'warning',
-                                                   'damaged': 'danger',
-                                                   'retired': 'secondary'}}"/>
+                            <div class="oe_kanban_details">
+                                <div class="o_kanban_record_top">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title">
+                                            <t t-if="record.property_code.value">
+                                                [<field name="property_code"/>]
+                                            </t>
+                                            <field name="name"/>
+                                        </strong>
                                     </div>
-                                    <div class="oe_kanban_bottom_right" t-if="record.current_borrower_id.raw_value">
-                                        <small>
-                                            <i class="fa fa-user"/> <field name="current_borrower_id"/>
-                                        </small>
+                                </div>
+                                <div class="o_kanban_record_body">
+                                    <field name="category_id"/>
+                                    <t t-if="record.current_borrower_id.value">
+                                        <div>
+                                            <span class="text-muted">Used by: </span>
+                                            <field name="current_borrower_id"/>
+                                        </div>
+                                    </t>
+                                    <t t-if="record.next_maintenance_date.value">
+                                        <div>
+                                            <span class="text-muted">Next maintenance: </span>
+                                            <field name="next_maintenance_date"/>
+                                        </div>
+                                        <div t-if="record.maintenance_overdue.raw_value" class="text-danger">
+                                            <i class="fa fa-exclamation-triangle"/> Maintenance Overdue
+                                        </div>
+                                        <div t-elif="record.maintenance_due_soon.raw_value" class="text-warning">
+                                            <i class="fa fa-clock-o"/> Maintenance Due Soon
+                                        </div>
+                                    </t>
+                                </div>
+                                <div class="o_kanban_record_bottom">
+                                    <div class="oe_kanban_bottom_left">
+                                        <button name="action_record_maintenance" string="Record Maintenance" type="object" class="btn btn-sm btn-primary"
+                                                t-if="record.next_maintenance_date.value"/>
                                     </div>
                                 </div>
                             </div>
@@ -265,26 +330,26 @@
         </field>
     </record>
 
-    <!-- Custody Property Action-->
-    <record id='custody_property_action' model='ir.actions.act_window'>
-        <field name="name">Property</field>
+    <!-- Custody Property Action -->
+    <record id="action_custody_property" model="ir.actions.act_window">
+        <field name="name">Properties</field>
         <field name="res_model">custody.property</field>
         <field name="view_mode">kanban,list,form</field>
-    </record>
-
-    <!-- Add a wizard action for auto category -->
-    <record id="action_auto_categorize" model="ir.actions.server">
-        <field name="name">Auto Categorize</field>
-        <field name="model_id" ref="model_custody_property"/>
-        <field name="binding_model_id" ref="model_custody_property"/>
-        <field name="binding_view_types">list</field>
-        <field name="state">code</field>
-        <field name="code">
-            for record in records:
-                if not record.category_id and record.name:
-                    category_id = env['custody.category'].predict_category_for_property(record.name, record.desc)
-                    if category_id:
-                        record.write({'category_id': category_id})
+        <field name="context">{'search_default_available': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first property!
+            </p>
+            <p>
+                Properties are items that can be assigned to employees.
+            </p>
         </field>
     </record>
+
+    <!-- Menu Items -->
+    <menuitem id="menu_custody_property"
+              name="Properties"
+              parent="hr_custody_menu"
+              action="action_custody_property"
+              sequence="10"/>
 </odoo>
