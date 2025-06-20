@@ -526,6 +526,20 @@
         </field>
     </record>
     
+    <!-- Maintenance History List View - User Friendly -->
+    <record id="view_maintenance_history_tree" model="ir.ui.view">
+        <field name="name">maintenance.history.tree</field>
+        <field name="model">mail.message</field>
+        <field name="arch" type="xml">
+            <list string="🔧 Maintenance History" create="false" edit="false" delete="false">
+                <field name="date" string="📅 Date"/>
+                <field name="subject" string="🔧 Maintenance Type"/>
+                <field name="author_id" string="👤 Recorded By"/>
+                <field name="body" string="📝 Details" widget="html"/>
+            </list>
+        </field>
+    </record>
+
     <!-- Menu Items -->
     <!-- Note: This menu is now managed in hr_custody_views.xml -->
 </odoo>
