@@ -191,7 +191,7 @@
         <field name="name">custody.property.view.list</field>
         <field name="model">custody.property</field>
         <field name="arch" type="xml">
-            <tree>
+            <list>
                 <field name="property_code"/>
                 <field name="name"/>
                 <field name="category_id"/>
@@ -208,7 +208,7 @@
                 <field name="days_to_maintenance" invisible="1"/>
                 <button name="action_record_maintenance" string="Record" type="object" icon="fa-wrench" 
                         invisible="next_maintenance_date == False"/>
-            </tree>
+            </list>
         </field>
     </record>
 

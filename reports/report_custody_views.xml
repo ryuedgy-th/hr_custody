@@ -18,7 +18,7 @@
         <field name="name">report.custody.view.list</field>
         <field name="model">report.custody</field>
         <field name="arch" type="xml">
-            <tree string="Custody Analysis">
+            <list string="Custody Analysis">
                 <field name="name"/>
                 <field name="date_request"/>
                 <field name="employee_id"/>
@@ -29,7 +29,7 @@
                 <field name="approved_date"/>
                 <field name="return_date"/>
                 <field name="state"/>
-            </tree>
+            </list>
         </field>
     </record>
 
