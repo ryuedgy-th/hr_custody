@@ -5,35 +5,60 @@
         <field name="name">custody.record.maintenance.wizard.form</field>
         <field name="model">custody.record.maintenance.wizard</field>
         <field name="arch" type="xml">
-            <form string="Record Maintenance">
+            <form string="🔧 Record Maintenance">
                 <sheet>
+                    <div class="oe_title" invisible="context.get('default_property_id')">
+                        <h1>
+                            <field name="property_id" placeholder="Select Property"/>
+                        </h1>
+                    </div>
+                    
+                    <!-- Quick Info Card -->
+                    <div class="alert alert-info">
+                        <strong>📝 Recording maintenance for:</strong> 
+                        <span invisible="not context.get('default_property_id')">Selected Property</span>
+                        <field name="property_id" readonly="1" invisible="not context.get('default_property_id')" style="font-weight: bold;"/>
+                    </div>
+                    
                     <group>
-                        <group>
-                            <field name="property_id" invisible="context.get('default_property_id')"/>
-                            <field name="maintenance_date"/>
-                            <field name="maintenance_type"/>
-                            <field name="performed_by"/>
-                            <field name="vendor_id"/>
+                        <group string="🔧 Maintenance Details">
+                            <field name="maintenance_date" help="When was this maintenance performed?"/>
+                            <field name="maintenance_type" widget="radio" help="What type of maintenance was this?"/>
+                            <field name="cost" help="Total cost of maintenance (optional)"/>
                         </group>
-                        <group>
-                            <field name="cost"/>
-                            <field name="next_maintenance_date"/>
-                            <field name="update_status"/>
-                            <field name="preserve_in_use_status"/>
+                        <group string="👥 Who Did It?">
+                            <field name="performed_by" help="Internal employee who performed maintenance"/>
+                            <field name="vendor_id" help="External vendor/company (if outsourced)"/>
+                            <separator/>
+                            <field name="next_maintenance_date" help="When should the next maintenance be scheduled?"/>
                         </group>
                     </group>
+                    
+                    <!-- Status Settings -->
+                    <group string="⚙️ Property Status After Maintenance">
+                        <field name="update_status" help="Should we update the property status?"/>
+                        <field name="preserve_in_use_status" invisible="not update_status" 
+                               help="Keep 'In Use' status if property is currently being used"/>
+                    </group>
                     <notebook>
-                        <page string="Notes" name="notes">
-                            <field name="notes" placeholder="Enter maintenance notes and details..."/>
+                        <page string="📝 Notes" name="notes">
+                            <div class="alert alert-secondary">
+                                <strong>💡 Tip:</strong> Document what was done, parts replaced, issues found, etc.
+                            </div>
+                            <field name="notes" placeholder="Example: Replaced air filter, cleaned components, checked for wear and tear, all systems functioning normally..."/>
                         </page>
-                        <page string="Images" name="images">
-                            <field name="image_ids" context="{'default_name': 'Maintenance Image'}" string="Upload Maintenance Images"/>
+                        <page string="📷 Images" name="images">
+                            <div class="alert alert-secondary">
+                                <strong>📸 Upload photos:</strong> Before/after maintenance, replaced parts, any issues found
+                            </div>
+                            <field name="image_ids" context="{'default_name': 'Maintenance Image'}" 
+                                   string="Upload Maintenance Images"/>
                         </page>
                     </notebook>
                 </sheet>
                 <footer>
-                    <button name="action_record_maintenance" string="Record Maintenance" type="object" class="btn-primary"/>
-                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    <button name="action_record_maintenance" string="✅ Save Maintenance Record" type="object" class="btn-primary btn-lg"/>
+                    <button string="❌ Cancel" class="btn-secondary" special="cancel"/>
                 </footer>
             </form>
         </field>

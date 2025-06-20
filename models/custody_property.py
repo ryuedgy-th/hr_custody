@@ -213,6 +213,13 @@ class CustodyProperty(models.Model):
         store=True,
         help='Number of days until next scheduled maintenance'
     )
+    
+    maintenance_status_display = fields.Char(
+        string='Maintenance Status',
+        compute='_compute_maintenance_status_display',
+        store=True,
+        help='Human readable maintenance status'
+    )
 
     purchase_date = fields.Date(
         string='Purchase Date',
@@ -339,6 +346,24 @@ class CustodyProperty(models.Model):
                 record.days_to_maintenance = 0
                 record.maintenance_overdue = False
                 record.maintenance_due_soon = False
+    
+    @api.depends('maintenance_frequency', 'next_maintenance_date', 'maintenance_overdue', 'maintenance_due_soon', 'days_to_maintenance')
+    def _compute_maintenance_status_display(self):
+        """Compute human readable maintenance status"""
+        for record in self:
+            if record.maintenance_frequency == 'none':
+                record.maintenance_status_display = 'No Schedule'
+            elif not record.next_maintenance_date:
+                record.maintenance_status_display = 'Not Scheduled'
+            elif record.maintenance_overdue:
+                days_overdue = abs(record.days_to_maintenance)
+                record.maintenance_status_display = f'🔴 Overdue ({days_overdue} days)'
+            elif record.maintenance_due_soon:
+                record.maintenance_status_display = f'🟡 Due Soon ({record.days_to_maintenance} days)'
+            elif record.days_to_maintenance > 0:
+                record.maintenance_status_display = f'🟢 OK ({record.days_to_maintenance} days left)'
+            else:
+                record.maintenance_status_display = 'Due Today'
     
     # NEW: Update next maintenance date based on frequency
     @api.onchange('maintenance_frequency', 'maintenance_interval', 'last_maintenance_date')

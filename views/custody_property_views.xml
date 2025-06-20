@@ -61,18 +61,23 @@
                         <field name="current_borrower_id" readonly="1"/>
                     </div>
                     
-                    <!-- Maintenance Alert -->
-                    <div class="alert alert-danger" invisible="maintenance_overdue == False">
-                        <strong>Maintenance Overdue!</strong> This property is overdue for maintenance.
-                        <div>
-                            <button name="action_record_maintenance" string="Record Maintenance" type="object" class="btn btn-sm btn-danger"/>
-                        </div>
-                    </div>
-                    
-                    <div class="alert alert-warning" invisible="maintenance_due_soon == False">
-                        <strong>Maintenance Due Soon!</strong> This property is due for maintenance in <field name="days_to_maintenance"/> days.
-                        <div>
-                            <button name="action_record_maintenance" string="Record Maintenance" type="object" class="btn btn-sm btn-warning"/>
+                    <!-- Maintenance Status Alert -->
+                    <div class="alert alert-info" invisible="maintenance_frequency == 'none'">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <strong>🔧 Maintenance Status:</strong>
+                                <field name="maintenance_status_display" readonly="1" style="font-weight: bold; margin-left: 10px;"/>
+                                <div style="margin-top: 5px;">
+                                    <span class="text-muted">Next scheduled: </span>
+                                    <field name="next_maintenance_date" readonly="1"/>
+                                    <span class="text-muted" invisible="last_maintenance_date == False"> | Last done: </span>
+                                    <field name="last_maintenance_date" readonly="1" invisible="last_maintenance_date == False"/>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-right">
+                                <button name="action_record_maintenance" string="✅ Record Maintenance" type="object" 
+                                        class="btn btn-primary btn-sm"/>
+                            </div>
                         </div>
                     </div>
 
@@ -127,22 +132,45 @@
                             </group>
                         </page>
 
-                        <page name="maintenance" string="Maintenance">
+                        <page name="maintenance" string="🔧 Maintenance">
+                            <!-- Current Status Card -->
+                            <div class="o_form_sheet_bg">
+                                <div class="card mb-3" style="border-left: 4px solid #17a2b8;">
+                                    <div class="card-body">
+                                        <h5 class="card-title">📊 Current Status</h5>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <field name="maintenance_status_display" readonly="1" 
+                                                       style="font-size: 16px; font-weight: bold;"/>
+                                            </div>
+                                            <div class="col-md-6 text-right">
+                                                <button name="action_record_maintenance" string="✅ Record Maintenance" 
+                                                        type="object" class="btn btn-success btn-sm"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <group>
-                                <group string="Maintenance Schedule">
-                                    <field name="maintenance_frequency"/>
-                                    <field name="maintenance_interval" invisible="maintenance_frequency != 'custom'" required="maintenance_frequency == 'custom'"/>
-                                    <field name="last_maintenance_date"/>
-                                    <field name="next_maintenance_date"/>
+                                <group string="📅 Schedule Settings">
+                                    <field name="maintenance_frequency" widget="selection"/>
+                                    <field name="maintenance_interval" invisible="maintenance_frequency != 'custom'" 
+                                           required="maintenance_frequency == 'custom'" 
+                                           placeholder="Enter days (e.g., 30, 90, 180)"/>
                                 </group>
-                                <group string="Maintenance Status">
-                                    <field name="days_to_maintenance"/>
-                                    <field name="maintenance_overdue" readonly="1"/>
-                                    <field name="maintenance_due_soon" readonly="1"/>
+                                <group string="📊 Dates &amp; History">
+                                    <field name="last_maintenance_date" 
+                                           help="When was the last maintenance performed?"/>
+                                    <field name="next_maintenance_date" 
+                                           help="When is the next maintenance due?"/>
+                                    <field name="days_to_maintenance" readonly="1" 
+                                           help="Days remaining until next maintenance"/>
                                 </group>
                             </group>
-                            <group string="Maintenance Notes">
-                                <field name="maintenance_notes" nolabel="1" placeholder="Enter special instructions or notes for maintenance..."/>
+                            <group string="📝 Maintenance Notes &amp; Instructions">
+                                <field name="maintenance_notes" nolabel="1" 
+                                       placeholder="Enter special instructions, requirements, or notes for maintenance personnel..."/>
                             </group>
                         </page>
 
@@ -204,14 +232,16 @@
                 <field name="purchase_date"/>
                 <field name="purchase_value" widget="monetary"/>
                 <field name="current_borrower_id"/>
-                <field name="last_maintenance_date"/>
-                <field name="next_maintenance_date"/>
-                <field name="maintenance_frequency"/>
+                <field name="last_maintenance_date" string="Last Maintenance"/>
+                <field name="maintenance_status_display" string="Maintenance Status"/>
+                <field name="next_maintenance_date" string="Next Due" 
+                       decoration-danger="maintenance_overdue == True"
+                       decoration-warning="maintenance_due_soon == True"/>
                 <field name="maintenance_overdue" invisible="1"/>
                 <field name="maintenance_due_soon" invisible="1"/>
-                <field name="days_to_maintenance" invisible="1"/>
-                <button name="action_record_maintenance" string="Record" type="object" icon="fa-wrench" 
-                        invisible="next_maintenance_date == False"/>
+                <button name="action_record_maintenance" string="✓ Done" type="object" icon="fa-check" 
+                        class="btn-success"
+                        invisible="maintenance_frequency == 'none'"/>
             </list>
         </field>
     </record>
