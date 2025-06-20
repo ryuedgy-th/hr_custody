@@ -115,27 +115,34 @@ class RecordMaintenanceWizard(models.TransientModel):
         # Update the property
         self.property_id.write(vals)
         
-        # Create maintenance log message
-        message_body = _("""
-            <strong>Maintenance Recorded</strong><br/>
-            <ul>
-                <li><strong>Date:</strong> %s</li>
-                <li><strong>Type:</strong> %s</li>
-                <li><strong>Performed by:</strong> %s</li>
-                <li><strong>Next scheduled:</strong> %s</li>
-            </ul>
-            <p>%s</p>
-        """) % (
-            fields.Date.to_string(self.maintenance_date),
-            dict(self._fields['maintenance_type'].selection).get(self.maintenance_type),
-            self.performed_by.name if self.performed_by else _('N/A'),
-            fields.Date.to_string(self.next_maintenance_date) if self.next_maintenance_date else _('N/A'),
-            self.notes or ''
-        )
+        # Create enhanced maintenance log message
+        maintenance_details = []
+        maintenance_details.append(f"<strong>📅 Date:</strong> {fields.Date.to_string(self.maintenance_date)}")
+        maintenance_details.append(f"<strong>🔧 Type:</strong> {dict(self._fields['maintenance_type'].selection).get(self.maintenance_type)}")
         
-        # Post message with maintenance details
+        if self.performed_by:
+            maintenance_details.append(f"<strong>👤 Performed by:</strong> {self.performed_by.name}")
+        if self.vendor_id:
+            maintenance_details.append(f"<strong>🏢 Vendor:</strong> {self.vendor_id.name}")
+        if self.cost:
+            maintenance_details.append(f"<strong>💰 Cost:</strong> {self.cost:,.2f}")
+        if self.next_maintenance_date:
+            maintenance_details.append(f"<strong>📅 Next scheduled:</strong> {fields.Date.to_string(self.next_maintenance_date)}")
+        
+        message_body = f"""
+            <div style="border-left: 4px solid #17a2b8; padding-left: 15px; margin: 10px 0;">
+                <h4 style="color: #17a2b8; margin-bottom: 10px;">🔧 Maintenance Recorded</h4>
+                <ul style="list-style: none; padding-left: 0;">
+                    {''.join(f'<li style="margin: 5px 0;">{detail}</li>' for detail in maintenance_details)}
+                </ul>
+                {f'<div style="margin-top: 10px;"><strong>📝 Notes:</strong><br/>{self.notes}</div>' if self.notes else ''}
+            </div>
+        """
+        
+        # Post message with enhanced maintenance details
         self.property_id.message_post(
             body=message_body,
+            subject=f"Maintenance Recorded - {self.maintenance_type.replace('_', ' ').title()}",
             subtype_id=self.env.ref('mail.mt_note').id
         )
         

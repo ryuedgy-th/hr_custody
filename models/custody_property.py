@@ -230,6 +230,13 @@ class CustodyProperty(models.Model):
         string='Purchase Value',
         help='Original purchase value of this property'
     )
+    
+    # Maintenance History Tracking
+    maintenance_history_count = fields.Integer(
+        string='Maintenance Records',
+        compute='_compute_maintenance_history_count',
+        help='Number of maintenance records in history'
+    )
 
     # Auto-select default return period based on category
     @api.onchange('category_id')
@@ -372,6 +379,17 @@ class CustodyProperty(models.Model):
                     record.maintenance_status_display = f'🟢 OK ({delta} days left)'
                 else:
                     record.maintenance_status_display = 'Due Today'
+    
+    @api.depends('message_ids')
+    def _compute_maintenance_history_count(self):
+        """Compute number of maintenance records from messages"""
+        for record in self:
+            # Count messages that contain maintenance records
+            maintenance_messages = record.message_ids.filtered(
+                lambda m: 'Maintenance Recorded' in (m.body or '') or 
+                         'maintenance' in (m.subject or '').lower()
+            )
+            record.maintenance_history_count = len(maintenance_messages)
     
     # NEW: Update next maintenance date based on frequency
     @api.onchange('maintenance_frequency', 'maintenance_interval', 'last_maintenance_date')
@@ -562,6 +580,42 @@ class CustodyProperty(models.Model):
                 if category_id:
                     record.category_id = category_id
         return True
+    
+    def action_view_maintenance_history(self):
+        """Action to view maintenance history from chatter messages"""
+        self.ensure_one()
+        
+        # Filter messages related to maintenance
+        maintenance_messages = self.message_ids.filtered(
+            lambda m: 'Maintenance Recorded' in (m.body or '') or 
+                     'maintenance' in (m.subject or '').lower() or
+                     'Record Maintenance' in (m.body or '')
+        )
+        
+        if not maintenance_messages:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('No Maintenance History'),
+                    'message': _('No maintenance records found for this property.'),
+                    'sticky': False,
+                    'type': 'info',
+                }
+            }
+        
+        return {
+            'name': _('Maintenance History - %s') % self.name,
+            'type': 'ir.actions.act_window',
+            'res_model': 'mail.message',
+            'view_mode': 'list,form',
+            'domain': [('id', 'in', maintenance_messages.ids)],
+            'context': {
+                'default_res_model': 'custody.property',
+                'default_res_id': self.id,
+            },
+            'help': '<p class="o_view_nocontent_smiling_face">No maintenance history found</p>'
+        }
         
     @api.model
     def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):
