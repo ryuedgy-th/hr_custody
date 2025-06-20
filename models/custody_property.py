@@ -239,7 +239,7 @@ class CustodyProperty(models.Model):
                 }
             }
 
-    @api.depends('product_id')
+    @api.onchange('product_id')
     def _onchange_product_id(self):
         """The function is used to
             change product Automatic
