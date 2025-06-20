@@ -225,7 +225,7 @@
         <field name="name">hr.custody.list</field>
         <field name="model">hr.custody</field>
         <field name="arch" type="xml">
-            <list>
+            <tree>
                 <field name="name"/>
                 <field name="employee_id"/>
                 <field name="custody_property_id" string="Property"/>
@@ -244,7 +244,7 @@
                        decoration-info="state == 'to_approve'"
                        decoration-muted="state == 'returned'"
                        decoration-danger="state == 'rejected'"/>
-            </list>
+            </tree>
         </field>
     </record>
 

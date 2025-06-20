@@ -37,7 +37,7 @@
         <field name="name">custody.image.list</field>
         <field name="model">custody.image</field>
         <field name="arch" type="xml">
-            <list string="Custody Images">
+            <tree string="Custody Images">
                 <field name="sequence" widget="handle"/>
                 <field name="image_128" widget="image" width="64px" options="{'size': [64, 64]}" string="Thumbnail"/>
                 <field name="name"/>
@@ -47,7 +47,7 @@
                 <field name="uploaded_by_id"/>
                 <field name="notes"/>
                 <button name="open_image_viewer" string="View" type="object" class="btn btn-sm btn-primary"/>
-            </list>
+            </tree>
         </field>
     </record>
 

@@ -37,12 +37,12 @@
                         </page>
                         <page string="Child Categories" name="child_categories">
                             <field name="child_ids">
-                                <list>
+                                <tree>
                                     <field name="sequence" widget="handle"/>
                                     <field name="name"/>
                                     <field name="code"/>
                                     <field name="property_count"/>
-                                </list>
+                                </tree>
                             </field>
                         </page>
                         <page string="Approval Requirements" name="approval_requirements" groups="hr.group_hr_user">
@@ -66,7 +66,7 @@
         <field name="name">custody.category.view.list</field>
         <field name="model">custody.category</field>
         <field name="arch" type="xml">
-            <list string="Property Categories">
+            <tree string="Property Categories">
                 <field name="sequence" widget="handle"/>
                 <field name="complete_name"/>
                 <field name="code"/>
@@ -75,7 +75,7 @@
                        decoration-success="lifecycle_stage == 'active'" 
                        decoration-warning="lifecycle_stage == 'phasing_out'" 
                        decoration-danger="lifecycle_stage == 'archived'"/>
-            </list>
+            </tree>
         </field>
     </record>
 

@@ -37,10 +37,10 @@
         <field name="name">custody.tag.view.list</field>
         <field name="model">custody.tag</field>
         <field name="arch" type="xml">
-            <list string="Property Tags">
+            <tree string="Property Tags">
                 <field name="name"/>
                 <field name="property_count"/>
-            </list>
+            </tree>
         </field>
     </record>
 
