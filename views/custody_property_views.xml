@@ -459,6 +459,9 @@
                             <field name="maintenance_interval" invisible="maintenance_frequency != 'custom'" required="maintenance_frequency == 'custom'"/>
                             <field name="last_maintenance_date"/>
                             <field name="next_maintenance_date"/>
+                            <button name="action_record_maintenance" string="🔧 Record Maintenance" 
+                                    type="object" class="btn-primary" 
+                                    help="Record completed maintenance work"/>
                         </group>
                         <group>
                             <field name="maintenance_notes" placeholder="Enter maintenance notes..."/>
