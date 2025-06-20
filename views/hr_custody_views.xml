@@ -352,7 +352,7 @@
               sequence="1"/>
 
     <!-- Properties menu - Using action from custody_property_views.xml -->
-    <menuitem action="hr_custody.action_custody_property"
+    <menuitem action="action_custody_property"
               id="hr_property_menu"
               parent="hr_custody_menu_management"
               name="Properties"
