@@ -41,7 +41,6 @@
         <field name="view_mode">form</field>
         <field name="target">new</field>
         <field name="view_id" ref="view_custody_record_maintenance_wizard_form_new"/>
-        <field name="binding_model_id" ref="model_custody_property"/>
-        <field name="binding_view_types">form</field>
+        <!-- Removed binding to action menu - now accessible via form button -->
     </record>
 </odoo> 

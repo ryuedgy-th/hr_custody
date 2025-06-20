@@ -166,6 +166,9 @@
                                            help="When is the next maintenance due?"/>
                                     <field name="days_to_maintenance" readonly="1" 
                                            help="Days remaining until next maintenance"/>
+                                    <button name="action_record_maintenance" string="🔧 Record Maintenance" 
+                                            type="object" class="btn-primary" 
+                                            help="Record completed maintenance work"/>
                                 </group>
                             </group>
                             <group string="📝 Maintenance Notes &amp; Instructions">
@@ -239,8 +242,8 @@
                        decoration-warning="maintenance_due_soon == True"/>
                 <field name="maintenance_overdue" invisible="1"/>
                 <field name="maintenance_due_soon" invisible="1"/>
-                <button name="action_record_maintenance" string="✓ Done" type="object" icon="fa-check" 
-                        class="btn-success"
+                <button name="action_record_maintenance" string="🔧 Record" type="object" icon="fa-wrench" 
+                        class="btn-primary"
                         invisible="maintenance_frequency == 'none'"/>
             </list>
         </field>
@@ -373,8 +376,8 @@
                                 </div>
                                 <div class="o_kanban_record_bottom">
                                     <div class="oe_kanban_bottom_left">
-                                        <button name="action_record_maintenance" string="Record Maintenance" type="object" class="btn btn-sm btn-primary"
-                                                t-if="record.next_maintenance_date.value"/>
+                                        <button name="action_record_maintenance" string="🔧 Record" type="object" class="btn btn-sm btn-primary"
+                                                t-if="record.maintenance_frequency.value != 'none'"/>
                                     </div>
                                 </div>
                             </div>
