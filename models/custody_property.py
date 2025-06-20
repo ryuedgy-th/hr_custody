@@ -608,7 +608,6 @@ class CustodyProperty(models.Model):
             'type': 'ir.actions.act_window',
             'res_model': 'custody.maintenance.history',
             'view_mode': 'list,form',
-            'view_id': self.env.ref('hr_custody.view_maintenance_history_list').id,
             'domain': [('property_id', '=', self.id)],
             'context': {
                 'default_property_id': self.id,
