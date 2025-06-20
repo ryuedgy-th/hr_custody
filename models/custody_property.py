@@ -231,12 +231,7 @@ class CustodyProperty(models.Model):
         help='Original purchase value of this property'
     )
     
-    # Maintenance History Tracking
-    # maintenance_history_count = fields.Integer(
-    #     string='Maintenance Records',
-    #     compute='_compute_maintenance_history_count',
-    #     help='Number of maintenance records in history'
-    # )
+    # Maintenance History Tracking - handled by separate model custody.maintenance.history
 
     # Auto-select default return period based on category
     @api.onchange('category_id')
@@ -380,16 +375,6 @@ class CustodyProperty(models.Model):
                 else:
                     record.maintenance_status_display = 'Due Today'
     
-    # @api.depends('message_ids')
-    # def _compute_maintenance_history_count(self):
-    #     """Compute number of maintenance records from messages"""
-    #     for record in self:
-    #         # Count messages that contain maintenance records
-    #         maintenance_messages = record.message_ids.filtered(
-    #             lambda m: 'Maintenance Recorded' in (m.body or '') or 
-    #                      'maintenance' in (m.subject or '').lower()
-    #         )
-    #         record.maintenance_history_count = len(maintenance_messages)
     
     # NEW: Update next maintenance date based on frequency
     @api.onchange('maintenance_frequency', 'maintenance_interval', 'last_maintenance_date')
