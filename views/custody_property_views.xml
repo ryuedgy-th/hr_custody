@@ -337,7 +337,7 @@
         <field name="view_mode">list,kanban,form</field>
         <field name="view_id" ref="custody_property_view_tree"/>
         <field name="target">current</field>
-        <field name="context">{'search_default_available': 1, 'default_property_status': 'available'}</field>
+        <field name="context">{'search_default_available': 1, 'default_property_status': 'available', 'form_view_ref': 'hr_custody.custody_property_view_form_simple'}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Create your first property!
@@ -403,16 +403,6 @@
         </field>
     </record>
     
-    <!-- NEW: Action for Adding New Property -->
-    <record id="action_custody_property_create" model="ir.actions.act_window">
-        <field name="name">New Property</field>
-        <field name="res_model">custody.property</field>
-        <field name="view_mode">form</field>
-        <field name="view_id" ref="custody_property_view_form_simple"/>
-        <field name="target">current</field>
-        <field name="context">{'default_property_status': 'available'}</field>
-    </record>
-    
     <!-- NEW: Override the "create" button action in list view -->
     <record id="custody_property_view_tree_create_button" model="ir.ui.view">
         <field name="name">custody.property.tree.create.button</field>
@@ -420,18 +410,11 @@
         <field name="inherit_id" ref="custody_property_view_tree"/>
         <field name="arch" type="xml">
             <list position="attributes">
-                <attribute name="create">0</attribute>
+                <attribute name="create">1</attribute>
             </list>
         </field>
     </record>
     
     <!-- Menu Items -->
     <!-- Note: This menu is now managed in hr_custody_views.xml -->
-    
-    <!-- NEW: Add a menu item for creating new property with the simple form -->
-    <menuitem id="menu_custody_property_create" 
-              name="Create New Property" 
-              parent="hr_custody_menu_management" 
-              action="action_custody_property_create" 
-              sequence="6"/>
 </odoo>
