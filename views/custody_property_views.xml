@@ -416,6 +416,7 @@
         <field name="arch" type="xml">
             <form string="Property">
                 <sheet>
+                    <field name="image" widget='image' class="oe_avatar"/>
                     <div class="oe_title">
                         <h1>
                             <field name="name" placeholder="Property Name"/>
@@ -430,12 +431,14 @@
                             <field name="property_selection" widget="radio"/>
                             <field name="product_id" invisible="property_selection != 'product'"/>
                             <field name="category_id"/>
+                            <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
                             <field name="property_status"/>
                         </group>
                         <group string="Location">
-                            <field name="storage_location"/>
+                            <field name="storage_location" placeholder="e.g., IT Room Cabinet A1"/>
                             <field name="department_id"/>
                             <field name="responsible_person"/>
+                            <field name="company_id" options="{'no_create': True}"/>
                         </group>
                     </group>
                 </sheet>
