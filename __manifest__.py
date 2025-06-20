@@ -26,6 +26,7 @@
         # Main views with menu structure - must come before dependent views
         'views/custody_property_views.xml',
         'views/custody_image_views.xml',
+        'views/maintenance_history_views.xml',
         'views/hr_custody_views.xml',
         # Category and Tag views that depend on menus from hr_custody_views.xml
         'views/custody_category_views.xml',

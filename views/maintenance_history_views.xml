@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Maintenance History List View -->
+    <record id="view_maintenance_history_list" model="ir.ui.view">
+        <field name="name">custody.maintenance.history.list</field>
+        <field name="model">custody.maintenance.history</field>
+        <field name="arch" type="xml">
+            <list string="🔧 Maintenance History" create="false" edit="false" delete="false" default_order="maintenance_date desc">
+                <field name="maintenance_date" string="📅 Date"/>
+                <field name="type_display" string="🔧 Type"/>
+                <field name="performer_display" string="👤 Performed By"/>
+                <field name="cost" string="💰 Cost" widget="monetary" options="{'currency_field': 'currency_id'}" optional="show"/>
+                <field name="next_maintenance_date" string="📅 Next Due" optional="show"/>
+                <field name="notes" string="📝 Notes" optional="hide"/>
+                <!-- Hidden currency field for monetary widget -->
+                <field name="property_id" invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Maintenance History Form View -->
+    <record id="view_maintenance_history_form" model="ir.ui.view">
+        <field name="name">custody.maintenance.history.form</field>
+        <field name="model">custody.maintenance.history</field>
+        <field name="arch" type="xml">
+            <form string="Maintenance Record" create="false" edit="false" delete="false">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="display_name"/>
+                        </h1>
+                    </div>
+                    
+                    <group>
+                        <group string="📋 Basic Information">
+                            <field name="property_id" readonly="1"/>
+                            <field name="maintenance_date"/>
+                            <field name="maintenance_type"/>
+                        </group>
+                        <group string="👥 Personnel &amp; Cost">
+                            <field name="performed_by"/>
+                            <field name="vendor_id"/>
+                            <field name="cost"/>
+                        </group>
+                    </group>
+                    
+                    <group string="📅 Scheduling">
+                        <field name="next_maintenance_date"/>
+                    </group>
+                    
+                    <group string="📝 Notes &amp; Details">
+                        <field name="notes" nolabel="1" placeholder="Detailed maintenance notes..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Maintenance History Action -->
+    <record id="action_maintenance_history" model="ir.actions.act_window">
+        <field name="name">🔧 Maintenance History</field>
+        <field name="res_model">custody.maintenance.history</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_maintenance_history_list"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No maintenance history found!
+            </p>
+            <p>
+                Maintenance records will appear here when you record maintenance activities.
+            </p>
+        </field>
+    </record>
+</odoo>

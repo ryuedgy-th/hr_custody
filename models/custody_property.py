@@ -585,38 +585,34 @@ class CustodyProperty(models.Model):
         """Action to view maintenance history in user-friendly format"""
         self.ensure_one()
         
-        # Get maintenance messages
-        maintenance_messages = self.env['mail.message'].search([
-            ('model', '=', 'custody.property'),
-            ('res_id', '=', self.id),
-            '|',
-            ('body', 'ilike', 'maintenance'),
-            ('subject', 'ilike', 'maintenance')
+        # Get maintenance history records
+        maintenance_records = self.env['custody.maintenance.history'].search([
+            ('property_id', '=', self.id)
         ])
         
-        if not maintenance_messages:
+        if not maintenance_records:
             return {
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
                 'params': {
                     'title': _('No Maintenance History'),
-                    'message': _('No maintenance records found for %s') % self.name,
+                    'message': _('No maintenance records found for %s.\n\nUse the "🔧 Record Maintenance" button to add maintenance records.') % self.name,
                     'sticky': False,
                     'type': 'info',
                 }
             }
         
-        # Create user-friendly view
+        # Open user-friendly maintenance history view
         return {
             'name': _('🔧 Maintenance History - %s') % self.name,
             'type': 'ir.actions.act_window',
-            'res_model': 'mail.message',
-            'view_mode': 'list',
-            'view_id': self.env.ref('hr_custody.view_maintenance_history_tree').id,
-            'domain': [('id', 'in', maintenance_messages.ids)],
+            'res_model': 'custody.maintenance.history',
+            'view_mode': 'list,form',
+            'view_id': self.env.ref('hr_custody.view_maintenance_history_list').id,
+            'domain': [('property_id', '=', self.id)],
             'context': {
+                'default_property_id': self.id,
                 'property_name': self.name,
-                'show_maintenance_only': True,
             }
         }
         

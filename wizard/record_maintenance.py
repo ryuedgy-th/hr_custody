@@ -115,6 +115,18 @@ class RecordMaintenanceWizard(models.TransientModel):
         # Update the property
         self.property_id.write(vals)
         
+        # Create maintenance history record
+        self.env['custody.maintenance.history'].create({
+            'property_id': self.property_id.id,
+            'maintenance_date': self.maintenance_date,
+            'maintenance_type': self.maintenance_type,
+            'performed_by': self.performed_by.id if self.performed_by else False,
+            'vendor_id': self.vendor_id.id if self.vendor_id else False,
+            'cost': self.cost,
+            'notes': self.notes,
+            'next_maintenance_date': self.next_maintenance_date,
+        })
+        
         # Create enhanced maintenance log message
         maintenance_details = []
         maintenance_details.append(f"<strong>📅 Date:</strong> {fields.Date.to_string(self.maintenance_date)}")
