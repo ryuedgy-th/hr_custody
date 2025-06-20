@@ -62,14 +62,14 @@
                     </div>
                     
                     <!-- Maintenance Alert -->
-                    <div class="alert alert-danger" attrs="{'invisible': [('maintenance_overdue', '=', False)]}">
+                    <div class="alert alert-danger" invisible="maintenance_overdue == False">
                         <strong>Maintenance Overdue!</strong> This property is overdue for maintenance.
                         <div>
                             <button name="action_record_maintenance" string="Record Maintenance" type="object" class="btn btn-sm btn-danger"/>
                         </div>
                     </div>
                     
-                    <div class="alert alert-warning" attrs="{'invisible': [('maintenance_due_soon', '=', False)]}">
+                    <div class="alert alert-warning" invisible="maintenance_due_soon == False">
                         <strong>Maintenance Due Soon!</strong> This property is due for maintenance in <field name="days_to_maintenance"/> days.
                         <div>
                             <button name="action_record_maintenance" string="Record Maintenance" type="object" class="btn btn-sm btn-warning"/>
@@ -131,7 +131,7 @@
                             <group>
                                 <group string="Maintenance Schedule">
                                     <field name="maintenance_frequency"/>
-                                    <field name="maintenance_interval" attrs="{'invisible': [('maintenance_frequency', '!=', 'custom')], 'required': [('maintenance_frequency', '=', 'custom')]}"/>
+                                    <field name="maintenance_interval" invisible="maintenance_frequency != 'custom'" required="maintenance_frequency == 'custom'"/>
                                     <field name="last_maintenance_date"/>
                                     <field name="next_maintenance_date"/>
                                 </group>
@@ -207,7 +207,7 @@
                 <field name="maintenance_due_soon" invisible="1"/>
                 <field name="days_to_maintenance" invisible="1"/>
                 <button name="action_record_maintenance" string="Record" type="object" icon="fa-wrench" 
-                        attrs="{'invisible': [('next_maintenance_date', '=', False)]}"/>
+                        invisible="next_maintenance_date == False"/>
             </list>
         </field>
     </record>
