@@ -29,3 +29,6 @@ access_custody_tag_hr_manager,custody.tag.hr.manager,model_custody_tag,hr.group_
 access_custody_record_maintenance_wizard_employee,custody.record.maintenance.wizard.employee,model_custody_record_maintenance_wizard,base.group_user,1,1,1,0
 access_custody_record_maintenance_wizard_hr_user,custody.record.maintenance.wizard.hr.user,model_custody_record_maintenance_wizard,hr.group_hr_user,1,1,1,1
 access_custody_record_maintenance_wizard_hr_manager,custody.record.maintenance.wizard.hr.manager,model_custody_record_maintenance_wizard,hr.group_hr_manager,1,1,1,1
+access_custody_maintenance_history_employee,custody.maintenance.history.employee,model_custody_maintenance_history,base.group_user,1,0,0,0
+access_custody_maintenance_history_hr_user,custody.maintenance.history.hr.user,model_custody_maintenance_history,hr.group_hr_user,1,1,1,1
+access_custody_maintenance_history_hr_manager,custody.maintenance.history.hr.manager,model_custody_maintenance_history,hr.group_hr_manager,1,1,1,1
