@@ -104,20 +104,6 @@ class CustodyCategory(models.Model):
     ], string='Lifecycle Stage', default='active', tracking=True,
        help='Stage in the category lifecycle')
     
-    # NEW FIELDS: Category Template System
-    is_template = fields.Boolean(
-        string='Is Template',
-        default=False,
-        help='Mark this category as a template that can be used to create new categories'
-    )
-    
-    template_id = fields.Many2one(
-        'custody.category',
-        string='Based on Template',
-        domain="[('is_template', '=', True)]",
-        help='Template this category was created from'
-    )
-    
     # NEW FIELDS: Approval Requirements
     requires_approval = fields.Boolean(
         string='Requires Specific Approvers',
@@ -230,29 +216,6 @@ class CustodyCategory(models.Model):
             )
         return True
         
-    # NEW METHODS: Template System
-    @api.model
-    def create_from_template(self, template_id, values=None):
-        """Create a new category based on template"""
-        if values is None:
-            values = {}
-            
-        template = self.browse(template_id)
-        if not template.exists() or not template.is_template:
-            raise ValueError(_("Template not found or not marked as template"))
-            
-        # Copy template values but override with provided values
-        vals = template.copy_data(default={'is_template': False, 'template_id': template.id})[0]
-        vals.update(values)
-        
-        return self.create(vals)
-        
-    @api.model
-    def get_available_templates(self):
-        """Get all available templates"""
-        return self.search([('is_template', '=', True)])
-
-    # NEW METHODS: Smart Categorization
     @api.model
     def predict_category_for_property(self, property_name, description=None):
         """Predict the most appropriate category for a property based on its name and description"""
@@ -301,7 +264,6 @@ class CustodyCategory(models.Model):
         # Default to uncategorized if no match found
         return False
 
-    # NEW METHODS: Form Customization by Category
     @api.model
     def get_property_fields_view(self, view_id=None, view_type='form', **options):
         """Get a customized form view for property based on category"""
@@ -343,7 +305,6 @@ class CustodyCategory(models.Model):
         
         return res
 
-    # NEW METHODS: Get Effective Approvers
     def get_effective_approvers(self):
         """Get all approvers for this category, including inherited ones"""
         self.ensure_one()
