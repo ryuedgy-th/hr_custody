@@ -465,6 +465,10 @@
                         </group>
                         <group>
                             <field name="maintenance_notes" placeholder="Enter maintenance notes..."/>
+                            <div class="oe_clear"/>
+                            <div style="margin-top: 10px;">
+                                <strong>💡 Tip:</strong> Maintenance history can be viewed in the Messages section at the bottom of this form.
+                            </div>
                         </group>
                     </group>
 
@@ -481,6 +485,11 @@
                         </page>
                     </notebook>
                 </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
             </form>
         </field>
     </record>
