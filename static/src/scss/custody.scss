@@ -487,4 +487,29 @@ $-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     .o_hierarchy_header {
         background-color: transparent !important;
     }
+}
+
+/* Maintenance Actions Button Consistency */
+.o_model_custody_property {
+    .notebook {
+        .page[name="maintenance_info"] {
+            group[string="Actions"] {
+                button {
+                    min-width: 180px !important;
+                    padding: 8px 16px !important;
+                    font-size: 14px !important;
+                    line-height: 1.5 !important;
+                    border-radius: 4px !important;
+                    margin-bottom: 8px !important;
+                    
+                    &[name="action_record_maintenance"],
+                    &[name="action_view_maintenance_history"] {
+                        width: 180px !important;
+                        display: inline-block !important;
+                        text-align: center !important;
+                    }
+                }
+            }
+        }
+    }
 } 
