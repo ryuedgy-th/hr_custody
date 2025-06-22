@@ -91,8 +91,8 @@ class CustodyProperty(models.Model):
     )
 
     property_code = fields.Char(
-        string='Property Code',
-        help='Internal code or asset tag for this property'
+        string='Device Type',
+        help='Type or model of the device (e.g., Laptop, Phone, Tablet)'
     )
 
     # Multiple Approvers

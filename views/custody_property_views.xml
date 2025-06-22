@@ -52,7 +52,7 @@
                             <field name="name" placeholder="Property Name"/>
                         </h1>
                         <h3>
-                            <field name="property_code" placeholder="Property Code (Optional)"/>
+                            <field name="property_code" placeholder="Device Type (Optional)"/>
                         </h3>
                     </div>
 
@@ -257,7 +257,7 @@
         <field name="arch" type="xml">
             <search>
                 <field name="name" string="Property Name"/>
-                <field name="property_code" string="Property Code"/>
+                <field name="property_code" string="Device Type"/>
                 <field name="category_id"/>
                 <field name="tag_ids"/>
                 <field name="storage_location"/>
@@ -448,7 +448,7 @@
                             <field name="name" placeholder="Property Name"/>
                         </h1>
                         <h3>
-                            <field name="property_code" placeholder="Property Code (Optional)"/>
+                            <field name="property_code" placeholder="Device Type (Optional)"/>
                         </h3>
                     </div>
 
