@@ -468,35 +468,6 @@
                         </group>
                     </group>
 
-                    <!-- Purchase Information -->
-                    <group string="Purchase Information">
-                        <group>
-                            <field name="purchase_date"/>
-                            <field name="purchase_value"/>
-                        </group>
-                        <group>
-                        </group>
-                    </group>
-
-                    <!-- Maintenance Information -->
-                    <group string="Maintenance Information">
-                        <group>
-                            <field name="maintenance_frequency"/>
-                            <field name="maintenance_interval" invisible="maintenance_frequency != 'custom'" required="maintenance_frequency == 'custom'"/>
-                            <field name="last_maintenance_date"/>
-                            <field name="next_maintenance_date"/>
-                            <button name="action_record_maintenance" string="🔧 Record Maintenance" 
-                                    type="object" class="btn-primary" 
-                                    help="Record completed maintenance work"/>
-                        </group>
-                        <group>
-                            <field name="maintenance_notes" placeholder="Enter maintenance notes..."/>
-                            <button name="action_view_maintenance_history" string="📋 View History" 
-                                    type="object" class="btn-info btn-sm"
-                                    help="View maintenance history for this property"/>
-                        </group>
-                    </group>
-
                     <!-- Approvers Section -->
                     <group string="Approval Settings">
                         <field name="approver_ids" widget="many2many_tags"
@@ -507,6 +478,37 @@
                     <notebook>
                         <page name="desc" string="Description">
                             <field name="desc"/>
+                        </page>
+
+                        <page name="purchase_info" string="Purchase Information">
+                            <group>
+                                <group string="Purchase Details">
+                                    <field name="purchase_date"/>
+                                    <field name="purchase_value"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page name="maintenance_info" string="Maintenance Information">
+                            <group>
+                                <group string="Schedule Settings">
+                                    <field name="maintenance_frequency"/>
+                                    <field name="maintenance_interval" invisible="maintenance_frequency != 'custom'" required="maintenance_frequency == 'custom'"/>
+                                    <field name="last_maintenance_date"/>
+                                    <field name="next_maintenance_date"/>
+                                </group>
+                                <group string="Actions">
+                                    <button name="action_record_maintenance" string="🔧 Record Maintenance" 
+                                            type="object" class="btn-primary" 
+                                            help="Record completed maintenance work"/>
+                                    <button name="action_view_maintenance_history" string="📋 View History" 
+                                            type="object" class="btn-info btn-sm"
+                                            help="View maintenance history for this property"/>
+                                </group>
+                            </group>
+                            <group string="Maintenance Notes">
+                                <field name="maintenance_notes" nolabel="1" placeholder="Enter maintenance notes..."/>
+                            </group>
                         </page>
                     </notebook>
                 </sheet>
