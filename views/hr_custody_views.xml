@@ -12,16 +12,16 @@
                             class="oe_highlight"
                             invisible="state != 'draft'"/>
 
-                    <!-- Approval button - only visible for property approvers -->
+                    <!-- Approval button - only visible for HR users and property approvers -->
                     <button string="Approve" type="object" name="approve"
                             class="oe_highlight"
                             invisible="state != 'to_approve'"
-                            groups="base.group_user"/>
+                            groups="hr.group_hr_user"/>
 
                     <!-- Refuse button -->
                     <button string="Refuse" type="object" name="refuse_with_reason"
                             invisible="state != 'to_approve'"
-                            groups="base.group_user"/>
+                            groups="hr.group_hr_user"/>
 
                     <button string="Set to Draft" type="object"
                             name="set_to_draft"
@@ -338,31 +338,43 @@
               sequence="20"
               web_icon="hr_custody,static/description/icon.png"/>
 
-    <!-- Management submenu -->
+    <!-- My Custody menu for regular employees -->
+    <menuitem action="hr_custody_action"
+              id="hr_custody_menu_my_custody"
+              parent="hr_custody_main_menu"
+              name="My Custody"
+              groups="base.group_user"
+              sequence="1"/>
+
+    <!-- Management submenu for HR Users and Managers only -->
     <menuitem id="hr_custody_menu_management"
               parent="hr_custody_main_menu"
               name="Custody Management"
+              groups="hr.group_hr_user"
               sequence="10"/>
 
-    <!-- Custody Request menu -->
+    <!-- Custody Request menu for HR Users and Managers -->
     <menuitem action="hr_custody_action"
               id="hr_custody_menu_request"
               parent="hr_custody_menu_management"
-              name="Custody Request"
+              name="All Custody Requests"
+              groups="hr.group_hr_user"
               sequence="1"/>
 
-    <!-- Properties menu - Using action from custody_property_views.xml -->
+    <!-- Properties menu - HR Users and Managers only -->
     <menuitem action="action_custody_property"
               id="hr_property_menu"
               parent="hr_custody_menu_management"
               name="Properties"
+              groups="hr.group_hr_user"
               sequence="5"/>
 
-    <!-- Images Management menu - Added for managing multiple images -->
+    <!-- Images Management menu - HR Users and Managers only -->
     <menuitem action="hr_custody.action_custody_image_list"
               id="hr_custody_images_menu"
               parent="hr_custody_menu_management"
               name="Manage Images"
+              groups="hr.group_hr_user"
               sequence="6"/>
 
     <!-- Image Comparison Form View -->
