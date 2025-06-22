@@ -1,6 +1,7 @@
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 from datetime import timedelta
+from dateutil.relativedelta import relativedelta
 
 
 class CustodyProperty(models.Model):
@@ -232,9 +233,23 @@ class CustodyProperty(models.Model):
         help='Original purchase value of this property'
     )
 
-    warranty_expire_date = fields.Date(
-        string='Warranty Expire Date',
-        help='Date when warranty expires for this property'
+    warranty_expire_month = fields.Selection([
+        ('01', 'January'), ('02', 'February'), ('03', 'March'),
+        ('04', 'April'), ('05', 'May'), ('06', 'June'),
+        ('07', 'July'), ('08', 'August'), ('09', 'September'),
+        ('10', 'October'), ('11', 'November'), ('12', 'December')
+    ], string='Warranty Expire Month', help='Month when warranty expires')
+
+    warranty_expire_year = fields.Integer(
+        string='Warranty Expire Year',
+        help='Year when warranty expires (e.g., 2025, 2026)'
+    )
+
+    warranty_status = fields.Char(
+        string='Warranty Status',
+        compute='_compute_warranty_status',
+        store=True,
+        help='Current warranty status'
     )
 
     # Device Technical Information
@@ -411,6 +426,59 @@ class CustodyProperty(models.Model):
                     record.maintenance_status_display = f'🟢 OK ({delta} days left)'
                 else:
                     record.maintenance_status_display = 'Due Today'
+    
+    @api.depends('warranty_expire_month', 'warranty_expire_year')
+    def _compute_warranty_status(self):
+        """Compute warranty status based on expire month and year"""
+        today = fields.Date.today()
+        current_year = today.year
+        current_month = today.month
+        
+        for record in self:
+            if not record.warranty_expire_month or not record.warranty_expire_year:
+                record.warranty_status = 'Not Set'
+                continue
+                
+            expire_year = record.warranty_expire_year
+            expire_month = int(record.warranty_expire_month)
+            
+            # Create date for last day of warranty month
+            from calendar import monthrange
+            last_day = monthrange(expire_year, expire_month)[1]
+            expire_date = fields.Date.from_string(f'{expire_year}-{expire_month:02d}-{last_day}')
+            
+            if expire_date < today:
+                # Warranty expired
+                months_expired = (current_year - expire_year) * 12 + (current_month - expire_month)
+                if months_expired == 1:
+                    record.warranty_status = '🔴 Expired (1 month ago)'
+                elif months_expired < 12:
+                    record.warranty_status = f'🔴 Expired ({months_expired} months ago)'
+                else:
+                    years_expired = months_expired // 12
+                    remaining_months = months_expired % 12
+                    if remaining_months == 0:
+                        record.warranty_status = f'🔴 Expired ({years_expired} year{"s" if years_expired > 1 else ""} ago)'
+                    else:
+                        record.warranty_status = f'🔴 Expired ({years_expired}y {remaining_months}m ago)'
+            else:
+                # Warranty still active
+                months_left = (expire_year - current_year) * 12 + (expire_month - current_month)
+                if months_left == 0:
+                    record.warranty_status = '🟡 Expires This Month'
+                elif months_left == 1:
+                    record.warranty_status = '🟡 Expires Next Month'
+                elif months_left <= 3:
+                    record.warranty_status = f'🟡 Expires in {months_left} months'
+                elif months_left < 12:
+                    record.warranty_status = f'🟢 Active ({months_left} months left)'
+                else:
+                    years_left = months_left // 12
+                    remaining_months = months_left % 12
+                    if remaining_months == 0:
+                        record.warranty_status = f'🟢 Active ({years_left} year{"s" if years_left > 1 else ""} left)'
+                    else:
+                        record.warranty_status = f'🟢 Active ({years_left}y {remaining_months}m left)'
     
     
     # NEW: Update next maintenance date based on frequency

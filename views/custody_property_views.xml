@@ -205,7 +205,9 @@
                                 <group string="Purchase Information">
                                     <field name="purchase_date"/>
                                     <field name="purchase_value"/>
-                                    <field name="warranty_expire_date"/>
+                                    <field name="warranty_expire_month"/>
+                                    <field name="warranty_expire_year"/>
+                                    <field name="warranty_status" readonly="1"/>
                                 </group>
                                 <group>
                                 </group>
@@ -250,6 +252,7 @@
                        decoration-danger="property_status == 'damaged'"/>
                 <field name="purchase_date"/>
                 <field name="purchase_value" widget="monetary"/>
+                <field name="warranty_status" string="Warranty"/>
                 <field name="current_borrower_id"/>
                 <field name="last_maintenance_date" string="Last Maintenance"/>
                 <field name="maintenance_status_display" string="Maintenance Status"/>
@@ -280,7 +283,9 @@
                 <field name="department_id"/>
                 <field name="purchase_date"/>
                 <field name="purchase_value"/>
-                <field name="warranty_expire_date"/>
+                <field name="warranty_expire_month"/>
+                <field name="warranty_expire_year"/>
+                <field name="warranty_status"/>
                 <field name="last_maintenance_date"/>
                 <field name="next_maintenance_date"/>
                 <field name="maintenance_frequency"/>
@@ -310,6 +315,15 @@
                         domain="[('maintenance_due_soon', '=', True)]"/>
                 <filter string="No Maintenance Schedule" name="no_maintenance"
                         domain="[('maintenance_frequency', '=', 'none')]"/>
+
+                <!-- Warranty Filters -->
+                <separator/>
+                <filter string="Warranty Expired" name="warranty_expired"
+                        domain="[('warranty_status', 'like', '🔴 Expired')]"/>
+                <filter string="Warranty Expiring Soon" name="warranty_expiring"
+                        domain="[('warranty_status', 'like', '🟡')]"/>
+                <filter string="Warranty Active" name="warranty_active"
+                        domain="[('warranty_status', 'like', '🟢 Active')]"/>
 
                 <separator/>
 
@@ -350,6 +364,7 @@
                 <field name="maintenance_status_display"/>
                 <field name="maintenance_overdue"/>
                 <field name="maintenance_due_soon"/>
+                <field name="warranty_status"/>
                 <templates>
                     <t t-name="kanban-box">
                         <div class="oe_kanban_global_click o_kanban_record_has_image_fill">
@@ -389,6 +404,12 @@
                                         <div>
                                             <strong>Status: </strong>
                                             <field name="maintenance_status_display"/>
+                                        </div>
+                                    </t>
+                                    <t t-if="record.warranty_status.value">
+                                        <div>
+                                            <strong>Warranty: </strong>
+                                            <field name="warranty_status"/>
                                         </div>
                                     </t>
                                     <t t-if="record.next_maintenance_date.value">
@@ -520,7 +541,9 @@
                                 <group string="Purchase Information">
                                     <field name="purchase_date"/>
                                     <field name="purchase_value"/>
-                                    <field name="warranty_expire_date"/>
+                                    <field name="warranty_expire_month"/>
+                                    <field name="warranty_expire_year"/>
+                                    <field name="warranty_status" readonly="1"/>
                                 </group>
                                 <group>
                                 </group>
