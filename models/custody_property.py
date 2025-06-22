@@ -232,6 +232,11 @@ class CustodyProperty(models.Model):
         help='Original purchase value of this property'
     )
 
+    warranty_expire_date = fields.Date(
+        string='Warranty Expire Date',
+        help='Date when warranty expires for this property'
+    )
+
     # Device Technical Information
     ip_address = fields.Char(
         string='IP Address',
