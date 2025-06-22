@@ -533,13 +533,11 @@
                                     <field name="next_maintenance_date"/>
                                 </group>
                                 <group string="Actions">
-                                    <button name="action_record_maintenance" string="🔧 Record Maintenance" 
-                                            type="object" class="btn btn-primary" 
-                                            style="padding: 8px 16px; min-width: 180px;"
+                                    <button name="action_record_maintenance" string="🔧 Record" 
+                                            type="object" class="btn btn-primary btn-lg" 
                                             help="Record completed maintenance work"/>
-                                    <button name="action_view_maintenance_history" string="📋 View History" 
-                                            type="object" class="btn btn-info"
-                                            style="padding: 8px 16px; min-width: 180px;"
+                                    <button name="action_view_maintenance_history" string="📋 History" 
+                                            type="object" class="btn btn-info btn-lg"
                                             help="View maintenance history for this property"/>
                                 </group>
                             </group>
