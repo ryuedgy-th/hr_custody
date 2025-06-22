@@ -537,7 +537,7 @@
                                             type="object" class="btn-primary" 
                                             help="Record completed maintenance work"/>
                                     <button name="action_view_maintenance_history" string="📋 View History" 
-                                            type="object" class="btn-info btn-sm"
+                                            type="object" class="btn-info"
                                             help="View maintenance history for this property"/>
                                 </group>
                             </group>
