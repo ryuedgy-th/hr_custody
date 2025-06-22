@@ -221,6 +221,7 @@ class CustodyProperty(models.Model):
         help='Human readable maintenance status'
     )
 
+    # Purchase Information
     purchase_date = fields.Date(
         string='Purchase Date',
         help='Date when this property was purchased'
@@ -229,6 +230,37 @@ class CustodyProperty(models.Model):
     purchase_value = fields.Float(
         string='Purchase Value',
         help='Original purchase value of this property'
+    )
+
+    # Device Technical Information
+    ip_address = fields.Char(
+        string='IP Address',
+        help='Network IP address of the device (e.g., 192.168.1.100)'
+    )
+
+    serial_number = fields.Char(
+        string='Serial Number',
+        help='Manufacturer serial number of the device'
+    )
+
+    operating_system = fields.Char(
+        string='Operating System',
+        help='Operating system and version (e.g., Windows 11, macOS 14.0, Ubuntu 22.04)'
+    )
+
+    manufacturer = fields.Char(
+        string='Manufacturer',
+        help='Device manufacturer (e.g., Apple, Dell, HP, Lenovo)'
+    )
+
+    model = fields.Char(
+        string='Model',
+        help='Device model name or number (e.g., MacBook Pro 13", ThinkPad X1 Carbon)'
+    )
+
+    mac_address = fields.Char(
+        string='MAC Address',
+        help='Network MAC address of the device (e.g., 00:1B:44:11:3A:B7)'
     )
     
     # Maintenance History Tracking - handled by separate model custody.maintenance.history

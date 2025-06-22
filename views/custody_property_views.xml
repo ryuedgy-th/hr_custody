@@ -188,11 +188,25 @@
                             </group>
                         </page>
 
-                        <page name="purchase_info" string="Purchase Information">
+                        <page name="device_info" string="Device Information">
                             <group>
-                                <group string="Purchase Details">
+                                <group string="Device Specifications">
+                                    <field name="manufacturer"/>
+                                    <field name="model"/>
+                                    <field name="serial_number"/>
+                                    <field name="operating_system"/>
+                                </group>
+                                <group string="Network Information">
+                                    <field name="ip_address"/>
+                                    <field name="mac_address"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="Purchase Information">
                                     <field name="purchase_date"/>
                                     <field name="purchase_value"/>
+                                </group>
+                                <group>
                                 </group>
                             </group>
                         </page>
@@ -268,6 +282,13 @@
                 <field name="last_maintenance_date"/>
                 <field name="next_maintenance_date"/>
                 <field name="maintenance_frequency"/>
+                <!-- Device Information fields -->
+                <field name="serial_number"/>
+                <field name="manufacturer"/>
+                <field name="model"/>
+                <field name="ip_address"/>
+                <field name="mac_address"/>
+                <field name="operating_system"/>
                 <!-- Search by approvers -->
                 <field name="approver_ids"/>
 
@@ -480,11 +501,25 @@
                             <field name="desc"/>
                         </page>
 
-                        <page name="purchase_info" string="Purchase Information">
+                        <page name="device_info" string="Device Information">
                             <group>
-                                <group string="Purchase Details">
+                                <group string="Device Specifications">
+                                    <field name="manufacturer"/>
+                                    <field name="model"/>
+                                    <field name="serial_number"/>
+                                    <field name="operating_system"/>
+                                </group>
+                                <group string="Network Information">
+                                    <field name="ip_address"/>
+                                    <field name="mac_address"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="Purchase Information">
                                     <field name="purchase_date"/>
                                     <field name="purchase_value"/>
+                                </group>
+                                <group>
                                 </group>
                             </group>
                         </page>
