@@ -535,9 +535,11 @@
                                 <group string="Actions">
                                     <button name="action_record_maintenance" string="🔧 Record Maintenance" 
                                             type="object" class="btn btn-primary" 
+                                            style="width: 200px;"
                                             help="Record completed maintenance work"/>
                                     <button name="action_view_maintenance_history" string="📋 View History" 
                                             type="object" class="btn btn-info"
+                                            style="width: 200px;"
                                             help="View maintenance history for this property"/>
                                 </group>
                             </group>
