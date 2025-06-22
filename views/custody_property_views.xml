@@ -255,10 +255,10 @@
                 <field name="warranty_status" string="Warranty"/>
                 <field name="current_borrower_id"/>
                 <field name="last_maintenance_date" string="Last Maintenance"/>
-                <field name="maintenance_status_display" string="Maintenance Status"/>
-                <field name="next_maintenance_date" string="Next Due" 
+                <field name="maintenance_status_display" string="Maintenance Status"
                        decoration-danger="maintenance_overdue == True"
                        decoration-warning="maintenance_due_soon == True"/>
+                <field name="next_maintenance_date" string="Next Due"/>
                 <field name="maintenance_overdue" invisible="1"/>
                 <field name="maintenance_due_soon" invisible="1"/>
                 <button name="action_record_maintenance" string="🔧 Record" type="object" icon="fa-wrench" 

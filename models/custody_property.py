@@ -194,6 +194,13 @@ class CustodyProperty(models.Model):
         tracking=True
     )
     
+    days_to_maintenance = fields.Integer(
+        string='Days to Next Maintenance',
+        compute='_compute_maintenance_status',
+        store=True,
+        help='Number of days until next scheduled maintenance'
+    )
+    
     maintenance_overdue = fields.Boolean(
         string='Maintenance Overdue',
         compute='_compute_maintenance_status',
@@ -206,13 +213,6 @@ class CustodyProperty(models.Model):
         compute='_compute_maintenance_status',
         store=True,
         help='Indicates if maintenance is due within the reminder period'
-    )
-    
-    days_to_maintenance = fields.Integer(
-        string='Days to Next Maintenance',
-        compute='_compute_maintenance_status',
-        store=True,
-        help='Number of days until next scheduled maintenance'
     )
     
     maintenance_status_display = fields.Char(
