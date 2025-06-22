@@ -118,26 +118,22 @@
                                     </div>
                                 </button>
                                 
-                                <!-- Button for Multiple Images Upload Wizard -->
+                                <!-- Button for Multiple Images Upload Wizard - HR Users only -->
                                 <button class="o_btn_primary o_custody_button" type="object" name="action_add_multiple_images"
                                         string="Upload Multiple Images" icon="fa-upload"
                                         invisible="state in ['rejected', 'returned']"
+                                        groups="hr.group_hr_user"
                                         style="margin-right: 20px; margin-left: 20px; padding: 8px 16px;"/>
                                 
                                 <!-- Spacer div to improve layout -->
                                 <div class="o_custody_button_spacer"/>
                                 
-                                <!-- Button for Manage Multiple Images (list view) -->
+                                <!-- Button for Manage Multiple Images (list view) - HR Users only -->
                                 <button class="o_btn_primary o_custody_button" type="object" name="action_manage_multiple_images"
                                         string="Manage Multiple Images" icon="fa-list"
                                         help="View, select and delete multiple images at once"
+                                        groups="hr.group_hr_user"
                                         style="margin-right: 20px; padding: 8px 16px;"/>
-                                
-                                <!-- Keep only the checkout image button, remove return image button -->
-                                <button class="o_stat_button" type="object" name="action_add_image"
-                                        context="{'default_image_type': 'checkout'}" 
-                                        icon="fa-plus" string="Add Checkout Image"
-                                        invisible="state not in ['draft', 'to_approve']"/>
                             </div>
                             
                             <!-- Hide legacy sections that are no longer used -->
