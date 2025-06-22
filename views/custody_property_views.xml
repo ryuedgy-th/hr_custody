@@ -259,8 +259,8 @@
                        decoration-danger="maintenance_overdue == True"
                        decoration-warning="maintenance_due_soon == True"/>
                 <field name="next_maintenance_date" string="Next Due"/>
-                <field name="maintenance_overdue" invisible="1"/>
-                <field name="maintenance_due_soon" invisible="1"/>
+                <field name="maintenance_overdue" column_invisible="1"/>
+                <field name="maintenance_due_soon" column_invisible="1"/>
                 <button name="action_record_maintenance" string="🔧 Record" type="object" icon="fa-wrench" 
                         class="btn-primary"
                         invisible="maintenance_frequency == 'none'"/>
@@ -362,8 +362,6 @@
                 <field name="next_maintenance_date"/>
                 <field name="maintenance_frequency"/>
                 <field name="maintenance_status_display"/>
-                <field name="maintenance_overdue"/>
-                <field name="maintenance_due_soon"/>
                 <field name="warranty_status"/>
                 <templates>
                     <t t-name="kanban-box">
