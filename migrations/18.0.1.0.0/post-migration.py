@@ -223,4 +223,3 @@ def migrate(cr, version):
                 'migrations/18.0.1.0.0/post-migration.py', 0, 'migrate', NOW(), 1)
     """)
 
-    print("HR Custody module successfully migrated to Odoo 18.0")
