@@ -32,7 +32,6 @@ access_custody_record_maintenance_wizard_custody_manager,custody.record.maintena
 access_report_custody_custody_user,report.custody.custody.user,model_report_custody,group_custody_user,1,0,0,0
 access_report_custody_custody_officer,report.custody.custody.officer,model_report_custody,group_custody_officer,1,0,0,0
 access_report_custody_custody_manager,report.custody.custody.manager,model_report_custody,group_custody_manager,1,0,0,0
-access_custody_settings_custody_manager,custody.settings.custody.manager,model_custody_settings,group_custody_manager,1,1,1,1
 access_hr_custody_employee,hr.custody.employee,model_hr_custody,base.group_user,1,0,0,0
 access_hr_custody_hr_user,hr.custody.hr.user,model_hr_custody,hr.group_hr_user,1,1,1,1
 access_hr_custody_hr_manager,hr.custody.hr.manager,model_hr_custody,hr.group_hr_manager,1,1,1,1

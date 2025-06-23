@@ -363,14 +363,29 @@ class HrCustody(models.Model):
 
     @api.depends('property_approver_ids', 'category_approver_ids', 'custody_property_id')
     def _compute_effective_approvers(self):
-        """Combine all approvers for this custody request using new settings"""
+        """Combine all approvers for this custody request using predefined roles"""
         for record in self:
-            # Use the new settings system to get effective approvers
-            settings = self.env['custody.settings']
-            effective_approvers = settings.get_effective_approvers(record.custody_property_id.id)
+            # Get default approvers from predefined security groups
+            custody_officer = self.env.ref('hr_custody.group_custody_officer', raise_if_not_found=False)
+            custody_manager = self.env.ref('hr_custody.group_custody_manager', raise_if_not_found=False)
+            hr_manager = self.env.ref('hr.group_hr_manager', raise_if_not_found=False)
             
-            # Combine with category approvers if they exist
-            all_approvers = effective_approvers | record.category_approver_ids
+            all_approvers = self.env['res.users']
+            
+            # 1. Property-specific approvers first
+            if record.property_approver_ids:
+                all_approvers |= record.property_approver_ids
+            else:
+                # 2. Use security group members as default
+                if custody_officer:
+                    all_approvers |= custody_officer.users
+                if custody_manager:
+                    all_approvers |= custody_manager.users
+                if hr_manager:
+                    all_approvers |= hr_manager.users
+            
+            # 3. Add category approvers if they exist
+            all_approvers |= record.category_approver_ids
             
             record.effective_approver_ids = all_approvers
 
@@ -613,13 +628,12 @@ class HrCustody(models.Model):
             )
             
             if not has_approval_permission:
-                # Get effective approvers using new settings
-                settings = self.env['custody.settings']
-                effective_approvers = settings.get_effective_approvers(record.custody_property_id.id)
+                # Get authorized approvers from effective_approver_ids
+                authorized_approvers = record.effective_approver_ids
                 
                 raise UserError(
                     _("You don't have permission to approve this request. Authorized approvers are: %s")
-                    % (', '.join(effective_approvers.mapped('name')))
+                    % (', '.join(authorized_approvers.mapped('name')))
                 )
 
             # Check property availability - use domain search to avoid N+1 query
