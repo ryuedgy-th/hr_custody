@@ -331,6 +331,7 @@
     <menuitem id="hr_custody_main_menu"
               name="Custody"
               sequence="20"
+              groups="base.group_user"
               web_icon="hr_custody,static/description/icon.png"/>
 
     <!-- My Custody menu for regular employees -->
@@ -341,35 +342,35 @@
               groups="base.group_user"
               sequence="1"/>
 
-    <!-- Management submenu for HR Users and Managers only -->
+    <!-- Management submenu for Custody Officers/Managers and HR Users -->
     <menuitem id="hr_custody_menu_management"
               parent="hr_custody_main_menu"
               name="Custody Management"
-              groups="hr.group_hr_user"
+              groups="hr_custody.group_custody_officer,hr_custody.group_custody_manager,hr.group_hr_user"
               sequence="10"/>
 
-    <!-- Custody Request menu for HR Users and Managers -->
+    <!-- Custody Request menu for Custody Officers/Managers and HR Users -->
     <menuitem action="hr_custody_action"
               id="hr_custody_menu_request"
               parent="hr_custody_menu_management"
               name="All Custody Requests"
-              groups="hr.group_hr_user"
+              groups="hr_custody.group_custody_officer,hr_custody.group_custody_manager,hr.group_hr_user"
               sequence="1"/>
 
-    <!-- Properties menu - HR Users and Managers only -->
+    <!-- Properties menu - Custody Officers/Managers and HR Users -->
     <menuitem action="action_custody_property"
               id="hr_property_menu"
               parent="hr_custody_menu_management"
               name="Properties"
-              groups="hr.group_hr_user"
+              groups="hr_custody.group_custody_officer,hr_custody.group_custody_manager,hr.group_hr_user"
               sequence="5"/>
 
-    <!-- Images Management menu - HR Users and Managers only -->
+    <!-- Images Management menu - Custody Officers/Managers and HR Users -->
     <menuitem action="hr_custody.action_custody_image_list"
               id="hr_custody_images_menu"
               parent="hr_custody_menu_management"
               name="Manage Images"
-              groups="hr.group_hr_user"
+              groups="hr_custody.group_custody_officer,hr_custody.group_custody_manager,hr.group_hr_user"
               sequence="6"/>
 
     <!-- Image Comparison Form View -->
