@@ -14,14 +14,16 @@ class CustodySettings(models.TransientModel):
     default_approver_groups = fields.Many2many(
         'res.groups',
         string='Default Approver Groups',
-        help='Select which user groups can approve custody requests by default'
+        help='Select which user groups can approve custody requests by default',
+        default_model='hr_custody.default_approver_groups'
     )
 
     # Custom default approvers (individual users)
     default_approver_users = fields.Many2many(
         'res.users',
         string='Default Approver Users',
-        help='Specific users who can approve custody requests globally'
+        help='Specific users who can approve custody requests globally',
+        default_model='hr_custody.default_approver_users'
     )
 
     # Approval workflow settings
