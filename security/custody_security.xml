@@ -9,14 +9,14 @@
         <!-- Custody User: Basic custody operations -->
         <record id="group_custody_user" model="res.groups">
             <field name="name">Custody User</field>
-            <field name="category_id" ref="base.module_category_human_resources"/>
+            <field name="category_id" ref="base.module_category_management"/>
             <field name="comment">User can create custody requests and view their own records</field>
         </record>
 
         <!-- Custody Officer: Can approve and manage properties -->
         <record id="group_custody_officer" model="res.groups">
             <field name="name">Custody Officer</field>
-            <field name="category_id" ref="base.module_category_human_resources"/>
+            <field name="category_id" ref="base.module_category_management"/>
             <field name="implied_ids" eval="[(4, ref('group_custody_user'))]"/>
             <field name="comment">Officer can approve custody requests and manage properties (cannot delete)</field>
         </record>
@@ -24,7 +24,7 @@
         <!-- Custody Manager: Full access -->
         <record id="group_custody_manager" model="res.groups">
             <field name="name">Custody Manager</field>
-            <field name="category_id" ref="base.module_category_human_resources"/>
+            <field name="category_id" ref="base.module_category_management"/>
             <field name="implied_ids" eval="[(4, ref('group_custody_officer'))]"/>
             <field name="comment">Manager has full access to all custody operations including deletion and settings</field>
         </record>
