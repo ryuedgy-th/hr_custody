@@ -11,15 +11,15 @@
                     <button string="Record Maintenance" type="object"
                             name="action_record_maintenance"
                             class="btn-primary"
-                            groups="hr.group_hr_user"/>
+                            groups="hr_custody.group_custody_officer,hr_custody.group_custody_manager,hr.group_hr_user"/>
                     <button string="Set to Maintenance" type="object"
                             name="action_set_maintenance"
                             invisible="property_status == 'maintenance' or active_custody_count > 0"
-                            groups="hr.group_hr_user"/>
+                            groups="hr_custody.group_custody_officer,hr_custody.group_custody_manager,hr.group_hr_user"/>
                     <button string="Set to Available" type="object"
                             name="action_set_available"
                             invisible="property_status == 'available'"
-                            groups="hr.group_hr_user"/>
+                            groups="hr_custody.group_custody_officer,hr_custody.group_custody_manager,hr.group_hr_user"/>
                     <field name="property_status" widget="statusbar"
                            statusbar_visible="available,in_use,maintenance"/>
                 </header>
