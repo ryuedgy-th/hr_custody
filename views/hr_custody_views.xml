@@ -185,7 +185,7 @@
                         <page string="Approval Info" invisible="state == 'draft'">
                             <group>
                                 <group string="Approval System">
-                                    <label string="Role-based approval: Custody Officer, Custody Manager, HR Manager"/>
+                                    <label string="Role-based approval: Custody Officer, Custody Manager, HR Manager" class="o_form_label"/>
                                 </group>
                                 <group string="Approval Details" invisible="state not in ['approved', 'returned']">
                                     <field name="approved_by_id" readonly="1"/>
@@ -198,7 +198,7 @@
                         <page string="Approvers" name="approvers">
                             <group>
                                 <separator string="Role-based Approval System"/>
-                                <label string="Default approvers: Custody Officer, Custody Manager, HR Manager"/>
+                                <label string="Default approvers: Custody Officer, Custody Manager, HR Manager" class="o_form_label"/>
                                 <separator string="Category Approvers" groups="hr.group_hr_user"/>
                                 <field name="category_approver_ids" widget="many2many_tags" 
                                        options="{'no_create': True}" readonly="1" 
