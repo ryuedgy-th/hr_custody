@@ -50,28 +50,26 @@
 
                         <div class="col-12 o_setting_box">
                             <div class="o_setting_right_pane">
-                                <label for="default_approver_groups"/>
+                                <label for="default_approver_group_ids"/>
                                 <div class="text-muted">
-                                    Select user groups that can approve custody requests by default
+                                    Comma-separated list of group IDs that can approve custody requests by default
                                 </div>
                                 <div class="content-group mt16">
-                                    <field name="default_approver_groups" widget="many2many_tags" 
-                                           placeholder="Select approver groups..."
-                                           options="{'no_create': True, 'no_create_edit': True}"/>
+                                    <field name="default_approver_group_ids" 
+                                           placeholder="e.g. 1,2,3 (Group IDs)"/>
                                 </div>
                             </div>
                         </div>
 
                         <div class="col-12 o_setting_box">
                             <div class="o_setting_right_pane">
-                                <label for="default_approver_users"/>
+                                <label for="default_approver_user_ids"/>
                                 <div class="text-muted">
-                                    Select specific users who can approve custody requests globally
+                                    Comma-separated list of user IDs that can approve custody requests globally
                                 </div>
                                 <div class="content-group mt16">
-                                    <field name="default_approver_users" widget="many2many_tags" 
-                                           placeholder="Select approver users..."
-                                           options="{'no_create': True, 'no_create_edit': True}"/>
+                                    <field name="default_approver_user_ids" 
+                                           placeholder="e.g. 1,2,3 (User IDs)"/>
                                 </div>
                             </div>
                         </div>

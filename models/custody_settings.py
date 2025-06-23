@@ -23,24 +23,6 @@ class CustodySettings(models.TransientModel):
         config_parameter='hr_custody.default_approver_users'
     )
 
-    # Display fields for UI
-    default_approver_groups = fields.Many2many(
-        'res.groups',
-        string='Default Approver Groups Display',
-        help='Select which user groups can approve custody requests by default',
-        domain="[('category_id.name', 'in', ['Human Resources', 'Asset Management', 'Extra Rights'])]",
-        compute='_compute_default_approvers',
-        inverse='_inverse_default_approver_groups'
-    )
-
-    default_approver_users = fields.Many2many(
-        'res.users',
-        string='Default Approver Users Display',
-        help='Specific users who can approve custody requests globally',
-        domain="[('share', '=', False)]",
-        compute='_compute_default_approvers',
-        inverse='_inverse_default_approver_users'
-    )
 
     # Approval workflow settings
     require_approval = fields.Boolean(
@@ -81,39 +63,6 @@ class CustodySettings(models.TransientModel):
         config_parameter='hr_custody.maintenance_reminder_days'
     )
 
-    @api.depends('default_approver_group_ids', 'default_approver_user_ids')
-    def _compute_default_approvers(self):
-        """Compute Many2many fields from stored config parameters"""
-        for record in self:
-            # Groups
-            group_ids = []
-            if record.default_approver_group_ids:
-                try:
-                    group_ids = [int(gid) for gid in record.default_approver_group_ids.split(',') if gid.strip()]
-                except (ValueError, TypeError):
-                    group_ids = []
-            record.default_approver_groups = [(6, 0, group_ids)]
-            
-            # Users  
-            user_ids = []
-            if record.default_approver_user_ids:
-                try:
-                    user_ids = [int(uid) for uid in record.default_approver_user_ids.split(',') if uid.strip()]
-                except (ValueError, TypeError):
-                    user_ids = []
-            record.default_approver_users = [(6, 0, user_ids)]
-
-    def _inverse_default_approver_groups(self):
-        """Store Many2many groups as comma-separated config parameter"""
-        for record in self:
-            group_ids = ','.join(str(gid) for gid in record.default_approver_groups.ids)
-            record.default_approver_group_ids = group_ids
-
-    def _inverse_default_approver_users(self):
-        """Store Many2many users as comma-separated config parameter"""
-        for record in self:
-            user_ids = ','.join(str(uid) for uid in record.default_approver_users.ids)
-            record.default_approver_user_ids = user_ids
 
     @api.model
     def get_default_approver_groups(self):
