@@ -237,7 +237,7 @@
 
     <!-- Custody Property list view -->
     <record id="custody_property_view_tree" model="ir.ui.view">
-        <field name="name">custody.property.view.list</field>
+        <field name="name">custody.property.list</field>
         <field name="model">custody.property</field>
         <field name="arch" type="xml">
             <list>
@@ -576,8 +576,8 @@
     </record>
     
     <!-- NEW: Override the "create" button action in list view -->
-    <record id="custody_property_view_tree_create_button" model="ir.ui.view">
-        <field name="name">custody.property.tree.create.button</field>
+    <record id="custody_property_tree_inherit" model="ir.ui.view">
+        <field name="name">custody.property.tree.inherit</field>
         <field name="model">custody.property</field>
         <field name="inherit_id" ref="custody_property_view_tree"/>
         <field name="arch" type="xml">

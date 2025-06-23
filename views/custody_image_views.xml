@@ -73,7 +73,7 @@
                                 </div>
                                 <div class="o_image_overlay">
                                     <a type="object" name="open_image_viewer" class="o_attachment_button_view">
-                                        <i class="fa fa-search-plus"></i> ดูภาพใหญ่
+                                        <i class="fa fa-search-plus"></i> View Larger
                                     </a>
                                 </div>
                             </div>
@@ -175,11 +175,11 @@
         <field name="arch" type="xml">
             <form string="Image Viewer" create="false" edit="false" class="o_custody_image_fullscreen">
                 <sheet>
-                    <!-- แสดงรูปภาพขนาดใหญ่ครบทั้งหน้าจอ -->
+                    <!-- Display full-screen image -->
                     <div class="o_image_container" style="text-align: center; height: calc(100vh - 150px); display: flex; align-items: center; justify-content: center;">
                         <field name="image" widget="image" options="{'zoom': true, 'preview_image': 'image', 'size': [1200, 1200], 'isFullscreen': true}" class="o_image_large" style="max-height: 100%; object-fit: contain;"/>
                     </div>
-                    <!-- ข้อมูลเพิ่มเติมแสดงด้านล่าง -->
+                    <!-- Additional information displayed below -->
                     <div class="oe_title" style="text-align: center;">
                         <h1><field name="name" readonly="1"/></h1>
                     </div>

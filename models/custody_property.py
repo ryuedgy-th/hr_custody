@@ -1,7 +1,9 @@
+from datetime import timedelta
+
+from dateutil.relativedelta import relativedelta
+
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
-from datetime import timedelta
-from dateutil.relativedelta import relativedelta
 
 
 class CustodyProperty(models.Model):
@@ -382,8 +384,13 @@ class CustodyProperty(models.Model):
     def _compute_maintenance_status(self):
         """Compute maintenance status indicators"""
         today = fields.Date.today()
-        reminder_days = int(self.env['ir.config_parameter'].sudo().get_param(
-            'hr_custody.maintenance_reminder_days', '7'))
+        # Get maintenance reminder days without sudo - use accessible parameter or default
+        reminder_days_param = self.env['ir.config_parameter'].get_param(
+            'hr_custody.maintenance_reminder_days', '7')
+        try:
+            reminder_days = int(reminder_days_param)
+        except (ValueError, TypeError):
+            reminder_days = 7  # Default fallback
         
         for record in self:
             if record.next_maintenance_date:
@@ -405,27 +412,32 @@ class CustodyProperty(models.Model):
     def _compute_maintenance_status_display(self):
         """Compute human readable maintenance status"""
         today = fields.Date.today()
-        reminder_days = int(self.env['ir.config_parameter'].sudo().get_param(
-            'hr_custody.maintenance_reminder_days', '7'))
+        # Get maintenance reminder days without sudo - use accessible parameter or default
+        reminder_days_param = self.env['ir.config_parameter'].get_param(
+            'hr_custody.maintenance_reminder_days', '7')
+        try:
+            reminder_days = int(reminder_days_param)
+        except (ValueError, TypeError):
+            reminder_days = 7  # Default fallback
         
         for record in self:
             if record.maintenance_frequency == 'none':
-                record.maintenance_status_display = 'No Schedule'
+                record.maintenance_status_display = _('No Schedule')
             elif not record.next_maintenance_date:
-                record.maintenance_status_display = 'Not Scheduled'
+                record.maintenance_status_display = _('Not Scheduled')
             else:
                 # Calculate days to maintenance locally
                 delta = (record.next_maintenance_date - today).days
                 
                 if delta < 0:
                     days_overdue = abs(delta)
-                    record.maintenance_status_display = f'🔴 Overdue ({days_overdue} days)'
+                    record.maintenance_status_display = _('🔴 Overdue (%s days)') % days_overdue
                 elif 0 <= delta <= reminder_days:
-                    record.maintenance_status_display = f'🟡 Due Soon ({delta} days)'
+                    record.maintenance_status_display = _('🟡 Due Soon (%s days)') % delta
                 elif delta > 0:
-                    record.maintenance_status_display = f'🟢 OK ({delta} days left)'
+                    record.maintenance_status_display = _('🟢 OK (%s days left)') % delta
                 else:
-                    record.maintenance_status_display = 'Due Today'
+                    record.maintenance_status_display = _('Due Today')
     
     @api.depends('warranty_expire_month', 'warranty_expire_year')
     def _compute_warranty_status(self):
@@ -436,7 +448,7 @@ class CustodyProperty(models.Model):
         
         for record in self:
             if not record.warranty_expire_month or not record.warranty_expire_year:
-                record.warranty_status = 'Not Set'
+                record.warranty_status = _('Not Set')
                 continue
                 
             expire_year = record.warranty_expire_year
@@ -451,34 +463,36 @@ class CustodyProperty(models.Model):
                 # Warranty expired
                 months_expired = (current_year - expire_year) * 12 + (current_month - expire_month)
                 if months_expired == 1:
-                    record.warranty_status = '🔴 Expired (1 month ago)'
+                    record.warranty_status = _('🔴 Expired (1 month ago)')
                 elif months_expired < 12:
-                    record.warranty_status = f'🔴 Expired ({months_expired} months ago)'
+                    record.warranty_status = _('🔴 Expired (%s months ago)') % months_expired
                 else:
                     years_expired = months_expired // 12
                     remaining_months = months_expired % 12
                     if remaining_months == 0:
-                        record.warranty_status = f'🔴 Expired ({years_expired} year{"s" if years_expired > 1 else ""} ago)'
+                        year_text = _('years') if years_expired > 1 else _('year')
+                        record.warranty_status = _('🔴 Expired (%s %s ago)') % (years_expired, year_text)
                     else:
-                        record.warranty_status = f'🔴 Expired ({years_expired}y {remaining_months}m ago)'
+                        record.warranty_status = _('🔴 Expired (%sy %sm ago)') % (years_expired, remaining_months)
             else:
                 # Warranty still active
                 months_left = (expire_year - current_year) * 12 + (expire_month - current_month)
                 if months_left == 0:
-                    record.warranty_status = '🟡 Expires This Month'
+                    record.warranty_status = _('🟡 Expires This Month')
                 elif months_left == 1:
-                    record.warranty_status = '🟡 Expires Next Month'
+                    record.warranty_status = _('🟡 Expires Next Month')
                 elif months_left <= 3:
-                    record.warranty_status = f'🟡 Expires in {months_left} months'
+                    record.warranty_status = _('🟡 Expires in %s months') % months_left
                 elif months_left < 12:
-                    record.warranty_status = f'🟢 Active ({months_left} months left)'
+                    record.warranty_status = _('🟢 Active (%s months left)') % months_left
                 else:
                     years_left = months_left // 12
                     remaining_months = months_left % 12
                     if remaining_months == 0:
-                        record.warranty_status = f'🟢 Active ({years_left} year{"s" if years_left > 1 else ""} left)'
+                        year_text = _('years') if years_left > 1 else _('year')
+                        record.warranty_status = _('🟢 Active (%s %s left)') % (years_left, year_text)
                     else:
-                        record.warranty_status = f'🟢 Active ({years_left}y {remaining_months}m left)'
+                        record.warranty_status = _('🟢 Active (%sy %sm left)') % (years_left, remaining_months)
     
     
     # NEW: Update next maintenance date based on frequency
@@ -631,8 +645,13 @@ class CustodyProperty(models.Model):
     def _cron_maintenance_reminder(self):
         """Send reminders for upcoming maintenance"""
         today = fields.Date.today()
-        reminder_days = int(self.env['ir.config_parameter'].sudo().get_param(
-            'hr_custody.maintenance_reminder_days', '7'))
+        # Get maintenance reminder days without sudo - use accessible parameter or default
+        reminder_days_param = self.env['ir.config_parameter'].get_param(
+            'hr_custody.maintenance_reminder_days', '7')
+        try:
+            reminder_days = int(reminder_days_param)
+        except (ValueError, TypeError):
+            reminder_days = 7  # Default fallback
         
         # Calculate the date range for sending reminders
         reminder_date = today + timedelta(days=reminder_days)

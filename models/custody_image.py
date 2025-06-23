@@ -1,11 +1,13 @@
-from odoo import api, fields, models, _
 import base64
+from io import BytesIO
+
 try:
     import PIL
     from PIL import Image
-    from io import BytesIO
 except ImportError:
     PIL = None
+
+from odoo import api, fields, models, _
 
 
 class CustodyImage(models.Model):

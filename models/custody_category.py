@@ -1,5 +1,6 @@
-from odoo import api, fields, models, _
 from lxml import etree
+
+from odoo import api, fields, models, _
 
 
 class CustodyCategory(models.Model):

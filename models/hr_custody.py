@@ -1,4 +1,5 @@
 from datetime import date, datetime, timedelta
+
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
 
@@ -124,8 +125,14 @@ class HrCustody(models.Model):
         ('date', 'Fixed Return Date'),
         ('flexible', 'No Fixed Return Date'),
         ('term_end', 'Return at Term/Project End')
-    ], string='Return Type', default='date', required=True, index=True, tracking=True,
-    help='Select the type of return date arrangement')
+    ], 
+        string='Return Type', 
+        default='date', 
+        required=True, 
+        index=True, 
+        tracking=True,
+        help='Select the type of return date arrangement'
+    )
 
     return_date = fields.Date(
         string='Return Date',
@@ -305,7 +312,8 @@ class HrCustody(models.Model):
             if record.state == 'returned':
                 record.return_status_display = 'Returned'
             elif record.return_type == 'date' and record.return_date:
-                record.return_status_display = f'Due: {record.return_date.strftime("%d/%m/%Y")}'
+                date_str = record.return_date.strftime("%d/%m/%Y")
+                record.return_status_display = f'Due: {date_str}'
             elif record.return_type == 'flexible':
                 period = record.expected_return_period or 'No fixed date'
                 record.return_status_display = f'Flexible ({period})'
@@ -456,7 +464,11 @@ class HrCustody(models.Model):
 
     def _send_fixed_date_reminder(self, custody_record):
         """Send reminder for fixed date returns only"""
-        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+        # Get base URL without sudo - use system parameter accessible to current user
+        base_url = self.env['ir.config_parameter'].get_param('web.base.url')
+        if not base_url:
+            # Fallback to default if parameter not accessible
+            base_url = 'http://localhost:8069'
         url = f"{base_url}/web#id={custody_record.id}&view_type=form&model=hr.custody"
 
         mail_content = _(
@@ -591,13 +603,14 @@ class HrCustody(models.Model):
                     % (', '.join(record.effective_approver_ids.mapped('name')))
                 )
 
-            # Check property availability
-            for custody in self.env['hr.custody'].search([
+            # Check property availability - use domain search to avoid N+1 query
+            existing_approved = self.env['hr.custody'].search_count([
                 ('custody_property_id', '=', record.custody_property_id.id),
-                ('id', '!=', record.id)
-            ]):
-                if custody.state == "approved":
-                    raise UserError(_("Custody is not available now"))
+                ('id', '!=', record.id),
+                ('state', '=', 'approved')
+            ])
+            if existing_approved > 0:
+                raise UserError(_("Custody is not available now"))
 
             # Record approval information
             record.approved_by_id = current_user

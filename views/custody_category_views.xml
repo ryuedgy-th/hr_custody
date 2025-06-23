@@ -63,7 +63,7 @@
 
     <!-- Category Tree View -->
     <record id="custody_category_view_tree" model="ir.ui.view">
-        <field name="name">custody.category.view.list</field>
+        <field name="name">custody.category.list</field>
         <field name="model">custody.category</field>
         <field name="arch" type="xml">
             <list string="Property Categories">
