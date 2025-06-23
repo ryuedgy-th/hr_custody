@@ -2,83 +2,192 @@
     :target: https://www.gnu.org/licenses/lgpl-3.0-standalone.html
     :alt: License: LGPL-3
 
+.. image:: https://img.shields.io/badge/version-18.0.1.0.0-blue.svg
+    :alt: Version: 18.0.1.0.0
 
-Open HRMS Custody
-================
+.. image:: https://img.shields.io/badge/enhanced-version-orange.svg
+    :alt: Enhanced Version
 
-Manage and track company property in the custody of employees. This module provides an efficient system for managing property loans, returns, and condition tracking with image documentation and a flexible approval system.
 
-Key Features
------------
+Enhanced HR Custody Management
+==============================
 
-* **Request and Approval Management**: Create custody requests with flexible approval workflows
-* **Property Management**: Record property details with categories and tags
-* **Image Documentation**: Document property condition with photos at checkout and return
-* **Advanced Image Management**: Upload multiple images, view fullscreen, batch delete
-* **Notifications**: Email alerts for upcoming returns
-* **Status Tracking**: Track property status and current custodian
-* **Overview Reports**: View reports and statistics about property custody
+**Professional Asset & Equipment Custody Management System for Odoo 18**
 
-Installation
------------
+An enhanced and security-hardened version of the OpenHRMS Custody module, featuring role-based approval workflows, advanced security controls, and streamlined user experience. Perfect for organizations requiring professional asset management with robust approval processes.
 
-1. Install the module through the standard Odoo installation process
-2. Create property records and define approvers
-3. Begin creating custody requests
+🔗 **Based on**: `OpenHRMS hr_custody module <https://github.com/CybroOdoo/OpenHRMS/tree/17.0/hr_custody>`_
 
-Usage
------
+🚀 **Key Enhancements**
+-----------------------
 
-**Record Property Information**:
-  * Add and manage company property items
-  * Define storage locations, responsible persons, and approvers
+**Security & Compliance**
+* **Role-Based Approval System** - Three-tier permission structure (User/Officer/Manager)
+* **Enhanced Security Groups** - Proper separation of concerns and access controls
+* **Asset Management Category** - Dedicated category for custody roles
+* **OAuth2 Compatibility** - Resolved authentication conflicts
 
-**Create and Manage Custody Requests**:
-  * Employees can create requests to borrow property
-  * Approvers can approve or reject requests
-  * Document property condition with images at checkout and return
+**User Experience Improvements**
+* **Streamlined Interface** - Removed complex custom approver configurations
+* **Dynamic Warranty Years** - Auto-calculated dropdown (current year ±5/+15 years)
+* **Simplified Approval Workflow** - Clear role-based permissions
+* **Clean UI/UX** - Removed unnecessary complexity while maintaining functionality
 
-**Image Documentation**:
-  * Upload multiple images at once
-  * View images in fullscreen and zoom to check details
-  * Compare condition before checkout and after return
-  * Delete multiple images at once in list view
+**Technical Improvements**
+* **Odoo 18.0 Compatibility** - Fully compatible with latest Odoo version
+* **Code Quality** - PEP8 compliant, proper error handling, optimized queries
+* **Performance Optimizations** - Reduced N+1 queries, efficient database operations
+* **Translation Ready** - Proper _() wrappers for internationalization
 
-Configuration
-------------
+📋 **Core Features**
+-------------------
 
-* Configure approvers for each property item
-* Customize notification templates and emails
-* Set up access rights based on user roles
+**Property & Asset Management**
+* Complete property lifecycle management
+* Categories, tags, and detailed property information
+* Warranty tracking with intelligent year selection
+* Maintenance history and status tracking
+* Image documentation with batch upload capabilities
 
-License
--------
-General Public License, Version 3 (LGPL v3).
-(https://www.gnu.org/licenses/lgpl-3.0-standalone.html)
+**Custody Request Workflow**
+* Employee self-service custody requests
+* Role-based approval system (Officer/Manager levels)
+* Flexible return types (fixed date, flexible, term-end)
+* Comprehensive status tracking
+* Email notifications and reminders
 
-Credits
--------
-**Original Development**:
-   * Cybrosys Techno Solutions
-   * Developers: (V15) Mily Shajan
-                (V16) Aiswarya M
-                (V17) Janish Babu EK
-                (V18) RYU
-   * Mail: odoo@cybrosys.com
+**Advanced Image Management**
+* Multiple image upload with wizard
+* Before/after condition comparison
+* Fullscreen image viewing with zoom
+* Batch image management and deletion
+* Image categorization (checkout/return)
 
-Contact
--------
-* Website: https://cybrosys.com
+**Reporting & Analytics**
+* Comprehensive custody reports
+* Property utilization tracking
+* Overdue item monitoring
+* Maintenance scheduling
+* User activity reports
 
-Bug Tracker
-----------
-Bugs are tracked on GitHub Issues. In case of trouble, please check there if your issue has already been reported.
+👥 **Role-Based Access Control**
+-------------------------------
 
-Maintainer
----------
-.. image:: https://cybrosys.com/images/logo.png
-   :target: https://cybrosys.com
+**Custody User** (View-Only)
+  * View own custody records
+  * Check borrowed items and due dates
+  * Read-only access to ensure data integrity
 
-This module is maintained by Cybrosys Technologies.
+**Custody Officer** (Management)
+  * All User permissions
+  * Approve/reject custody requests
+  * Manage properties and categories
+  * Cannot delete critical records
 
-For additional support, please contact https://cybrosys.com
+**Custody Manager** (Full Access)
+  * All Officer permissions
+  * Delete records and complete administration
+  * Access to all system settings
+  * Full property lifecycle management
+
+💼 **Enterprise Features**
+-------------------------
+
+* **Multi-company Support** - Proper company-wise data separation
+* **Advanced Security** - Role-based access with inheritance
+* **Scalable Architecture** - Optimized for large organizations
+* **Integration Ready** - Compatible with other Odoo modules
+* **Audit Trail** - Complete activity tracking and logging
+
+📦 **Installation & Setup**
+--------------------------
+
+**Requirements**
+* Odoo 18.0+
+* Python 3.8+
+* Dependencies: hr, mail, base
+
+**Quick Installation**
+1. Download and extract the module to your addons directory
+2. Update the app list in Odoo
+3. Install "Enhanced HR Custody Management"
+4. Assign users to appropriate custody roles
+5. Configure properties and begin managing assets
+
+**Post-Installation Configuration**
+* Assign users to Custody User/Officer/Manager roles
+* Create property categories and items
+* Configure email notifications (optional)
+* Set up maintenance schedules (optional)
+
+🔧 **Technical Specifications**
+------------------------------
+
+* **Framework**: Odoo 18.0
+* **License**: LGPL-3 (Open Source)
+* **Language**: Python 3.8+
+* **Database**: PostgreSQL
+* **Frontend**: Odoo Web Framework
+* **Security**: Role-based access control
+
+💰 **Commercial Support & Services**
+-----------------------------------
+
+**Available Services**
+* Custom implementation and configuration
+* User training and documentation
+* Technical support and maintenance
+* Custom feature development
+* Integration with existing systems
+
+**Pricing Options**
+* Implementation Service: $1,000 - $3,000 USD
+* Annual Support: $500 - $1,500 USD
+* Custom Development: Contact for quote
+
+📞 **Contact for Commercial Services**
+* **Email**: Contact for commercial inquiries
+* **Implementation**: Professional setup and configuration
+* **Training**: User and administrator training available
+* **Support**: Ongoing technical support options
+
+⚖️ **License & Legal**
+---------------------
+
+This module is licensed under LGPL-3 and is an enhanced version of the original OpenHRMS hr_custody module. 
+
+**Compliance Notes**
+* Source code modifications are available upon request
+* Original attribution to Cybrosys Techno Solutions maintained
+* Enhanced version developed independently
+* Commercial use permitted under LGPL-3 terms
+
+**Original Credits**
+* **Base Module**: Cybrosys Techno Solutions
+* **Original Authors**: Mily Shajan (V15), Aiswarya M (V16), Janish Babu EK (V17)
+* **Enhancement**: Independent development for Odoo 18.0
+
+🔄 **Version History**
+---------------------
+
+**18.0.1.0.0** (Current - Enhanced Version)
+* Complete Odoo 18.0 compatibility
+* Role-based approval system implementation
+* Security enhancements and OAuth2 fixes
+* UI/UX improvements and code optimization
+* Dynamic warranty year selection
+* Streamlined configuration process
+
+🐛 **Support & Bug Reports**
+---------------------------
+
+For technical issues or feature requests:
+* Check existing documentation
+* Review configuration settings
+* Contact support for commercial installations
+
+**Note**: This is an independently enhanced version. For the original OpenHRMS module support, please contact Cybrosys Techno Solutions.
+
+---
+
+*This enhanced version provides enterprise-grade asset management capabilities while maintaining the open-source flexibility of the original OpenHRMS module.*
