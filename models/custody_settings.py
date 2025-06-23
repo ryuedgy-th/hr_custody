@@ -10,46 +10,59 @@ class CustodySettings(models.TransientModel):
     _description = 'Custody Settings'
     _inherit = 'res.config.settings'
 
-    # Global Approval Settings
-    default_approver_groups = fields.Many2many(
-        'res.groups',
-        'custody_settings_groups_rel',
-        'settings_id',
-        'group_id',
+    # Global Approval Settings - stored as config parameters
+    default_approver_group_ids = fields.Char(
         string='Default Approver Groups',
-        help='Select which user groups can approve custody requests by default',
-        domain="[('category_id.name', 'in', ['Human Resources', 'Asset Management', 'Extra Rights'])]"
+        help='Comma-separated list of group IDs that can approve custody requests by default',
+        config_parameter='hr_custody.default_approver_groups'
     )
 
-    # Custom default approvers (individual users)
+    default_approver_user_ids = fields.Char(
+        string='Default Approver Users', 
+        help='Comma-separated list of user IDs that can approve custody requests globally',
+        config_parameter='hr_custody.default_approver_users'
+    )
+
+    # Display fields for UI
+    default_approver_groups = fields.Many2many(
+        'res.groups',
+        string='Default Approver Groups Display',
+        help='Select which user groups can approve custody requests by default',
+        domain="[('category_id.name', 'in', ['Human Resources', 'Asset Management', 'Extra Rights'])]",
+        compute='_compute_default_approvers',
+        inverse='_inverse_default_approver_groups'
+    )
+
     default_approver_users = fields.Many2many(
         'res.users',
-        'custody_settings_users_rel',
-        'settings_id',
-        'user_id',
-        string='Default Approver Users',
+        string='Default Approver Users Display',
         help='Specific users who can approve custody requests globally',
-        domain="[('share', '=', False)]"
+        domain="[('share', '=', False)]",
+        compute='_compute_default_approvers',
+        inverse='_inverse_default_approver_users'
     )
 
     # Approval workflow settings
     require_approval = fields.Boolean(
         string='Require Approval',
         default=True,
-        help='Whether custody requests require approval before being granted'
+        help='Whether custody requests require approval before being granted',
+        config_parameter='hr_custody.require_approval'
     )
 
     auto_approve_same_department = fields.Boolean(
         string='Auto-approve Same Department',
         default=False,
-        help='Automatically approve requests from same department manager'
+        help='Automatically approve requests from same department manager',
+        config_parameter='hr_custody.auto_approve_same_department'
     )
 
     # Notification settings
     notify_approvers = fields.Boolean(
         string='Notify Approvers',
         default=True,
-        help='Send email notifications to approvers when new requests are submitted'
+        help='Send email notifications to approvers when new requests are submitted',
+        config_parameter='hr_custody.notify_approvers'
     )
 
     reminder_frequency = fields.Selection([
@@ -58,13 +71,49 @@ class CustodySettings(models.TransientModel):
         ('weekly', 'Weekly'),
         ('monthly', 'Monthly')
     ], string='Return Reminder Frequency', default='weekly',
-    help='How often to send return reminders for overdue items')
+    help='How often to send return reminders for overdue items',
+    config_parameter='hr_custody.reminder_frequency')
 
     maintenance_reminder_days = fields.Integer(
         string='Maintenance Reminder Days',
         default=7,
-        help='Number of days before maintenance due date to send reminders'
+        help='Number of days before maintenance due date to send reminders',
+        config_parameter='hr_custody.maintenance_reminder_days'
     )
+
+    @api.depends('default_approver_group_ids', 'default_approver_user_ids')
+    def _compute_default_approvers(self):
+        """Compute Many2many fields from stored config parameters"""
+        for record in self:
+            # Groups
+            group_ids = []
+            if record.default_approver_group_ids:
+                try:
+                    group_ids = [int(gid) for gid in record.default_approver_group_ids.split(',') if gid.strip()]
+                except (ValueError, TypeError):
+                    group_ids = []
+            record.default_approver_groups = [(6, 0, group_ids)]
+            
+            # Users  
+            user_ids = []
+            if record.default_approver_user_ids:
+                try:
+                    user_ids = [int(uid) for uid in record.default_approver_user_ids.split(',') if uid.strip()]
+                except (ValueError, TypeError):
+                    user_ids = []
+            record.default_approver_users = [(6, 0, user_ids)]
+
+    def _inverse_default_approver_groups(self):
+        """Store Many2many groups as comma-separated config parameter"""
+        for record in self:
+            group_ids = ','.join(str(gid) for gid in record.default_approver_groups.ids)
+            record.default_approver_group_ids = group_ids
+
+    def _inverse_default_approver_users(self):
+        """Store Many2many users as comma-separated config parameter"""
+        for record in self:
+            user_ids = ','.join(str(uid) for uid in record.default_approver_users.ids)
+            record.default_approver_user_ids = user_ids
 
     @api.model
     def get_default_approver_groups(self):
@@ -120,56 +169,3 @@ class CustodySettings(models.TransientModel):
         unique_approver_ids = list(set(approvers))
         return self.env['res.users'].browse(unique_approver_ids)
 
-    def set_values(self):
-        """Save the settings"""
-        super(CustodySettings, self).set_values()
-        self.env['ir.config_parameter'].sudo().set_param(
-            'hr_custody.default_approver_groups',
-            ','.join(str(gid) for gid in self.default_approver_groups.ids)
-        )
-        self.env['ir.config_parameter'].sudo().set_param(
-            'hr_custody.default_approver_users',
-            ','.join(str(uid) for uid in self.default_approver_users.ids)
-        )
-        self.env['ir.config_parameter'].sudo().set_param(
-            'hr_custody.require_approval', str(self.require_approval)
-        )
-        self.env['ir.config_parameter'].sudo().set_param(
-            'hr_custody.auto_approve_same_department', str(self.auto_approve_same_department)
-        )
-        self.env['ir.config_parameter'].sudo().set_param(
-            'hr_custody.notify_approvers', str(self.notify_approvers)
-        )
-        self.env['ir.config_parameter'].sudo().set_param(
-            'hr_custody.reminder_frequency', self.reminder_frequency
-        )
-        self.env['ir.config_parameter'].sudo().set_param(
-            'hr_custody.maintenance_reminder_days', str(self.maintenance_reminder_days)
-        )
-
-    @api.model
-    def get_values(self):
-        """Load the settings"""
-        res = super(CustodySettings, self).get_values()
-        
-        # Load group settings
-        group_ids = self.get_default_approver_groups()
-        if group_ids:
-            res['default_approver_groups'] = [(6, 0, group_ids)]
-        
-        # Load user settings
-        user_ids = self.get_default_approver_users()
-        if user_ids:
-            res['default_approver_users'] = [(6, 0, user_ids)]
-        
-        # Load other settings
-        settings = self.env['ir.config_parameter'].sudo()
-        res.update({
-            'require_approval': settings.get_param('hr_custody.require_approval', 'True') == 'True',
-            'auto_approve_same_department': settings.get_param('hr_custody.auto_approve_same_department', 'False') == 'True',
-            'notify_approvers': settings.get_param('hr_custody.notify_approvers', 'True') == 'True',
-            'reminder_frequency': settings.get_param('hr_custody.reminder_frequency', 'weekly'),
-            'maintenance_reminder_days': int(settings.get_param('hr_custody.maintenance_reminder_days', '7')),
-        })
-        
-        return res
