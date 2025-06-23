@@ -33,6 +33,8 @@
         'views/custody_tag_views.xml',
         # Employee views
         'views/hr_employee_views.xml',
+        # Settings views
+        'views/custody_settings_views.xml',
         # Reports last
         'reports/report_custody_views.xml',
     ],

@@ -12,23 +12,23 @@
                             class="oe_highlight"
                             invisible="state != 'draft'"/>
 
-                    <!-- Approval button - only visible for HR users and property approvers -->
+                    <!-- Approval button - visible for custody officers/managers and HR users -->
                     <button string="Approve" type="object" name="approve"
                             class="oe_highlight"
                             invisible="state != 'to_approve'"
-                            groups="hr.group_hr_user"/>
+                            groups="hr_custody.group_custody_officer,hr_custody.group_custody_manager,hr.group_hr_user"/>
 
                     <!-- Refuse button -->
                     <button string="Refuse" type="object" name="refuse_with_reason"
                             invisible="state != 'to_approve'"
-                            groups="hr.group_hr_user"/>
+                            groups="hr_custody.group_custody_officer,hr_custody.group_custody_manager,hr.group_hr_user"/>
 
                     <button string="Set to Draft" type="object"
                             name="set_to_draft"
                             invisible="state != 'rejected'"/>
                     <button string="Return" type="object"
                             name="set_to_return"
-                            groups="hr.group_hr_manager"
+                            groups="hr_custody.group_custody_officer,hr_custody.group_custody_manager,hr.group_hr_manager"
                             invisible="state != 'approved'"/>
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,to_approve,approved,returned"/>

@@ -361,12 +361,18 @@ class HrCustody(models.Model):
                     
             record.category_approver_ids = approvers
 
-    @api.depends('property_approver_ids', 'category_approver_ids')
+    @api.depends('property_approver_ids', 'category_approver_ids', 'custody_property_id')
     def _compute_effective_approvers(self):
-        """Combine all approvers for this custody request"""
+        """Combine all approvers for this custody request using new settings"""
         for record in self:
-            # Combine property approvers and category approvers
-            record.effective_approver_ids = record.property_approver_ids | record.category_approver_ids
+            # Use the new settings system to get effective approvers
+            settings = self.env['custody.settings']
+            effective_approvers = settings.get_effective_approvers(record.custody_property_id.id)
+            
+            # Combine with category approvers if they exist
+            all_approvers = effective_approvers | record.category_approver_ids
+            
+            record.effective_approver_ids = all_approvers
 
     # ================================================================
     # ONCHANGE METHODS
@@ -588,19 +594,32 @@ class HrCustody(models.Model):
         Validates user permissions, checks property availability,
         records approval metadata, and updates property status.
         """
-        # Check if current user is in effective approvers or is HR Manager
+        # Check if current user has approval permissions
         current_user = self.env.user
         is_hr_manager = current_user.has_group('hr.group_hr_manager')
+        is_custody_manager = current_user.has_group('hr_custody.group_custody_manager')
+        is_custody_officer = current_user.has_group('hr_custody.group_custody_officer')
         
         for record in self:
             # Refresh approvers to ensure we have the latest
             record._compute_effective_approvers()
             
-            # Check approval permissions
-            if not is_hr_manager and current_user not in record.effective_approver_ids:
+            # Check approval permissions - use new custody roles
+            has_approval_permission = (
+                is_custody_manager or 
+                is_custody_officer or 
+                is_hr_manager or 
+                current_user in record.effective_approver_ids
+            )
+            
+            if not has_approval_permission:
+                # Get effective approvers using new settings
+                settings = self.env['custody.settings']
+                effective_approvers = settings.get_effective_approvers(record.custody_property_id.id)
+                
                 raise UserError(
                     _("You don't have permission to approve this request. Authorized approvers are: %s")
-                    % (', '.join(record.effective_approver_ids.mapped('name')))
+                    % (', '.join(effective_approvers.mapped('name')))
                 )
 
             # Check property availability - use domain search to avoid N+1 query

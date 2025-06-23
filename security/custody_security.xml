@@ -2,6 +2,33 @@
 <odoo>
     <data noupdate="0">
 
+        <!-- ===================================== -->
+        <!-- CUSTODY-SPECIFIC SECURITY GROUPS -->
+        <!-- ===================================== -->
+        
+        <!-- Custody User: Basic custody operations -->
+        <record id="group_custody_user" model="res.groups">
+            <field name="name">Custody User</field>
+            <field name="category_id" ref="base.module_category_human_resources"/>
+            <field name="comment">User can create custody requests and view their own records</field>
+        </record>
+
+        <!-- Custody Officer: Can approve and manage properties -->
+        <record id="group_custody_officer" model="res.groups">
+            <field name="name">Custody Officer</field>
+            <field name="category_id" ref="base.module_category_human_resources"/>
+            <field name="implied_ids" eval="[(4, ref('group_custody_user'))]"/>
+            <field name="comment">Officer can approve custody requests and manage properties (cannot delete)</field>
+        </record>
+
+        <!-- Custody Manager: Full access -->
+        <record id="group_custody_manager" model="res.groups">
+            <field name="name">Custody Manager</field>
+            <field name="category_id" ref="base.module_category_human_resources"/>
+            <field name="implied_ids" eval="[(4, ref('group_custody_officer'))]"/>
+            <field name="comment">Manager has full access to all custody operations including deletion and settings</field>
+        </record>
+
         <!-- Multi-Company Rule (Global) -->
         <record id="property_rule_custody_multicompany" model="ir.rule">
             <field name="name">Custody Property: Multi-Company</field>
@@ -21,7 +48,49 @@
             </field>
         </record>
 
-        <!-- Employee Level Access - Own Records Only -->
+        <!-- ===================================== -->
+        <!-- CUSTODY RECORD ACCESS RULES -->
+        <!-- ===================================== -->
+
+        <!-- Custody User Level: Own records + create new -->
+        <record id="custody_user_rule" model="ir.rule">
+            <field name="name">Custody: User Own Records</field>
+            <field name="model_id" ref="model_hr_custody"/>
+            <field name="domain_force">
+                [('employee_id.user_id', '=', user.id)]
+            </field>
+            <field name="groups" eval="[(4, ref('group_custody_user'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <!-- Custody Officer Level: All records for approval + management -->
+        <record id="custody_officer_rule" model="ir.rule">
+            <field name="name">Custody: Officer All Records</field>
+            <field name="model_id" ref="model_hr_custody"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_custody_officer'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <!-- Custody Manager Level: Full access -->
+        <record id="custody_manager_rule" model="ir.rule">
+            <field name="name">Custody: Manager Full Access</field>
+            <field name="model_id" ref="model_hr_custody"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_custody_manager'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+
+        <!-- Legacy HR Rules - Keep for backward compatibility -->
         <record id="hr_custody_employee_rule" model="ir.rule">
             <field name="name">HR Custody: Employee Own Records Only</field>
             <field name="model_id" ref="model_hr_custody"/>
@@ -35,9 +104,8 @@
             <field name="perm_unlink" eval="False"/>
         </record>
 
-        <!-- HR User Level Access: Department and Subordinate Records + Property Approvers -->
         <record id="hr_custody_hr_user_rule" model="ir.rule">
-            <field name="name">HR Custody: HR User Department Access + Property Approvers</field>
+            <field name="name">HR Custody: HR User Department Access</field>
             <field name="model_id" ref="model_hr_custody"/>
             <field name="domain_force">
                 ['|', '|', '|',
@@ -54,7 +122,6 @@
             <field name="perm_unlink" eval="True"/>
         </record>
 
-        <!-- HR Manager Level Access: All Records -->
         <record id="hr_custody_hr_manager_rule" model="ir.rule">
             <field name="name">HR Custody: HR Manager All Access</field>
             <field name="model_id" ref="model_hr_custody"/>
@@ -66,7 +133,47 @@
             <field name="perm_unlink" eval="True"/>
         </record>
 
-        <!-- Property Access Rules -->
+        <!-- ===================================== -->
+        <!-- PROPERTY ACCESS RULES -->
+        <!-- ===================================== -->
+
+        <!-- Custody User: Read properties only -->
+        <record id="property_custody_user_rule" model="ir.rule">
+            <field name="name">Property: Custody User Read Access</field>
+            <field name="model_id" ref="model_custody_property"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_custody_user'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <!-- Custody Officer: Manage properties (no delete) -->
+        <record id="property_custody_officer_rule" model="ir.rule">
+            <field name="name">Property: Custody Officer Management</field>
+            <field name="model_id" ref="model_custody_property"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_custody_officer'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <!-- Custody Manager: Full property access -->
+        <record id="property_custody_manager_rule" model="ir.rule">
+            <field name="name">Property: Custody Manager Full Access</field>
+            <field name="model_id" ref="model_custody_property"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_custody_manager'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+
+        <!-- Legacy Property Rules - Keep for backward compatibility -->
         <record id="custody_property_employee_rule" model="ir.rule">
             <field name="name">Custody Property: Employee Access</field>
             <field name="model_id" ref="model_custody_property"/>
