@@ -13,11 +13,11 @@
             <field name="sequence">10</field>
         </record>
 
-        <!-- Custody User: Basic custody operations -->
+        <!-- Custody User: View-only access -->
         <record id="group_custody_user" model="res.groups">
             <field name="name">Custody User</field>
             <field name="category_id" ref="module_category_asset_management"/>
-            <field name="comment">User can create custody requests and view their own records</field>
+            <field name="comment">User can only view their own custody records (read-only access)</field>
         </record>
 
         <!-- Custody Officer: Can approve and manage properties -->
@@ -59,17 +59,17 @@
         <!-- CUSTODY RECORD ACCESS RULES -->
         <!-- ===================================== -->
 
-        <!-- Custody User Level: Own records + create new -->
+        <!-- Custody User Level: Own records read-only -->
         <record id="custody_user_rule" model="ir.rule">
-            <field name="name">Custody: User Own Records</field>
+            <field name="name">Custody: User Own Records (Read-Only)</field>
             <field name="model_id" ref="model_hr_custody"/>
             <field name="domain_force">
                 [('employee_id.user_id', '=', user.id)]
             </field>
             <field name="groups" eval="[(4, ref('group_custody_user'))]"/>
             <field name="perm_read" eval="True"/>
-            <field name="perm_write" eval="True"/>
-            <field name="perm_create" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
             <field name="perm_unlink" eval="False"/>
         </record>
 
