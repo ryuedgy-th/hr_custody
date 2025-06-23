@@ -13,6 +13,9 @@ class CustodySettings(models.TransientModel):
     # Global Approval Settings
     default_approver_groups = fields.Many2many(
         'res.groups',
+        'custody_settings_groups_rel',
+        'settings_id',
+        'group_id',
         string='Default Approver Groups',
         help='Select which user groups can approve custody requests by default',
         domain="[('category_id.name', 'in', ['Human Resources', 'Asset Management', 'Extra Rights'])]"
@@ -21,6 +24,9 @@ class CustodySettings(models.TransientModel):
     # Custom default approvers (individual users)
     default_approver_users = fields.Many2many(
         'res.users',
+        'custody_settings_users_rel',
+        'settings_id',
+        'user_id',
         string='Default Approver Users',
         help='Specific users who can approve custody requests globally',
         domain="[('share', '=', False)]"
