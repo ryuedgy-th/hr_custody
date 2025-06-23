@@ -10,18 +10,6 @@ class CustodySettings(models.TransientModel):
     _description = 'Custody Settings'
     _inherit = 'res.config.settings'
 
-    # Global Approval Settings - stored as config parameters
-    default_approver_group_ids = fields.Char(
-        string='Default Approver Groups',
-        help='Comma-separated list of group IDs that can approve custody requests by default',
-        config_parameter='hr_custody.default_approver_groups'
-    )
-
-    default_approver_user_ids = fields.Char(
-        string='Default Approver Users', 
-        help='Comma-separated list of user IDs that can approve custody requests globally',
-        config_parameter='hr_custody.default_approver_users'
-    )
 
 
     # Approval workflow settings
@@ -66,20 +54,33 @@ class CustodySettings(models.TransientModel):
 
     @api.model
     def get_default_approver_groups(self):
-        """Get the default approver groups from settings"""
-        settings = self.env['ir.config_parameter'].sudo()
-        group_ids = settings.get_param('hr_custody.default_approver_groups', '')
-        if group_ids:
-            return [int(gid) for gid in group_ids.split(',') if gid.strip()]
-        return []
+        """Get the default approver groups from predefined security groups"""
+        # Return predefined custody and HR groups that have approval permissions
+        custody_officer = self.env.ref('hr_custody.group_custody_officer', raise_if_not_found=False)
+        custody_manager = self.env.ref('hr_custody.group_custody_manager', raise_if_not_found=False)
+        hr_manager = self.env.ref('hr.group_hr_manager', raise_if_not_found=False)
+        
+        group_ids = []
+        if custody_officer:
+            group_ids.append(custody_officer.id)
+        if custody_manager:
+            group_ids.append(custody_manager.id)
+        if hr_manager:
+            group_ids.append(hr_manager.id)
+        
+        return group_ids
 
     @api.model
     def get_default_approver_users(self):
-        """Get the default approver users from settings"""
-        settings = self.env['ir.config_parameter'].sudo()
-        user_ids = settings.get_param('hr_custody.default_approver_users', '')
-        if user_ids:
-            return [int(uid) for uid in user_ids.split(',') if uid.strip()]
+        """Get the default approver users from predefined security groups"""
+        # Get all users from the default approver groups
+        group_ids = self.get_default_approver_groups()
+        if group_ids:
+            groups = self.env['res.groups'].browse(group_ids)
+            user_ids = []
+            for group in groups:
+                user_ids.extend(group.users.ids)
+            return list(set(user_ids))  # Remove duplicates
         return []
 
     @api.model

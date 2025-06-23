@@ -50,26 +50,13 @@
 
                         <div class="col-12 o_setting_box">
                             <div class="o_setting_right_pane">
-                                <label for="default_approver_group_ids"/>
                                 <div class="text-muted">
-                                    Comma-separated list of group IDs that can approve custody requests by default
-                                </div>
-                                <div class="content-group mt16">
-                                    <field name="default_approver_group_ids" 
-                                           placeholder="e.g. 1,2,3 (Group IDs)"/>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-12 o_setting_box">
-                            <div class="o_setting_right_pane">
-                                <label for="default_approver_user_ids"/>
-                                <div class="text-muted">
-                                    Comma-separated list of user IDs that can approve custody requests globally
-                                </div>
-                                <div class="content-group mt16">
-                                    <field name="default_approver_user_ids" 
-                                           placeholder="e.g. 1,2,3 (User IDs)"/>
+                                    <strong>Note:</strong> Default approvers are configured through the existing HR groups:<br/>
+                                    • HR Manager (full access)<br/>
+                                    • Custody Manager (full access)<br/>
+                                    • Custody Officer (approval permissions)<br/>
+                                    <br/>
+                                    Custom approvers can be set on individual property records.
                                 </div>
                             </div>
                         </div>
