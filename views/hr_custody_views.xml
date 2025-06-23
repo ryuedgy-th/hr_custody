@@ -36,12 +36,13 @@
                 <sheet>
                     <!-- Alert for pending approval - display approvers -->
                     <div class="alert alert-info" invisible="state != 'to_approve'">
-                        <strong>Waiting for approval from any of these users:</strong><br/>
-                        <field name="property_approver_ids" widget="many2many_tags" readonly="1"/>
+                        <strong>Waiting for approval from role-based approvers:</strong><br/>
+                        <span>Custody Officer, Custody Manager, or HR Manager</span>
                     </div>
 
                     <!-- Alert for current user who is an approver -->
-                    <div class="alert alert-warning" invisible="state != 'to_approve' or uid not in property_approver_ids">
+                    <div class="alert alert-warning" invisible="state != 'to_approve'" 
+                         groups="hr_custody.group_custody_officer,hr_custody.group_custody_manager,hr.group_hr_user">
                         <strong>This request is waiting for YOUR approval!</strong>
                     </div>
 
@@ -86,8 +87,7 @@
                         </group>
                     </group>
 
-                    <!-- Hidden field for approvers (for domain/invisible conditions) -->
-                    <field name="property_approver_ids" invisible="1"/>
+                    <!-- Note: Using role-based approval system -->
 
                     <notebook>
                         <page string="Notes">
@@ -184,8 +184,8 @@
                         <!-- NEW: Approval Information Tab -->
                         <page string="Approval Info" invisible="state == 'draft'">
                             <group>
-                                <group string="Available Approvers">
-                                    <field name="property_approver_ids" widget="many2many_tags" readonly="1"/>
+                                <group string="Approval System">
+                                    <label string="Role-based approval: Custody Officer, Custody Manager, HR Manager"/>
                                 </group>
                                 <group string="Approval Details" invisible="state not in ['approved', 'returned']">
                                     <field name="approved_by_id" readonly="1"/>
@@ -197,8 +197,8 @@
                         <!-- Available Approvers -->
                         <page string="Approvers" name="approvers">
                             <group>
-                                <field name="property_approver_ids" widget="many2many_tags" 
-                                       options="{'no_create': True}" readonly="1"/>
+                                <separator string="Role-based Approval System"/>
+                                <label string="Default approvers: Custody Officer, Custody Manager, HR Manager"/>
                                 <separator string="Category Approvers" groups="hr.group_hr_user"/>
                                 <field name="category_approver_ids" widget="many2many_tags" 
                                        options="{'no_create': True}" readonly="1" 
@@ -227,8 +227,7 @@
                 <field name="property_code_display" string="Property Code"/>
                 <field name="purpose"/>
 
-                <!-- Approvers & Approved By Columns -->
-                <field name="property_approver_ids" widget="many2many_tags" string="Approvers"/>
+                <!-- Approved By Column -->
                 <field name="approved_by_id" string="Approved By"/>
 
                 <field name="date_request"/>
@@ -254,8 +253,7 @@
                 <field name="custody_property_id"/>
                 <field name="purpose"/>
 
-                <!-- Search by Approvers & Approved By -->
-                <field name="property_approver_ids"/>
+                <!-- Search by Approved By -->
                 <field name="approved_by_id"/>
 
                 <field name="state"/>
@@ -263,7 +261,8 @@
 
                 <!-- Important Filters -->
                 <filter string="Waiting My Approval" name="waiting_my_approval"
-                        domain="[('property_approver_ids', 'in', [uid]), ('state', '=', 'to_approve')]"/>
+                        domain="[('state', '=', 'to_approve')]"
+                        groups="hr_custody.group_custody_officer,hr_custody.group_custody_manager,hr.group_hr_user"/>
                 <filter string="My Requests" name="my_requests"
                         domain="[('employee_id.user_id', '=', uid)]"/>
                 <filter string="Approved by Me" name="approved_by_me"

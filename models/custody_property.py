@@ -98,15 +98,6 @@ class CustodyProperty(models.Model):
         help='Type or model of the device (e.g., Laptop, Phone, Tablet)'
     )
 
-    # Multiple Approvers
-    approver_ids = fields.Many2many(
-        'res.users',
-        'custody_property_approver_rel',
-        'property_id',
-        'user_id',
-        string='Approvers',
-        help='Users who can approve custody requests for this property'
-    )
 
     # Property Status and Availability
     property_status = fields.Selection([
@@ -293,9 +284,7 @@ class CustodyProperty(models.Model):
     def _onchange_category_id(self):
         """Auto-fill default return period based on category settings"""
         if self.category_id and self.category_id.default_return_type:
-            # Get and set default values from category
-            self.approver_ids = self.category_id.get_effective_approvers()
-            
+            # Category settings can be used for defaults if needed
             return {
                 'domain': {},
                 'value': {

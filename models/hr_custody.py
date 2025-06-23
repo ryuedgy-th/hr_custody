@@ -75,13 +75,6 @@ class HrCustody(models.Model):
     # APPROVAL FIELDS
     # ================================================================
 
-    # Related field for property approvers
-    property_approver_ids = fields.Many2many(
-        related='custody_property_id.approver_ids',
-        string='Available Approvers',
-        readonly=True,
-        help='Users who can approve this request based on the selected property'
-    )
 
     # Category approvers relation
     category_approver_ids = fields.Many2many(
@@ -361,9 +354,9 @@ class HrCustody(models.Model):
                     
             record.category_approver_ids = approvers
 
-    @api.depends('property_approver_ids', 'category_approver_ids', 'custody_property_id')
+    @api.depends('category_approver_ids', 'custody_property_id')
     def _compute_effective_approvers(self):
-        """Combine all approvers for this custody request using predefined roles"""
+        """Combine all approvers for this custody request using role-based system"""
         for record in self:
             # Get default approvers from predefined security groups
             custody_officer = self.env.ref('hr_custody.group_custody_officer', raise_if_not_found=False)
@@ -372,19 +365,15 @@ class HrCustody(models.Model):
             
             all_approvers = self.env['res.users']
             
-            # 1. Property-specific approvers first
-            if record.property_approver_ids:
-                all_approvers |= record.property_approver_ids
-            else:
-                # 2. Use security group members as default
-                if custody_officer:
-                    all_approvers |= custody_officer.users
-                if custody_manager:
-                    all_approvers |= custody_manager.users
-                if hr_manager:
-                    all_approvers |= hr_manager.users
+            # Use security group members as default approvers
+            if custody_officer:
+                all_approvers |= custody_officer.users
+            if custody_manager:
+                all_approvers |= custody_manager.users
+            if hr_manager:
+                all_approvers |= hr_manager.users
             
-            # 3. Add category approvers if they exist
+            # Add category approvers if they exist
             all_approvers |= record.category_approver_ids
             
             record.effective_approver_ids = all_approvers
@@ -574,10 +563,9 @@ class HrCustody(models.Model):
     def sent(self):
         """Move the current record to the 'to_approve' state."""
         self.state = 'to_approve'
-        # Send notification to all approvers
-        approver_names = ', '.join(self.property_approver_ids.mapped('name'))
+        # Send notification using role-based system
         self.message_post(
-            body=_('Custody request sent for approval to: %s') % approver_names,
+            body=_('Custody request sent for approval to authorized approvers (Custody Officer/Manager, HR Manager)'),
             message_type='notification'
         )
 
