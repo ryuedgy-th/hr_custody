@@ -14,14 +14,7 @@ class CustodySettings(models.TransientModel):
     default_approver_groups = fields.Many2many(
         'res.groups',
         string='Default Approver Groups',
-        help='Select which user groups can approve custody requests by default',
-        domain=[
-            '|', '|', '|',
-            ('id', '=', ref('hr_custody.group_custody_manager')),
-            ('id', '=', ref('hr_custody.group_custody_officer')),
-            ('id', '=', ref('hr.group_hr_manager')),
-            ('id', '=', ref('hr.group_hr_user'))
-        ]
+        help='Select which user groups can approve custody requests by default'
     )
 
     # Custom default approvers (individual users)
