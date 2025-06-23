@@ -15,7 +15,7 @@ class CustodySettings(models.TransientModel):
         'res.groups',
         string='Default Approver Groups',
         help='Select which user groups can approve custody requests by default',
-        default_model='hr_custody.default_approver_groups'
+        domain="[('category_id.name', 'in', ['Human Resources', 'Asset Management', 'Extra Rights'])]"
     )
 
     # Custom default approvers (individual users)
@@ -23,7 +23,7 @@ class CustodySettings(models.TransientModel):
         'res.users',
         string='Default Approver Users',
         help='Specific users who can approve custody requests globally',
-        default_model='hr_custody.default_approver_users'
+        domain="[('share', '=', False)]"
     )
 
     # Approval workflow settings

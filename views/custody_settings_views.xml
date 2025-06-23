@@ -56,7 +56,8 @@
                                 </div>
                                 <div class="content-group mt16">
                                     <field name="default_approver_groups" widget="many2many_tags" 
-                                           placeholder="Select approver groups..."/>
+                                           placeholder="Select approver groups..."
+                                           options="{'no_create': True, 'no_create_edit': True}"/>
                                 </div>
                             </div>
                         </div>
@@ -69,7 +70,8 @@
                                 </div>
                                 <div class="content-group mt16">
                                     <field name="default_approver_users" widget="many2many_tags" 
-                                           placeholder="Select approver users..."/>
+                                           placeholder="Select approver users..."
+                                           options="{'no_create': True, 'no_create_edit': True}"/>
                                 </div>
                             </div>
                         </div>
