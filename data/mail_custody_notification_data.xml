@@ -30,11 +30,11 @@
           <field name="model_id" ref="model_hr_custody"/>
           <field name="subject">Custody Request for ${object.custody_property_id.name}</field>
           <field name="email_from">${object.company_id.email or ''}</field>
-          <field name="email_to">${','.join(['%s' % email for email in object.custody_property_id.approver_ids.mapped('email')])}</field>
+          <field name="email_to">${','.join(['%s' % email for email in object.effective_approver_ids.mapped('email') if email])}</field>
           <field name="body_html" type="html">
               <div style="margin: 0px; padding: 0px;">
                   <p style="margin: 0px; padding: 0px; font-size: 13px;">
-                      Dear ${object.custody_property_id.approver_ids[0].name if object.custody_property_id.approver_ids else ''},
+                      Dear ${object.effective_approver_ids[0].name if object.effective_approver_ids else 'Approver'},
                       <br/><br/>
                       A custody request has been made for the following property:
                       <br/><br/>
