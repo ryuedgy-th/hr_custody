@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from dateutil.relativedelta import relativedelta
 
@@ -242,9 +242,10 @@ class CustodyProperty(models.Model):
         ('10', 'October'), ('11', 'November'), ('12', 'December')
     ], string='Warranty Expire Month', help='Month when warranty expires')
 
-    warranty_expire_year = fields.Integer(
+    warranty_expire_year = fields.Selection(
+        selection='_get_year_selection',
         string='Warranty Expire Year',
-        help='Year when warranty expires (e.g., 2025, 2026)'
+        help='Select the year when warranty expires'
     )
 
     warranty_status = fields.Char(
@@ -317,6 +318,15 @@ class CustodyProperty(models.Model):
                         record.name, record.desc)
                     if category_id:
                         record.category_id = category_id
+
+    @api.model
+    def _get_year_selection(self):
+        """Generate year selection list from current year -5 to +15"""
+        current_year = datetime.now().year
+        years = []
+        for year in range(current_year - 5, current_year + 16):  # +16 to include +15
+            years.append((str(year), str(year)))
+        return years
 
     @api.depends()
     def _compute_custody_counts(self):
@@ -451,7 +461,7 @@ class CustodyProperty(models.Model):
                 record.warranty_status = _('Not Set')
                 continue
                 
-            expire_year = record.warranty_expire_year
+            expire_year = int(record.warranty_expire_year)
             expire_month = int(record.warranty_expire_month)
             
             # Create date for last day of warranty month
