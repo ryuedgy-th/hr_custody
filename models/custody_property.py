@@ -146,6 +146,16 @@ class CustodyProperty(models.Model):
         help='Whether this property is available for custody'
     )
 
+    # Property-specific approvers
+    approver_ids = fields.Many2many(
+        'res.users',
+        'custody_property_approver_rel',
+        'property_id',
+        'user_id',
+        string='Property Approvers',
+        help='Users who can approve custody requests for this property'
+    )
+
     # History fields
     last_maintenance_date = fields.Date(
         string='Last Maintenance Date',

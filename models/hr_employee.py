@@ -24,7 +24,7 @@ class HrEmployee(models.Model):
         help='Number of equipment currently in possession'
     )
 
-    @api.depends('custody_count')
+    @api.depends()
     def _compute_custody_count(self):
         """Count only ACTIVE custody (approved state)"""
         for employee in self:
@@ -34,7 +34,7 @@ class HrEmployee(models.Model):
             ])
             employee.custody_count = active_custody
 
-    @api.depends('total_custody_count')
+    @api.depends()
     def _compute_total_custody_count(self):
         """Count ALL custody requests (all states)"""
         for employee in self:
@@ -44,7 +44,7 @@ class HrEmployee(models.Model):
             ])
             employee.total_custody_count = total_custody
 
-    @api.depends('equipment_count')
+    @api.depends()
     def _compute_equipment_count(self):
         """Count unique equipment currently in possession (approved state only)"""
         for employee in self:
