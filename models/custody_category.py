@@ -77,6 +77,14 @@ class CustodyCategory(models.Model):
         string='Child Categories',
         help='Sub-categories under this category'
     )
+
+    # Inverse relationship for properties
+    property_ids = fields.One2many(
+        'custody.property',
+        'category_id',
+        string='Properties',
+        help='Properties in this category'
+    )
     
     property_count = fields.Integer(
         compute='_compute_property_count',
@@ -164,7 +172,7 @@ class CustodyCategory(models.Model):
             else:
                 category.complete_name = category.name
     
-    @api.depends()
+    @api.depends('property_ids')
     def _compute_property_count(self):
         """Compute the number of properties in each category"""
         property_data = self.env['custody.property'].read_group(

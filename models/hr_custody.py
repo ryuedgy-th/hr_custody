@@ -295,6 +295,50 @@ class HrCustody(models.Model):
     )
 
     # ================================================================
+    # CONSTRAINTS
+    # ================================================================
+
+    @api.constrains('employee_id', 'custody_property_id', 'state')
+    def _check_single_active_custody(self):
+        """Ensure only one active custody per property"""
+        for record in self:
+            if record.state == 'approved':
+                existing = self.search([
+                    ('custody_property_id', '=', record.custody_property_id.id),
+                    ('state', '=', 'approved'),
+                    ('id', '!=', record.id)
+                ])
+                if existing:
+                    raise ValidationError(
+                        _('Property "%s" is already in custody by %s') 
+                        % (record.custody_property_id.name, existing[0].employee_id.name)
+                    )
+
+    @api.constrains('return_date')
+    def _check_return_date_reasonable(self):
+        """Ensure return date is reasonable"""
+        for record in self:
+            if record.return_date:
+                if record.return_date < fields.Date.today():
+                    raise ValidationError(_('Return date cannot be in the past'))
+                if record.return_date > fields.Date.today() + timedelta(days=365*2):
+                    raise ValidationError(_('Return date seems too far in the future (maximum 2 years)'))
+
+    # ================================================================
+    # DEFAULT METHODS
+    # ================================================================
+
+    @api.model
+    def default_get(self, fields_list):
+        """Set smart defaults for new custody records"""
+        res = super().default_get(fields_list)
+        if 'employee_id' in fields_list and not res.get('employee_id'):
+            # Default to current user's employee record
+            if self.env.user.employee_id:
+                res['employee_id'] = self.env.user.employee_id.id
+        return res
+
+    # ================================================================
     # COMPUTED FIELD METHODS
     # ================================================================
 

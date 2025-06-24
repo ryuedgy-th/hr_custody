@@ -5,6 +5,9 @@ from dateutil.relativedelta import relativedelta
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
+# Constants
+DEFAULT_MAINTENANCE_REMINDER_DAYS = 7
+
 
 class CustodyProperty(models.Model):
     """
@@ -106,7 +109,7 @@ class CustodyProperty(models.Model):
         ('maintenance', 'Under Maintenance'),
         ('damaged', 'Damaged'),
         ('retired', 'Retired')
-    ], string='Property Status', default='available', help='Current status of the property', tracking=True)
+    ], string='Property Status', default='available', index=True, tracking=True, help='Current status of the property')
 
     # Computed fields for better tracking
     custody_count = fields.Integer(
@@ -154,6 +157,14 @@ class CustodyProperty(models.Model):
         'user_id',
         string='Property Approvers',
         help='Users who can approve custody requests for this property'
+    )
+
+    # Inverse relationship for custody records
+    custody_ids = fields.One2many(
+        'hr.custody',
+        'custody_property_id',
+        string='Custody Records',
+        help='All custody records for this property'
     )
 
     # History fields
@@ -327,7 +338,7 @@ class CustodyProperty(models.Model):
             years.append((str(year), str(year)))
         return years
 
-    @api.depends()
+    @api.depends('custody_ids', 'custody_ids.state')
     def _compute_custody_counts(self):
         """Compute the number of custodies for this property using read_group for better performance"""
         # Get all custody counts in one query
@@ -395,11 +406,11 @@ class CustodyProperty(models.Model):
         today = fields.Date.today()
         # Get maintenance reminder days without sudo - use accessible parameter or default
         reminder_days_param = self.env['ir.config_parameter'].get_param(
-            'hr_custody.maintenance_reminder_days', '7')
+            'hr_custody.maintenance_reminder_days', str(DEFAULT_MAINTENANCE_REMINDER_DAYS))
         try:
             reminder_days = int(reminder_days_param)
         except (ValueError, TypeError):
-            reminder_days = 7  # Default fallback
+            reminder_days = DEFAULT_MAINTENANCE_REMINDER_DAYS  # Default fallback
         
         for record in self:
             if record.next_maintenance_date:
@@ -423,11 +434,11 @@ class CustodyProperty(models.Model):
         today = fields.Date.today()
         # Get maintenance reminder days without sudo - use accessible parameter or default
         reminder_days_param = self.env['ir.config_parameter'].get_param(
-            'hr_custody.maintenance_reminder_days', '7')
+            'hr_custody.maintenance_reminder_days', str(DEFAULT_MAINTENANCE_REMINDER_DAYS))
         try:
             reminder_days = int(reminder_days_param)
         except (ValueError, TypeError):
-            reminder_days = 7  # Default fallback
+            reminder_days = DEFAULT_MAINTENANCE_REMINDER_DAYS  # Default fallback
         
         for record in self:
             if record.maintenance_frequency == 'none':
@@ -656,11 +667,11 @@ class CustodyProperty(models.Model):
         today = fields.Date.today()
         # Get maintenance reminder days without sudo - use accessible parameter or default
         reminder_days_param = self.env['ir.config_parameter'].get_param(
-            'hr_custody.maintenance_reminder_days', '7')
+            'hr_custody.maintenance_reminder_days', str(DEFAULT_MAINTENANCE_REMINDER_DAYS))
         try:
             reminder_days = int(reminder_days_param)
         except (ValueError, TypeError):
-            reminder_days = 7  # Default fallback
+            reminder_days = DEFAULT_MAINTENANCE_REMINDER_DAYS  # Default fallback
         
         # Calculate the date range for sending reminders
         reminder_date = today + timedelta(days=reminder_days)

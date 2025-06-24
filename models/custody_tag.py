@@ -33,6 +33,16 @@ class CustodyTag(models.Model):
         translate=True,
         help='A description of what this tag represents'
     )
+
+    # Inverse relationship for properties
+    property_ids = fields.Many2many(
+        'custody.property',
+        'custody_property_tag_rel',
+        'tag_id',
+        'property_id',
+        string='Properties',
+        help='Properties with this tag'
+    )
     
     property_count = fields.Integer(
         compute='_compute_property_count',
@@ -40,7 +50,7 @@ class CustodyTag(models.Model):
         help='Number of properties with this tag'
     )
     
-    @api.depends()
+    @api.depends('property_ids')
     def _compute_property_count(self):
         """Compute the number of properties for each tag"""
         property_data = self.env['custody.property'].read_group(

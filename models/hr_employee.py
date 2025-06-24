@@ -24,6 +24,14 @@ class HrEmployee(models.Model):
         help='Number of equipment currently in possession'
     )
 
+    # Inverse relationship for custody records
+    custody_ids = fields.One2many(
+        'hr.custody',
+        'employee_id',
+        string='My Custodies',
+        help='Custody records for this employee'
+    )
+
     @api.depends()
     def _compute_custody_count(self):
         """Count only ACTIVE custody (approved state)"""
