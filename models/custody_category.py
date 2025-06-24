@@ -2,6 +2,27 @@ from lxml import etree
 
 from odoo import api, fields, models, _
 
+# Category prediction keywords - configurable constants
+DEFAULT_CATEGORY_KEYWORDS = {
+    'laptop': 'IT Equipment',
+    'computer': 'IT Equipment',
+    'mouse': 'IT Equipment',
+    'keyboard': 'IT Equipment',
+    'monitor': 'IT Equipment',
+    'printer': 'IT Equipment',
+    'phone': 'Communication Devices',
+    'mobile': 'Communication Devices',
+    'desk': 'Furniture',
+    'chair': 'Furniture',
+    'table': 'Furniture',
+    'cabinet': 'Furniture',
+    'car': 'Vehicles',
+    'vehicle': 'Vehicles',
+    'book': 'Office Supplies',
+    'pen': 'Office Supplies',
+    'paper': 'Office Supplies',
+}
+
 
 class CustodyCategory(models.Model):
     """
@@ -143,7 +164,7 @@ class CustodyCategory(models.Model):
             else:
                 category.complete_name = category.name
     
-    @api.depends()
+    @api.depends('property_ids')
     def _compute_property_count(self):
         """Compute the number of properties in each category"""
         property_data = self.env['custody.property'].read_group(
@@ -227,27 +248,18 @@ class CustodyCategory(models.Model):
         # Create a combined text for searching
         text = f"{property_name} {description}"
         
-        # Define keywords for each category
-        # This could be made configurable via the UI
-        category_keywords = {
-            'laptop': 'IT Equipment',
-            'computer': 'IT Equipment',
-            'mouse': 'IT Equipment',
-            'keyboard': 'IT Equipment',
-            'monitor': 'IT Equipment',
-            'printer': 'IT Equipment',
-            'phone': 'Communication Devices',
-            'mobile': 'Communication Devices',
-            'desk': 'Furniture',
-            'chair': 'Furniture',
-            'table': 'Furniture',
-            'cabinet': 'Furniture',
-            'car': 'Vehicles',
-            'vehicle': 'Vehicles',
-            'book': 'Office Supplies',
-            'pen': 'Office Supplies',
-            'paper': 'Office Supplies',
-        }
+        # Get category keywords from system parameter or use defaults
+        category_keywords = self.env['ir.config_parameter'].get_param(
+            'hr_custody.category_keywords'
+        )
+        if category_keywords:
+            try:
+                import json
+                category_keywords = json.loads(category_keywords)
+            except (ValueError, json.JSONDecodeError):
+                category_keywords = DEFAULT_CATEGORY_KEYWORDS
+        else:
+            category_keywords = DEFAULT_CATEGORY_KEYWORDS
         
         # Find matching categories
         matches = {}
