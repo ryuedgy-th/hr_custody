@@ -40,7 +40,7 @@ class CustodyTag(models.Model):
         help='Number of properties with this tag'
     )
     
-    @api.depends('property_ids')
+    @api.depends()
     def _compute_property_count(self):
         """Compute the number of properties for each tag"""
         property_data = self.env['custody.property'].read_group(

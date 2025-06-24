@@ -164,7 +164,7 @@ class CustodyCategory(models.Model):
             else:
                 category.complete_name = category.name
     
-    @api.depends('property_ids')
+    @api.depends()
     def _compute_property_count(self):
         """Compute the number of properties in each category"""
         property_data = self.env['custody.property'].read_group(
