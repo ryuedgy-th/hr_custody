@@ -317,7 +317,7 @@ class CustodyProperty(models.Model):
             years.append((str(year), str(year)))
         return years
 
-    @api.depends('custody_ids', 'custody_ids.state')
+    @api.depends()
     def _compute_custody_counts(self):
         """Compute the number of custodies for this property using read_group for better performance"""
         # Get all custody counts in one query
