@@ -257,9 +257,6 @@
                 <field name="next_maintenance_date" string="Next Due"/>
                 <field name="maintenance_overdue" column_invisible="1"/>
                 <field name="maintenance_due_soon" column_invisible="1"/>
-                <button name="action_record_maintenance" string="🔧 Record" type="object" icon="fa-wrench" 
-                        class="btn-primary"
-                        invisible="maintenance_frequency == 'none'"/>
             </list>
         </field>
     </record>
