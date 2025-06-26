@@ -1,20 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     <!-- Custody Return mail Scheduler-->
-    <data noupdate="1">
-        <!-- Import for DateTime and timedelta -->
-        <function model="ir.model.data" name="_update_xmlids">
-            <value model="base" eval="[{
-                'xml_id': 'hr_custody.datetime_import',
-                'noupdate': True,
-                'res_id': False,
-                'model': False,
-                'module': 'hr_custody',
-                'values': {},
-            }]"/>
-            <value name="datetime" eval="__import__('datetime')"/>
-        </function>
-        
+    <data noupdate="1">        
         <record model="ir.cron" id="hr_custody_data_reminders">
             <field name="name">HR Custody Return Notification</field>
             <field name="interval_number">1</field>
@@ -23,7 +10,7 @@
             <field name="model_id" ref="model_hr_custody"/>
             <field name="state">code</field>
             <field name="code">model.mail_reminder()</field>
-            <field name="nextcall" eval="datetime.datetime.now().replace(hour=6, minute=0, second=0) + datetime.timedelta(days=1)"/>
+            <field name="nextcall" eval="DateTime.now().replace(hour=6, minute=0, second=0, microsecond=0) + timedelta(days=1)"/>
         </record>
         
         <!-- Scheduled action for custody return reminders -->
@@ -35,7 +22,7 @@
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
             <field name="active" eval="True"/>
-            <field name="nextcall" eval="datetime.datetime.now().replace(hour=6, minute=0, second=0) + datetime.timedelta(days=1)"/>
+            <field name="nextcall" eval="DateTime.now().replace(hour=6, minute=0, second=0, microsecond=0) + timedelta(days=1)"/>
         </record>
         
         <!-- NEW: Scheduled action for maintenance reminders -->
@@ -47,8 +34,7 @@
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
             <field name="active" eval="True"/>
-            <!-- Using correct format for nextcall in Odoo 18 -->
-            <field name="nextcall" eval="datetime.datetime.now().replace(hour=6, minute=0, second=0) + datetime.timedelta(days=1)"/>
+            <field name="nextcall" eval="DateTime.now().replace(hour=6, minute=0, second=0, microsecond=0) + timedelta(days=1)"/>
         </record>
         
         <!-- System parameter for maintenance reminder days -->
