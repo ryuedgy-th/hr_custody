@@ -45,16 +45,6 @@
                             </div>
                         </button>
                         
-                        <!-- Inspection button temporarily disabled 
-                        <button name="action_view_inspections" type="object" class="oe_stat_button" icon="fa-clipboard-list">
-                            <div class="o_field_widget o_stat_info">
-                                <span class="o_stat_value">
-                                    <field name="inspection_count"/>
-                                </span>
-                                <span class="o_stat_text">Inspections</span>
-                            </div>
-                        </button>
-                        -->
                     </div>
 
                     <field name="image" widget='image' class="oe_avatar"/>
@@ -558,11 +548,6 @@
                                     <button name="action_record_maintenance" string="🔧 Record" 
                                             type="object" class="btn btn-primary btn-lg" 
                                             help="Record completed maintenance work"/>
-                                    <!-- Inspection button temporarily disabled
-                                    <button name="action_create_inspection" string="📋 Inspection" 
-                                            type="object" class="btn btn-success btn-lg"
-                                            help="Create new device inspection"/>
-                                    -->
                                     <button name="action_view_maintenance_history" string="📋 History" 
                                             type="object" class="btn btn-info btn-lg"
                                             help="View maintenance history for this property"/>

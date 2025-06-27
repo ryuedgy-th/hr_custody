@@ -229,19 +229,6 @@ class CustodyProperty(models.Model):
         help='Indicates if maintenance is due within the reminder period'
     )
     
-    # Device Inspection Fields
-    inspection_count = fields.Integer(
-        string='Inspection Count',
-        compute='_compute_inspection_count',
-        help='Number of inspections for this property'
-    )
-    
-    last_inspection_date = fields.Datetime(
-        string='Last Inspection Date',
-        compute='_compute_last_inspection_date',
-        store=True,
-        help='Date of the most recent inspection'
-    )
     
     maintenance_status_display = fields.Char(
         string='Maintenance Status',
@@ -674,26 +661,6 @@ class CustodyProperty(models.Model):
             return True
         return False
     
-    def _compute_inspection_count(self):
-        """Compute the number of inspections for this property"""
-        for record in self:
-            if 'device.inspection' in self.env:
-                record.inspection_count = self.env['device.inspection'].search_count([
-                    ('property_id', '=', record.id)
-                ])
-            else:
-                record.inspection_count = 0
-    
-    def _compute_last_inspection_date(self):
-        """Compute the date of the most recent inspection"""
-        for record in self:
-            if 'device.inspection' in self.env:
-                latest_inspection = self.env['device.inspection'].search([
-                    ('property_id', '=', record.id)
-                ], order='inspection_date desc', limit=1)
-                record.last_inspection_date = latest_inspection.inspection_date if latest_inspection else False
-            else:
-                record.last_inspection_date = False
     
     # NEW: Cron job for maintenance reminders
     @api.model
@@ -779,57 +746,6 @@ class CustodyProperty(models.Model):
             }
         }
     
-    def action_create_inspection(self):
-        """Action to create a new device inspection for this property"""
-        self.ensure_one()
-        
-        if 'device.inspection' not in self.env:
-            raise UserError(_("Device Inspection module is not properly installed."))
-        
-        # Create new inspection with this property
-        inspection = self.env['device.inspection'].create({
-            'property_id': self.id,
-        })
-        
-        return {
-            'name': _('Device Inspection'),
-            'type': 'ir.actions.act_window',
-            'res_model': 'device.inspection',
-            'view_mode': 'form',
-            'res_id': inspection.id,
-            'target': 'current',
-            'context': {
-                'default_property_id': self.id,
-                'form_view_initial_mode': 'edit',
-            }
-        }
-    
-    def action_view_inspections(self):
-        """Action to view all inspections for this property"""
-        self.ensure_one()
-        
-        if 'device.inspection' not in self.env:
-            raise UserError(_("Device Inspection module is not properly installed."))
-        
-        inspections = self.env['device.inspection'].search([('property_id', '=', self.id)])
-        
-        action = self.env['ir.actions.act_window']._for_xml_id('hr_custody.action_device_inspection')
-        
-        if len(inspections) == 1:
-            action.update({
-                'view_mode': 'form',
-                'res_id': inspections.id,
-            })
-        else:
-            action.update({
-                'domain': [('property_id', '=', self.id)],
-                'context': {
-                    'default_property_id': self.id,
-                    'search_default_property_id': self.id,
-                }
-            })
-            
-        return action
         
     @api.model
     def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):
