@@ -60,16 +60,24 @@ class CustodyImage(models.Model):
     custody_id = fields.Many2one(
         'hr.custody',
         string='Custody Record',
-        required=True,
         ondelete='cascade',
         index=True,  # Add index for better performance
         help='The custody record this image belongs to'
+    )
+    
+    inspection_id = fields.Many2one(
+        'device.inspection',
+        string='Inspection Record',
+        ondelete='cascade',
+        index=True,
+        help='The inspection record this image belongs to'
     )
     
     image_type = fields.Selection([
         ('checkout', 'Checkout'),
         ('return', 'Return'),
         ('maintenance', 'Maintenance'),
+        ('inspection', 'Inspection'),
         ('other', 'Other')
     ], 
         string='Image Type',
@@ -86,6 +94,15 @@ class CustodyImage(models.Model):
         readonly=True,
         help='User who uploaded this image'
     )
+    
+    @api.constrains('custody_id', 'inspection_id')
+    def _check_record_reference(self):
+        """Ensure image belongs to either custody or inspection, not both"""
+        for record in self:
+            if not record.custody_id and not record.inspection_id:
+                raise models.ValidationError(_("Image must belong to either a custody record or an inspection record."))
+            if record.custody_id and record.inspection_id:
+                raise models.ValidationError(_("Image cannot belong to both custody and inspection records."))
     
     @api.model_create_multi
     def create(self, vals_list):
