@@ -16,7 +16,7 @@
         'security/ir.model.access.csv',
         # Data files
         'data/custody_sequence_data.xml',
-        'data/device_inspection_data.xml',
+        # 'data/device_inspection_data.xml',
         'data/ir_cron_data.xml',
         'data/mail_custody_notification_data.xml',
         # Wizard views
@@ -34,8 +34,8 @@
         'views/custody_tag_views.xml',
         # Employee views
         'views/hr_employee_views.xml',
-        # Device Inspection views
-        'views/device_inspection_views.xml',
+        # Device Inspection views - temporarily disabled
+        # 'views/device_inspection_views.xml',
         # Reports last
         'reports/report_custody_views.xml',
     ],
