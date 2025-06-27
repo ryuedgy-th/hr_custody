@@ -8,6 +8,7 @@ except ImportError:
     PIL = None
 
 from odoo import api, fields, models, _
+from odoo.exceptions import ValidationError
 
 
 class CustodyImage(models.Model):
@@ -99,10 +100,8 @@ class CustodyImage(models.Model):
     def _check_record_reference(self):
         """Ensure image belongs to either custody or inspection, not both"""
         for record in self:
-            if not record.custody_id and not record.inspection_id:
-                raise models.ValidationError(_("Image must belong to either a custody record or an inspection record."))
             if record.custody_id and record.inspection_id:
-                raise models.ValidationError(_("Image cannot belong to both custody and inspection records."))
+                raise ValidationError(_("Image cannot belong to both custody and inspection records."))
     
     @api.model_create_multi
     def create(self, vals_list):

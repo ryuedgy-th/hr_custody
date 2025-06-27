@@ -681,7 +681,6 @@ class CustodyProperty(models.Model):
                 ('property_id', '=', record.id)
             ])
     
-    @api.depends('property_id')
     def _compute_last_inspection_date(self):
         """Compute the date of the most recent inspection"""
         for record in self:
