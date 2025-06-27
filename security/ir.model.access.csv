@@ -32,12 +32,13 @@ access_custody_record_maintenance_wizard_custody_manager,custody.record.maintena
 access_report_custody_custody_user,report.custody.custody.user,model_report_custody,group_custody_user,1,0,0,0
 access_report_custody_custody_officer,report.custody.custody.officer,model_report_custody,group_custody_officer,1,0,0,0
 access_report_custody_custody_manager,report.custody.custody.manager,model_report_custody,group_custody_manager,1,0,0,0
-access_device_inspection_type_custody_user,device.inspection.type.custody.user,model_device_inspection_type,group_custody_user,1,0,0,0
-access_device_inspection_type_custody_officer,device.inspection.type.custody.officer,model_device_inspection_type,group_custody_officer,1,1,1,0
-access_device_inspection_type_custody_manager,device.inspection.type.custody.manager,model_device_inspection_type,group_custody_manager,1,1,1,1
-access_device_inspection_custody_user,device.inspection.custody.user,model_device_inspection,group_custody_user,1,0,0,0
-access_device_inspection_custody_officer,device.inspection.custody.officer,model_device_inspection,group_custody_officer,1,1,1,0
-access_device_inspection_custody_manager,device.inspection.custody.manager,model_device_inspection,group_custody_manager,1,1,1,1
-access_device_inspection_line_custody_user,device.inspection.line.custody.user,model_device_inspection_line,group_custody_user,1,0,0,0
-access_device_inspection_line_custody_officer,device.inspection.line.custody.officer,model_device_inspection_line,group_custody_officer,1,1,1,0
-access_device_inspection_line_custody_manager,device.inspection.line.custody.manager,model_device_inspection_line,group_custody_manager,1,1,1,1
+# Device Inspection access rights - temporarily disabled
+# access_device_inspection_type_custody_user,device.inspection.type.custody.user,model_device_inspection_type,group_custody_user,1,0,0,0
+# access_device_inspection_type_custody_officer,device.inspection.type.custody.officer,model_device_inspection_type,group_custody_officer,1,1,1,0
+# access_device_inspection_type_custody_manager,device.inspection.type.custody.manager,model_device_inspection_type,group_custody_manager,1,1,1,1
+# access_device_inspection_custody_user,device.inspection.custody.user,model_device_inspection,group_custody_user,1,0,0,0
+# access_device_inspection_custody_officer,device.inspection.custody.officer,model_device_inspection,group_custody_officer,1,1,1,0
+# access_device_inspection_custody_manager,device.inspection.custody.manager,model_device_inspection,group_custody_manager,1,1,1,1
+# access_device_inspection_line_custody_user,device.inspection.line.custody.user,model_device_inspection_line,group_custody_user,1,0,0,0
+# access_device_inspection_line_custody_officer,device.inspection.line.custody.officer,model_device_inspection_line,group_custody_officer,1,1,1,0
+# access_device_inspection_line_custody_manager,device.inspection.line.custody.manager,model_device_inspection_line,group_custody_manager,1,1,1,1
