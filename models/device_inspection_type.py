@@ -40,17 +40,24 @@ class DeviceInspectionType(models.Model):
         help="Number of inspections using this type"
     )
 
-    @api.depends('name')
     def _compute_inspection_count(self):
         """Compute the number of inspections for each type"""
         for record in self:
-            record.inspection_count = self.env['device.inspection'].search_count([
-                ('inspection_type_id', '=', record.id)
-            ])
+            if 'device.inspection' in self.env:
+                record.inspection_count = self.env['device.inspection'].search_count([
+                    ('inspection_type_id', '=', record.id)
+                ])
+            else:
+                record.inspection_count = 0
 
     def action_view_inspections(self):
         """Action to view inspections of this type"""
         self.ensure_one()
+        
+        if 'device.inspection' not in self.env:
+            from odoo.exceptions import UserError
+            raise UserError("Device Inspection module is not properly installed.")
+            
         action = self.env['ir.actions.act_window']._for_xml_id(
             'hr_custody.action_device_inspection'
         )

@@ -677,18 +677,23 @@ class CustodyProperty(models.Model):
     def _compute_inspection_count(self):
         """Compute the number of inspections for this property"""
         for record in self:
-            record.inspection_count = self.env['device.inspection'].search_count([
-                ('property_id', '=', record.id)
-            ])
+            if 'device.inspection' in self.env:
+                record.inspection_count = self.env['device.inspection'].search_count([
+                    ('property_id', '=', record.id)
+                ])
+            else:
+                record.inspection_count = 0
     
     def _compute_last_inspection_date(self):
         """Compute the date of the most recent inspection"""
         for record in self:
-            latest_inspection = self.env['device.inspection'].search([
-                ('property_id', '=', record.id)
-            ], order='inspection_date desc', limit=1)
-            
-            record.last_inspection_date = latest_inspection.inspection_date if latest_inspection else False
+            if 'device.inspection' in self.env:
+                latest_inspection = self.env['device.inspection'].search([
+                    ('property_id', '=', record.id)
+                ], order='inspection_date desc', limit=1)
+                record.last_inspection_date = latest_inspection.inspection_date if latest_inspection else False
+            else:
+                record.last_inspection_date = False
     
     # NEW: Cron job for maintenance reminders
     @api.model
@@ -778,6 +783,9 @@ class CustodyProperty(models.Model):
         """Action to create a new device inspection for this property"""
         self.ensure_one()
         
+        if 'device.inspection' not in self.env:
+            raise UserError(_("Device Inspection module is not properly installed."))
+        
         # Create new inspection with this property
         inspection = self.env['device.inspection'].create({
             'property_id': self.id,
@@ -799,6 +807,9 @@ class CustodyProperty(models.Model):
     def action_view_inspections(self):
         """Action to view all inspections for this property"""
         self.ensure_one()
+        
+        if 'device.inspection' not in self.env:
+            raise UserError(_("Device Inspection module is not properly installed."))
         
         inspections = self.env['device.inspection'].search([('property_id', '=', self.id)])
         
